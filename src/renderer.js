@@ -80,19 +80,21 @@ const recordVideo = async () => {
   };
 
   mediaRecorder.onstop = async () => {
+    electronAPI.stopKeystrokesLogging();
     console.log('mediaRecorder stopped');
     const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=vp9' });
     recordedChunks = [];
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'recorded-video.webm';
+    a.download = `recorded-video-${Date.now()}.webm`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
+  electronAPI.startKeystrokesLogging();
   mediaRecorder.start();
 };
 
@@ -102,7 +104,6 @@ startButton.addEventListener('click', async () => {
   const stopButton = document.querySelector('#stopButton')
   stopButton.disabled = false
   startButton.disabled = true
-
   await recordVideo()
 })
 

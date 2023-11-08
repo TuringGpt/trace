@@ -1,6 +1,9 @@
-const { app, BrowserWindow, ipcMain, Menu, desktopCapturer } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, desktopCapturer, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
+const Keylogger = require('./keylogger.js');
+let keylogger;
 const isDev = process.env.MODE === 'development'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -76,5 +79,24 @@ ipcMain.handle('get-video-sources', async () => {
   } catch (error) {
     console.log("ERROR : MAIN : get-video-sources > ", error);
     throw error;
+  }
+});
+
+ipcMain.on('start-recording', () => {
+  keylogger = new Keylogger('/Users/suraj/Downloads/key-logs.txt');
+  keylogger.startLogging();
+});
+
+ipcMain.on('stop-recording', async (event) => {
+  if (keylogger) {
+    const logContent = keylogger.stopLogging();
+    const { filePath } = await dialog.showSaveDialog({
+      buttonLabel: 'Save log',
+      defaultPath: `keylog-${Date.now()}.txt`,
+    });
+  
+    if (filePath) {
+      fs.writeFileSync(filePath, logContent);
+    }
   }
 });
