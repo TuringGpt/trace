@@ -9,13 +9,16 @@ if (require('electron-squirrel-startup')) {
 }
 
 let mainWindow;
+let iconPath = path.join(__dirname, 'assets/icons/icon.icns');
+let preloadPath = path.join(__dirname, 'preload.js');
 const createWindow = () => {
   if (!isDev) {
     mainWindow = new BrowserWindow({
       width: 1200,
       height: 1000,
+      icon: iconPath,
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+        preload: preloadPath
       },
     });   
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
@@ -25,8 +28,9 @@ const createWindow = () => {
       y: 291, // for local devt
       width: 1200,
       height: 1000,
+      icon: iconPath,
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js')
+        preload: preloadPath
       }
     })
     mainWindow.loadFile(path.join(__dirname, 'index.html'));

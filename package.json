@@ -1,9 +1,9 @@
 {
   "name": "trace",
-  "productName": "trace",
+  "productName": "Trace",
   "version": "1.0.0",
-  "description": "My Electron application description",
-  "main": "src/index.js",
+  "description": "Trace: Cross Platform Screen Recorder with clicks and keystrokes",
+  "main": "src/main.js",
   "scripts": {
     "watch": "nodemon --exec electron .",
     "start": "electron-forge start",
