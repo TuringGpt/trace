@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, desktopCapturer } = require('electron');
 const path = require('path');
 require('dotenv').config();
 const isDev = process.env.MODE === 'development'
@@ -13,7 +13,7 @@ const createWindow = () => {
   if (!isDev) {
     mainWindow = new BrowserWindow({
       width: 1200,
-      height: 800,
+      height: 1000,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
       },
@@ -24,7 +24,7 @@ const createWindow = () => {
       x: 2560, // for local devt
       y: 291, // for local devt
       width: 1200,
-      height: 800,
+      height: 1000,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js')
       }
@@ -36,8 +36,7 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   createWindow()
-	console.log("APPLICATION_STARTUP: application started successfully")
-  ipcMain.handle('ping', () => 'pong')
+	console.log("SUCCESS : MAIN : APPLICATION_STARTUP : application started successfully")
 });
 
 app.on('window-all-closed', () => {
@@ -49,5 +48,28 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  }
+});
+
+ipcMain.handle('context-menu', async (event, sources) => {
+  try {
+    const template = JSON.parse(sources).map((item) => ({
+      label: item.name.length > 30 ? item.name.slice(0, 30) + '...' : item.name,
+      click: () => mainWindow.webContents.send('select-source', item)
+    }));
+    const contextMenu = Menu.buildFromTemplate(template);
+    contextMenu.popup();
+  } catch (error) {
+    console.log("ERROR : MAIN : context-menu > ", error);
+    throw error;
+  }
+});
+
+ipcMain.handle('get-video-sources', async () => {
+  try {
+    return await desktopCapturer.getSources({ types: ['screen'] });
+  } catch (error) {
+    console.log("ERROR : MAIN : get-video-sources > ", error);
+    throw error;
   }
 });
