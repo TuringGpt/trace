@@ -9,7 +9,8 @@ if (require('electron-squirrel-startup')) {
 }
 
 let mainWindow;
-let iconPath = path.join(__dirname, 'assets/icons/icon.icns');
+const iconExtension = process.platform === 'win32' ? 'ico' : (process.platform === 'darwin' ? 'icns' : 'png');
+let iconPath = path.join(__dirname, `assets/icons/icon.${iconExtension}`);
 let preloadPath = path.join(__dirname, 'preload.js');
 const createWindow = () => {
   if (!isDev) {

@@ -4,6 +4,7 @@ module.exports = {
   packagerConfig: {
     asar: true,
     icon: `src/assets/icons/icon.${iconExtension}`,
+    executableName: 'trace'
   },
   rebuildConfig: {},
   makers: [
