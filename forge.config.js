@@ -1,7 +1,9 @@
+const iconExtension = process.platform === 'win32' ? 'ico' : (process.platform === 'darwin' ? 'icns' : 'png');
+
 module.exports = {
   packagerConfig: {
     asar: true,
-    icon: 'src/assets/icons/icon.icns',
+    icon: `src/assets/icons/icon.${iconExtension}`,
   },
   rebuildConfig: {},
   makers: [
