@@ -1,3 +1,5 @@
+// src/renderer.js
+
 const startButton = document.getElementById('startButton')
 const stopButton = document.getElementById('stopButton')
 const videoSelectBtn = document.getElementById('videoSelectBtn')
@@ -63,6 +65,25 @@ window.electronAPI.selectSource(async (event, value) => {
 
 let mediaRecorder;
 let recordedChunks = [];
+let recordingStartTime;
+let intervalId;
+
+function formatTime(time) {
+  return time.toString().padStart(2, '0');
+}
+
+function updateRecordingTime() {
+  const elapsedTime = Date.now() - recordingStartTime;
+  const seconds = Math.floor((elapsedTime / 1000) % 60);
+  const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+  const hours = Math.floor((elapsedTime / (1000 * 60 * 60)));
+
+  const hoursStr = formatTime(hours);
+  const minutesStr = formatTime(minutes);
+  const secondsStr = formatTime(seconds);
+
+  document.getElementById('recordingTime').textContent = `${hoursStr}:${minutesStr}:${secondsStr}`;
+}
 
 const recordVideo = async () => {
   const videoElement = document.querySelector('video');
@@ -83,6 +104,9 @@ const recordVideo = async () => {
   };
 
   mediaRecorder.onstop = async () => {
+    clearInterval(intervalId);
+    document.getElementById('recordingTime').textContent = '00:00:00';
+    document.querySelector('.recording-dot').classList.remove('is-recording');  
     electronAPI.stopKeystrokesLogging();
     console.log('mediaRecorder stopped');
     const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=vp9' });
@@ -96,7 +120,10 @@ const recordVideo = async () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-
+  
+  recordingStartTime = Date.now();
+  intervalId = setInterval(updateRecordingTime, 1000);
+  document.querySelector('.recording-dot').classList.add('is-recording');
   electronAPI.startKeystrokesLogging();
   mediaRecorder.start();
 };

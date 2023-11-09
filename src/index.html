@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>Trace</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="styles.css" rel="stylesheet">
   </head>
   <body class="bg-slate-900 text-white">
     <div class="flex justify-center">
@@ -19,15 +20,20 @@
       </button>
     </div>
  
-    <div class="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-400px)]">
+    <div class="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-450px)]">
       <video id="videoElement" class="hidden"></video>
-      <div id="videoPlaceholder" class="flex items-center justify-center py-20 w-full text-2xl text-green-600">
+      <div id="videoPlaceholder" class="flex items-center justify-center py-20 w-full text-2xl text-indigo-600">
         Please select a source to proceed.
       </div>
-    </div>    
+    </div>
 
+    <div class="flex justify-center space-x-2">
+      <div class="recording-dot"></div>
+      <span id="recordingTime" class="text-2xl">00:00:00</span>
+    </div>
+    
     <div class="flex justify-center">
-      <button type="button" id="startButton" class="bg-blue-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Start</button>
+      <button type="button" id="startButton" class="bg-indigo-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Start</button>
       <button type="text" id="stopButton" class="bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Stop</button>
     </div>
     <script type="text/javascript" src="renderer.js"></script>

@@ -1,3 +1,5 @@
+// src/keylogger.js
+
 const { uIOhook } = require('uiohook-napi');
 
 class Keylogger {
@@ -6,13 +8,35 @@ class Keylogger {
     this.logEntries = [];
     this.startTime = Date.now();
     this.lastMouseLogTime = 0;
-    this.mouseLogInterval = 100;
+    this.mouseLogInterval = 1000;
   }
 
   startLogging() {
     if (this.isLogging) return;
     this.isLogging = true;
-    
+  
+    // Throttle mousemove event to fire only once per interval
+    const throttle = (func, limit) => {
+      let lastFunc;
+      let lastRan;
+      return function() {
+        const context = this;
+        const args = arguments;
+        if (!lastRan) {
+          func.apply(context, args);
+          lastRan = Date.now();
+        } else {
+          clearTimeout(lastFunc);
+          lastFunc = setTimeout(function() {
+            if ((Date.now() - lastRan) >= limit) {
+              func.apply(context, args);
+              lastRan = Date.now();
+            }
+          }, limit - (Date.now() - lastRan));
+        }
+      }
+    };
+  
     uIOhook.on('keydown', (e) => {
       const timestamp = this.getFormattedTime();
       this.logEntries.push(`${timestamp}: Keycode ${e.keycode}`);
@@ -25,17 +49,17 @@ class Keylogger {
       const timestamp = this.getFormattedTime();
       this.logEntries.push(`${timestamp}: Mouse button ${e.button} up`);
     });
-    uIOhook.on('mousemove', (e) => {
-      const now = Date.now();
-      if (now - this.lastMouseLogTime > this.mouseLogInterval) {
-        const timestamp = this.getFormattedTime();
-        this.logEntries.push(`${timestamp}: Mouse moved to x:${e.x}, y:${e.y}`);
-        this.lastMouseLogTime = now;
-      }
-    });
+  
+    const throttledMouseMove = throttle((e) => {
+      const timestamp = this.getFormattedTime();
+      this.logEntries.push(`${timestamp}: Mouse moved to x:${e.x}, y:${e.y}`);
+    }, this.mouseLogInterval);
+  
+    uIOhook.on('mousemove', throttledMouseMove);
   
     uIOhook.start();
   }
+  
 
   getFormattedTime() {
     const time = Date.now() - this.startTime;

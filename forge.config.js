@@ -1,3 +1,5 @@
+// forge.config.js
+
 const iconExtension = process.platform === 'win32' ? 'ico' : (process.platform === 'darwin' ? 'icns' : 'png');
 const path = require('path')
 const fs = require('node:fs/promises');

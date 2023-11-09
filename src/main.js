@@ -1,3 +1,5 @@
+// src/main.js
+
 const { app, BrowserWindow, ipcMain, Menu, desktopCapturer, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
