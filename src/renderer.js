@@ -107,14 +107,14 @@ const recordVideo = async () => {
     clearInterval(intervalId);
     document.getElementById('recordingTime').textContent = '00:00:00';
     document.querySelector('.recording-dot').classList.remove('is-recording');  
-    electronAPI.stopKeystrokesLogging();
+    const { filePath, timestamp } = await electronAPI.stopKeystrokesLogging();
     console.log('mediaRecorder stopped');
     const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=vp9' });
     recordedChunks = [];
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `recorded-video-${Date.now()}.webm`;
+    a.download = `${timestamp}-video.webm`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

@@ -89,11 +89,11 @@ ipcMain.on('start-recording', () => {
   keylogger.startLogging();
 });
 
-ipcMain.on('stop-recording', async (event) => {
+ipcMain.handle('stop-recording', async (event) => {
   if (keylogger) {
     const logContent = keylogger.stopLogging();
     const downloadsPath = app.getPath('downloads');
-    const defaultPath = `${downloadsPath}/keylog-${Date.now()}.txt`;
+    const defaultPath = `${downloadsPath}/${keylogger.startTime}-keystrokes.txt`;
     const { filePath } = await dialog.showSaveDialog({
       buttonLabel: 'Save log',
       defaultPath: defaultPath,
@@ -102,5 +102,6 @@ ipcMain.on('stop-recording', async (event) => {
     if (filePath) {
       fs.writeFileSync(filePath, logContent);
     }
+    return { filePath, timestamp: keylogger.startTime };
   }
 });
