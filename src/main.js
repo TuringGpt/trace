@@ -102,6 +102,30 @@ ipcMain.handle('stop-recording', async (event) => {
     if (filePath) {
       fs.writeFileSync(filePath, logContent);
     }
-    return { filePath, timestamp: keylogger.startTime };
+    const directoryPath = path.dirname(filePath);
+    return { directoryPath, timestamp: keylogger.startTime };
   }
+});
+
+ipcMain.handle('save-file', async (event, uint8Array, directoryPath, fileName) => {
+  try {
+      const buffer = Buffer.from(uint8Array);
+
+      const defaultPath = path.join(directoryPath, fileName);
+      let filePath = await dialog.showSaveDialog({
+          title: 'Save Recorded Video',
+          defaultPath: defaultPath || path.join(app.getPath('videos'), fileName),
+          filters: [{ name: 'WebM', extensions: ['webm'] }]
+      });
+
+      if (!filePath.canceled && filePath.filePath) {
+          fs.writeFileSync(filePath.filePath, buffer);
+          return filePath.filePath;
+        } else {
+          return null;
+        }
+      } catch (error) {
+        console.error('Failed to save the file', error);
+        return null;
+      }
 });

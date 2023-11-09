@@ -107,18 +107,19 @@ const recordVideo = async () => {
     clearInterval(intervalId);
     document.getElementById('recordingTime').textContent = '00:00:00';
     document.querySelector('.recording-dot').classList.remove('is-recording');  
-    const { filePath, timestamp } = await electronAPI.stopKeystrokesLogging();
+
     console.log('mediaRecorder stopped');
     const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=vp9' });
+    const arrayBuffer = await blob.arrayBuffer();
+
+    const { directoryPath, timestamp } = await electronAPI.stopKeystrokesLogging();
+    console.log('keylogging file saved to ', directoryPath);
+    const fileName = `${timestamp}-video.webm`;
+
+    const videoFilePath = await electronAPI.saveFile(new Uint8Array(arrayBuffer), directoryPath, fileName);
+    console.log('keylogging file saved to ', videoFilePath);
+
     recordedChunks = [];
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${timestamp}-video.webm`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
   
   recordingStartTime = Date.now();
