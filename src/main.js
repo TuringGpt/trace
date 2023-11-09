@@ -90,9 +90,11 @@ ipcMain.on('start-recording', () => {
 ipcMain.on('stop-recording', async (event) => {
   if (keylogger) {
     const logContent = keylogger.stopLogging();
+    const downloadsPath = app.getPath('downloads');
+    const defaultPath = `${downloadsPath}/keylog-${Date.now()}.txt`;
     const { filePath } = await dialog.showSaveDialog({
       buttonLabel: 'Save log',
-      defaultPath: `keylog-${Date.now()}.txt`,
+      defaultPath: defaultPath,
     });
   
     if (filePath) {
