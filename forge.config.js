@@ -1,4 +1,6 @@
 const iconExtension = process.platform === 'win32' ? 'ico' : (process.platform === 'darwin' ? 'icns' : 'png');
+const path = require('path')
+const fs = require('node:fs/promises');
 
 module.exports = {
   packagerConfig: {
@@ -31,4 +33,16 @@ module.exports = {
       config: {},
     },
   ],
+  hooks: {
+     packageAfterPrune: async (_config, buildPath) => {
+       const gypPath = path.join(
+         buildPath,
+         'node_modules',
+         'uiohook-napi',
+         'build',
+         'node_gyp_bins'
+       );
+       await fs.rm(gypPath, {recursive: true, force: true});
+    }
+  }
 };
