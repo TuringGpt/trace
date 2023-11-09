@@ -30,7 +30,8 @@ After downloading the correct file for your operating system, run the installer 
 2. Click on the "Choose a Video Source" button to select your video source.
 3. Once the video source is selected, the "Start" button will be enabled.
 4. Click "Start" to begin recording your screen.
-5. Click "Stop" to end the recording. Your video will be saved automatically.
+5. Click "Stop" to end the recording. You will be prompted to choose a location to save your video file.
+6. After saving the video, you will also be asked to save the keystroke log file for your session.
 
 ## Contributing
 
