@@ -1,3 +1,7 @@
+const startButton = document.getElementById('startButton')
+const stopButton = document.getElementById('stopButton')
+const videoSelectBtn = document.getElementById('videoSelectBtn')
+
 async function openContextMenu(sources) {
   try {
     await window.electronAPI.invokeContextMenu(JSON.stringify(sources));
@@ -16,7 +20,6 @@ async function fetchVideoSources() {
   }
 }
 
-const videoSelectBtn = document.getElementById('videoSelectBtn')
 videoSelectBtn.addEventListener('click', async () => {
   const sources = await fetchVideoSources();
   console.log("SUCCESS : RENDERER : getVideoSources > ", JSON.stringify(sources));
@@ -25,7 +28,6 @@ videoSelectBtn.addEventListener('click', async () => {
 
 const playVideo = async (source) => {
   try {
-    const videoSelectBtn = document.getElementById('videoSelectBtn')
     videoSelectBtn.textContent = source.name
     
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -56,6 +58,7 @@ window.electronAPI.selectSource(async (event, value) => {
   console.log("SUCCESS : RENDERER : selectSource callback : selected source > ", source);
   await playVideo(source);
   console.log("SUCCESS : RENDERER : playVideo > ", source);
+  enableButton(startButton);
 })
 
 let mediaRecorder;
@@ -98,24 +101,34 @@ const recordVideo = async () => {
   mediaRecorder.start();
 };
 
-const startButton = document.getElementById('startButton')
 startButton.addEventListener('click', async () => {
   console.log("SUCCESS : RENDERER : startButton > clicked");
   const stopButton = document.querySelector('#stopButton')
-  stopButton.disabled = false
-  startButton.disabled = true
+  enableButton(stopButton)
+  disableButton(startButton)
+  disableButton(videoSelectBtn);
   await recordVideo()
 })
 
-const stopButton = document.getElementById('stopButton')
 stopButton.addEventListener('click', async () => {
   console.log("SUCCESS : RENDERER : stopButton > clicked");
   const stopButton = document.querySelector('#stopButton')
-  stopButton.disabled = true
-  startButton.disabled = false
+  enableButton(startButton)
+  enableButton(videoSelectBtn);
+  disableButton(stopButton)
 
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.stop();
     console.log("Recording stopped");
   }
 })
+
+function disableButton(button) {
+  button.disabled = true;
+  button.classList.add('opacity-50', 'cursor-not-allowed');
+}
+
+function enableButton(button) {
+  button.disabled = false;
+  button.classList.remove('opacity-50', 'cursor-not-allowed');
+}

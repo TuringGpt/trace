@@ -11,7 +11,7 @@
       <h1 class="text-5xl mt-16 mb-8 font-sans inline-block font-bold text-center"> Trace</h1>
     </div>
 
-    <p class="text-center">Screen Recorder with clicks and keystrokes</p>
+    <p class="text-center text-xl">Screen Recorder with clicks and keystrokes</p>
  
     <div class="flex justify-center">
       <button id="videoSelectBtn" class="bg-slate-600 m-6 mb-0 rounded-full px-4 py-2 text-white">
@@ -21,14 +21,14 @@
  
     <div class="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-400px)]">
       <video id="videoElement" class="hidden"></video>
-      <div id="videoPlaceholder" class="flex items-center justify-center w-full text-3xl text-green-600">
+      <div id="videoPlaceholder" class="flex items-center justify-center py-20 w-full text-2xl text-green-600">
         Please select a source to proceed.
       </div>
     </div>    
 
     <div class="flex justify-center">
-      <button type="button" id="startButton" class="bg-blue-600 m-6 mb-0 rounded-md px-4 py-4 text-white" disabled>Start</button>
-      <button type="text" id="stopButton" class="bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white" disabled>Stop</button>
+      <button type="button" id="startButton" class="bg-blue-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Start</button>
+      <button type="text" id="stopButton" class="bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Stop</button>
     </div>
     <script type="text/javascript" src="renderer.js"></script>
   </body>
