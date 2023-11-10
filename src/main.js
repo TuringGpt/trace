@@ -1,6 +1,7 @@
 // src/main.js
 
 const { app, BrowserWindow, ipcMain, Menu, desktopCapturer, dialog } = require('electron');
+const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
@@ -8,7 +9,6 @@ const Keylogger = require('./keylogger.js');
 let keylogger;
 const isDev = process.env.MODE === 'development'
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
@@ -30,8 +30,8 @@ const createWindow = () => {
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
   } else {
     mainWindow = new BrowserWindow({
-      x: 2560, // for local devt
-      y: 291, // for local devt
+      x: 2560,
+      y: 291,
       width: 1200,
       height: 1000,
       icon: iconPath,
@@ -107,25 +107,55 @@ ipcMain.handle('stop-recording', async (event) => {
   }
 });
 
+function remuxVideo(inputPath, outputPath) {
+    return new Promise((resolve, reject) => {
+        ffmpeg(inputPath)
+            .output(outputPath)
+            .videoCodec('copy')
+            .audioCodec('copy')
+            .format('webm')
+            .on('end', () => {
+                console.log('Video remuxing completed.');
+                resolve();
+            })
+            .on('error', (err) => {
+                console.error('Error:', err);
+                reject(err);
+            })
+            .run();
+    });
+}
+
 ipcMain.handle('save-file', async (event, uint8Array, directoryPath, fileName) => {
-  try {
-      const buffer = Buffer.from(uint8Array);
+    try {
+        const buffer = Buffer.from(uint8Array);
+        const tempInputPath = path.join(directoryPath, 'temp-input-' + fileName);
+        const tempOutputPath = path.join(directoryPath, 'temp-output-' + fileName);
+        fs.writeFileSync(tempInputPath, buffer);
 
-      const defaultPath = path.join(directoryPath, fileName);
-      let filePath = await dialog.showSaveDialog({
-          title: 'Save Recorded Video',
-          defaultPath: defaultPath || path.join(app.getPath('videos'), fileName),
-          filters: [{ name: 'WebM', extensions: ['webm'] }]
-      });
+        await remuxVideo(tempInputPath, tempOutputPath);
+        fs.unlinkSync(tempInputPath);
 
-      if (!filePath.canceled && filePath.filePath) {
-          fs.writeFileSync(filePath.filePath, buffer);
-          return filePath.filePath;
+        const defaultPath = path.join(directoryPath, fileName);
+        let filePath = await dialog.showSaveDialog({
+            title: 'Save Recorded Video',
+            defaultPath: defaultPath || path.join(app.getPath('videos'), fileName),
+            filters: [{ name: 'WebM', extensions: ['webm'] }]
+        });
+
+        if (!filePath.canceled && filePath.filePath) {
+            fs.renameSync(tempOutputPath, filePath.filePath);
+            return filePath.filePath;
         } else {
-          return null;
+            fs.unlinkSync(tempOutputPath);
+            return null;
         }
-      } catch (error) {
+    } catch (error) {
         console.error('Failed to save the file', error);
+        fs.unlinkSync(tempInputPath);
+        if (fs.existsSync(tempOutputPath)) {
+            fs.unlinkSync(tempOutputPath);
+        }
         return null;
-      }
+    }
 });

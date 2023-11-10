@@ -21,6 +21,7 @@
   "dependencies": {
     "dotenv": "^16.3.1",
     "electron-squirrel-startup": "^1.0.0",
+    "fluent-ffmpeg": "^2.1.2",
     "uiohook-napi": "^1.5.2"
   },
   "devDependencies": {
