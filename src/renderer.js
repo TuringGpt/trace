@@ -94,7 +94,10 @@ const recordVideo = async () => {
     return;
   }
 
-  const options = { mimeType: 'video/webm; codecs=vp9' };
+  const options = {
+    mimeType: 'video/webm; codecs=vp9',
+    bitsPerSecond: 113778 // calculated for 1 hour recording to be under 100MB.
+  };
   mediaRecorder = new MediaRecorder(stream, options);
 
   mediaRecorder.ondataavailable = event => {
