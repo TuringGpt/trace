@@ -116,11 +116,11 @@ const recordVideo = async () => {
     const arrayBuffer = await blob.arrayBuffer();
 
     const { directoryPath, timestamp } = await electronAPI.stopKeystrokesLogging();
-    console.log('keylogging file saved to ', directoryPath);
+    console.log('keylogging file save : ', directoryPath);
     const fileName = `${timestamp}-video.webm`;
 
     const videoFilePath = await electronAPI.saveFile(new Uint8Array(arrayBuffer), directoryPath, fileName);
-    console.log('keylogging file saved to ', videoFilePath);
+    console.log('video file save : ', videoFilePath);
 
     recordedChunks = [];
   };

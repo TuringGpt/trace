@@ -13,6 +13,15 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+const logToFile = (message, error) => {
+  const logFilePath = path.join(app.getPath('userData'), 'app.log');
+  const timestamp = new Date().toISOString();
+  const logMessage = `${timestamp} - ${message}\n`;
+  fs.appendFileSync(logFilePath, logMessage);
+  if (error)
+    fs.appendFileSync(logFilePath, error);
+};
+
 let mainWindow;
 const iconExtension = process.platform === 'win32' ? 'ico' : (process.platform === 'darwin' ? 'icns' : 'png');
 let iconPath = path.join(__dirname, `assets/icons/icon.${iconExtension}`);
@@ -46,7 +55,7 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   createWindow()
-	console.log("SUCCESS : MAIN : APPLICATION_STARTUP : application started successfully")
+	logToFile("SUCCESS : MAIN : APPLICATION_STARTUP : application started successfully")
 });
 
 app.on('window-all-closed', () => {
@@ -70,7 +79,7 @@ ipcMain.handle('context-menu', async (event, sources) => {
     const contextMenu = Menu.buildFromTemplate(template);
     contextMenu.popup();
   } catch (error) {
-    console.log("ERROR : MAIN : context-menu > ", error);
+    logToFile("ERROR : MAIN : context-menu > ", error);
     throw error;
   }
 });
@@ -79,7 +88,7 @@ ipcMain.handle('get-video-sources', async () => {
   try {
     return await desktopCapturer.getSources({ types: ['screen'] });
   } catch (error) {
-    console.log("ERROR : MAIN : get-video-sources > ", error);
+    logToFile("ERROR : MAIN : get-video-sources > ", error);
     throw error;
   }
 });
@@ -115,22 +124,24 @@ function remuxVideo(inputPath, outputPath) {
             .audioCodec('copy')
             .format('webm')
             .on('end', () => {
-                console.log('Video remuxing completed.');
+                logToFile('Video remuxing completed.');
                 resolve();
             })
             .on('error', (err) => {
-                console.error('Error:', err);
-                reject(err);
-            })
+              logToFile(`FFmpeg Error: ${err.message}`);
+              if (err.stack) logToFile(`FFmpeg Stack: ${err.stack}`);
+              reject(err);
+          })
             .run();
     });
 }
 
 ipcMain.handle('save-file', async (event, uint8Array, directoryPath, fileName) => {
+    let tempInputPath, tempOutputPath;
     try {
         const buffer = Buffer.from(uint8Array);
-        const tempInputPath = path.join(directoryPath, 'temp-input-' + fileName);
-        const tempOutputPath = path.join(directoryPath, 'temp-output-' + fileName);
+        tempInputPath = path.join(directoryPath, 'temp-input-' + fileName);
+        tempOutputPath = path.join(directoryPath, 'temp-output-' + fileName);
         fs.writeFileSync(tempInputPath, buffer);
 
         await remuxVideo(tempInputPath, tempOutputPath);
@@ -151,11 +162,13 @@ ipcMain.handle('save-file', async (event, uint8Array, directoryPath, fileName) =
             return null;
         }
     } catch (error) {
-        console.error('Failed to save the file', error);
-        fs.unlinkSync(tempInputPath);
+        logToFile(`Failed to save the file, Error: ${JSON.stringify(error) || error}`);
+        if (fs.existsSync(tempInputPath)) {
+            fs.unlinkSync(tempInputPath);
+        }
         if (fs.existsSync(tempOutputPath)) {
             fs.unlinkSync(tempOutputPath);
         }
-        return null;
+        return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
     }
 });

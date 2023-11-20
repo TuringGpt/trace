@@ -2,40 +2,32 @@
 
 const { uIOhook } = require('uiohook-napi');
 
+function throttle(callback, limit) {
+  let waiting = false;
+  return function() {
+    if (!waiting) {
+      callback.apply(this, arguments);
+      waiting = true;
+      setTimeout(function() {
+        waiting = false;
+      }, limit);
+    }
+  };
+}
+
 class Keylogger {
   constructor() {
     this.isLogging = false;
     this.logEntries = [];
     this.startTime = Date.now();
     this.lastMouseLogTime = 0;
-    this.mouseLogInterval = 1000;
+    this.mouseLogInterval = 50;
+    this.scrollLogInterval = 50;
   }
 
   startLogging() {
     if (this.isLogging) return;
     this.isLogging = true;
-  
-    // Throttle mousemove event to fire only once per interval
-    const throttle = (func, limit) => {
-      let lastFunc;
-      let lastRan;
-      return function() {
-        const context = this;
-        const args = arguments;
-        if (!lastRan) {
-          func.apply(context, args);
-          lastRan = Date.now();
-        } else {
-          clearTimeout(lastFunc);
-          lastFunc = setTimeout(function() {
-            if ((Date.now() - lastRan) >= limit) {
-              func.apply(context, args);
-              lastRan = Date.now();
-            }
-          }, limit - (Date.now() - lastRan));
-        }
-      }
-    };
   
     uIOhook.on('keydown', (e) => {
       const timestamp = this.getFormattedTime();
@@ -49,10 +41,19 @@ class Keylogger {
   
     const throttledMouseMove = throttle((e) => {
       const timestamp = this.getFormattedTime();
-      this.logEntries.push(`${timestamp}: Mouse moved to x:${e.x}, y:${e.y}`);
+      this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
     }, this.mouseLogInterval);
   
     uIOhook.on('mousemove', throttledMouseMove);
+
+    const logScroll = throttle((e) => {
+      const timestamp = this.getFormattedTime();
+      const axis = e.direction == 3 ? 'Vertical' : 'Horizontal';
+      const direction = axis == 'Vertical' ? (e.rotation > 0 ? 'UP' : 'DOWN') : (e.rotation > 0 ? 'LEFT' : 'RIGHT');
+      this.logEntries.push(`${timestamp}: Scrolled ${axis}, Direction: ${direction}, Intensity: ${e.rotation < 0 ? e.rotation * -1 : e.rotation}`);
+    }, this.scrollLogInterval);
+
+    uIOhook.on('wheel', logScroll);
   
     uIOhook.start();
   }
