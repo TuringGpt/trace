@@ -40,11 +40,20 @@
     </div>
 
     <div id="loadingOverlay" class="hidden">
-      <div class="flex justify-center mt-16">
-        <div class="p-1 bg-gradient-to-tr animate-spin from-white to-indigo-600 via-indigo-600 rounded-full">
-            <div class="bg-slate-900 rounded-full">
-                <div class="w-12 h-12 rounded-full"></div>
-            </div>
+      <div class="relative">
+        <div class="flex justify-center mt-16">
+          <div class="p-1 bg-gradient-to-tr animate-spin from-white to-indigo-600 via-indigo-600 rounded-full">
+              <div class="bg-slate-900 rounded-full">
+                  <div class="w-12 h-12 rounded-full"></div>
+              </div>
+          </div>
+        </div>
+        <div class="absolute top-[20%] left-[calc(50%-1rem)]">
+          <div class="p-1 bg-gradient-to-tr animate-spin from-white to-indigo-600 via-indigo-600 rounded-full">
+              <div class="bg-slate-900 rounded-full">
+                  <div class="w-6 h-6 rounded-full"></div>
+              </div>
+          </div>
         </div>
       </div>
       <h1 class="text-xl mt-16 mb-8 flex justify-center font-sans inline-block text-center">Video conversion in progress... <br>This may take several minutes.</h1>
