@@ -93,26 +93,31 @@ ipcMain.handle('get-video-sources', async () => {
   }
 });
 
-ipcMain.on('start-recording', () => {
+ipcMain.on('start-keystrokes-logging', () => {
   keylogger = new Keylogger('/Users/suraj/Downloads/key-logs.txt');
   keylogger.startLogging();
 });
 
-ipcMain.handle('stop-recording', async (event) => {
+ipcMain.handle('stop-keystrokes-logging', async (event) => {
   if (keylogger) {
     const logContent = keylogger.stopLogging();
+    return { logContent, keyLogFileName: `${keylogger.startTime}-keystrokes.txt` };
+  }
+});
+
+ipcMain.handle('save-keystrokes-file', async (event, logContent) => {
+  if (keylogger) {
     const downloadsPath = app.getPath('downloads');
     const defaultPath = `${downloadsPath}/${keylogger.startTime}-keystrokes.txt`;
     const { filePath } = await dialog.showSaveDialog({
       buttonLabel: 'Save log',
       defaultPath: defaultPath,
     });
-  
     if (filePath) {
       fs.writeFileSync(filePath, logContent);
     }
     const directoryPath = path.dirname(filePath);
-    return { directoryPath, timestamp: keylogger.startTime };
+    return { directoryPath };
   }
 });
 
@@ -136,39 +141,67 @@ function remuxVideo(inputPath, outputPath) {
     });
 }
 
-ipcMain.handle('save-file', async (event, uint8Array, directoryPath, fileName) => {
-    let tempInputPath, tempOutputPath;
+ipcMain.handle('remux-video-file', async (event, uint8Array) => {
+  let tempInputPath, tempOutputPath;
     try {
-        const buffer = Buffer.from(uint8Array);
-        tempInputPath = path.join(directoryPath, 'temp-input-' + fileName);
-        tempOutputPath = path.join(directoryPath, 'temp-output-' + fileName);
-        fs.writeFileSync(tempInputPath, buffer);
+      const buffer = Buffer.from(uint8Array);
+      const downloadsPath = app.getPath('downloads');
+      tempInputPath = `${downloadsPath}/temp-input-${keylogger.startTime}-video.webm`;
+      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`;
+      fs.writeFileSync(tempInputPath, buffer);
 
-        await remuxVideo(tempInputPath, tempOutputPath);
-        fs.unlinkSync(tempInputPath);
-
-        const defaultPath = path.join(directoryPath, fileName);
-        let filePath = await dialog.showSaveDialog({
-            title: 'Save Recorded Video',
-            defaultPath: defaultPath || path.join(app.getPath('videos'), fileName),
-            filters: [{ name: 'WebM', extensions: ['webm'] }]
-        });
-
-        if (!filePath.canceled && filePath.filePath) {
-            fs.renameSync(tempOutputPath, filePath.filePath);
-            return filePath.filePath;
-        } else {
-            fs.unlinkSync(tempOutputPath);
-            return null;
-        }
+      await remuxVideo(tempInputPath, tempOutputPath);
+      fs.unlinkSync(tempInputPath);
+      return { videoFileName: `${keylogger.startTime}-video.webm` };
     } catch (error) {
-        logToFile(`Failed to save the file, Error: ${JSON.stringify(error) || error}`);
-        if (fs.existsSync(tempInputPath)) {
-            fs.unlinkSync(tempInputPath);
-        }
-        if (fs.existsSync(tempOutputPath)) {
-            fs.unlinkSync(tempOutputPath);
-        }
-        return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
+      logToFile(`Failed to remux the file, Error: ${JSON.stringify(error) || error}`);
+      if (fs.existsSync(tempInputPath)) {
+          fs.unlinkSync(tempInputPath);
+      }
+      if (fs.existsSync(tempOutputPath)) {
+          fs.unlinkSync(tempOutputPath);
+      }
+      return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
+    }
+})
+
+ipcMain.handle('save-video-file', async () => {
+    const downloadsPath = app.getPath('downloads');
+    const tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`
+    try {
+      const defaultPath = `${downloadsPath}/${keylogger.startTime}-video.webm`;
+      let filePath = await dialog.showSaveDialog({
+        title: 'Save Recorded Video',
+        defaultPath: defaultPath,
+        filters: [{ name: 'WebM', extensions: ['webm'] }]
+      });
+
+      if (!filePath.canceled && filePath.filePath) {
+        fs.renameSync(tempOutputPath, filePath.filePath);
+        return filePath.filePath;
+      } else {
+        fs.unlinkSync(tempOutputPath);
+        return null;
+      }
+    } catch (error) {
+      logToFile(`Failed to save the video file, Error: ${JSON.stringify(error) || error}`);
+      if (fs.existsSync(tempOutputPath)) {
+        fs.unlinkSync(tempOutputPath);
+      }
+      return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
+    }
+});
+
+ipcMain.handle('discard-video-file', async () => {
+    const downloadsPath = app.getPath('downloads');
+    const tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`
+    try {
+      if (fs.existsSync(tempOutputPath)) {
+        fs.unlinkSync(tempOutputPath);
+        logToFile('Video file discarded.', tempOutputPath);
+      }
+    } catch (error) {
+      logToFile(`Failed to discard the video file, Error: ${JSON.stringify(error) || error}`);
+      return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
     }
 });

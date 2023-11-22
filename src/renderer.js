@@ -112,15 +112,15 @@ const recordVideo = async () => {
     document.querySelector('.recording-dot').classList.remove('is-recording');  
 
     console.log('mediaRecorder stopped');
+    show('loadingOverlay');
+    hide('main');
     const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=vp9' });
     const arrayBuffer = await blob.arrayBuffer();
+    const { logContent, keyLogFileName } = await electronAPI.stopKeystrokesLogging();
+    const { videoFileName } = await electronAPI.remuxVideoFile(new Uint8Array(arrayBuffer));
+    hide('loadingOverlay');
 
-    const { directoryPath, timestamp } = await electronAPI.stopKeystrokesLogging();
-    console.log('keylogging file save : ', directoryPath);
-    const fileName = `${timestamp}-video.webm`;
-
-    const videoFilePath = await electronAPI.saveFile(new Uint8Array(arrayBuffer), directoryPath, fileName);
-    console.log('video file save : ', videoFilePath);
+    displayFileOptions(logContent, videoFileName, keyLogFileName);
 
     recordedChunks = [];
   };
@@ -141,6 +141,14 @@ startButton.addEventListener('click', async () => {
   await recordVideo()
 })
 
+function show (e) {
+  document.getElementById(e).classList.remove('hidden');
+}
+
+function hide (e) {
+  document.getElementById(e).classList.add('hidden');
+}
+
 stopButton.addEventListener('click', async () => {
   console.log("SUCCESS : RENDERER : stopButton > clicked");
   const stopButton = document.querySelector('#stopButton')
@@ -151,8 +159,6 @@ stopButton.addEventListener('click', async () => {
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.stop();
     console.log("Recording stopped");
-    document.getElementById('loadingOverlay').classList.remove('hidden');
-    document.getElementById('main').classList.add('hidden');
   }
 })
 
@@ -164,4 +170,76 @@ function disableButton(button) {
 function enableButton(button) {
   button.disabled = false;
   button.classList.remove('opacity-50', 'cursor-not-allowed');
+}
+
+let videoFileProcessed = false;
+let logFileProcessed = false;
+
+function checkFilesProcessed() {
+  if (videoFileProcessed && logFileProcessed) {
+    hide('fileOptions');
+    show('main');
+    videoFileProcessed = false;
+    logFileProcessed = false;
+  }
+}
+
+function displayFileOptions(logContent, videoFileName, keyLogFileName) {
+  const fileOptionsDiv = document.getElementById('fileOptions');
+  fileOptionsDiv.innerHTML = `
+    <div class="flex flex-col justify-center items-center">
+      <div class="flex items-center justify-between w-full max-w-xl rounded-lg border-[1px] border-indigo-600 m-4 mt-12 p-4">
+        <span class="text-l ml-3">${videoFileName}</span>
+        <div class="flex items-center">
+          <button id="saveVideoBtn" class="bg-indigo-600 rounded-md px-4 py-3 text-white mx-3">Save</button>
+          <button id="discardVideoBtn" class="bg-red-600 rounded-md px-4 py-3 text-white mx-3">Discard</button>
+        </div>
+      </div>
+      <div class="flex items-center justify-between w-full max-w-xl rounded-lg border-[1px] border-indigo-600 m-4 p-4">
+        <span class="text-l ml-3">${keyLogFileName}</span>
+        <div class="flex items-center">
+          <button id="saveLogBtn" class="bg-indigo-600 rounded-md px-4 py-3 text-white mx-3">Save</button>
+          <button id="discardLogBtn" class="bg-red-600 rounded-md px-4 py-3 text-white mx-3">Discard</button>
+        </div>
+      </div>
+    </div>
+  `;
+  show('fileOptions');
+
+  document.getElementById('saveVideoBtn').addEventListener('click', () => {
+    if (!videoFileProcessed) {
+      electronAPI.saveVideoFile().then(() => {
+        videoFileProcessed = true;
+        disableButton(document.getElementById('saveVideoBtn'));
+        disableButton(document.getElementById('discardVideoBtn'));
+        checkFilesProcessed();
+      })
+    }
+  });
+  document.getElementById('discardVideoBtn').addEventListener('click', () => {
+    if (!videoFileProcessed) {
+      electronAPI.discardVideoFile().then(() => {
+        videoFileProcessed = true;
+        disableButton(document.getElementById('saveVideoBtn'));
+        disableButton(document.getElementById('discardVideoBtn'));
+        checkFilesProcessed();
+      })
+    }
+  });
+  document.getElementById('saveLogBtn').addEventListener('click', () => {
+    if (!logFileProcessed) {
+      electronAPI.saveKeystrokesFile(logContent).then(() => {
+        logFileProcessed = true;
+        disableButton(document.getElementById('saveLogBtn'));
+        disableButton(document.getElementById('discardLogBtn'));
+        checkFilesProcessed();
+      })
+    }
+  });
+  document.getElementById('discardLogBtn').addEventListener('click', () => {
+    logFileProcessed = true;
+    disableButton(document.getElementById('saveLogBtn'));
+    disableButton(document.getElementById('discardLogBtn'));
+    checkFilesProcessed();
+  })
 }
