@@ -11,6 +11,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveKeystrokesFile: (logContent) => ipcRenderer.invoke('save-keystrokes-file', logContent),
   remuxVideoFile: (uint8Array) => ipcRenderer.invoke('remux-video-file', uint8Array),
   saveVideoFile: () => ipcRenderer.invoke('save-video-file'),
-  discardVideoFile: () => ipcRenderer.invoke('discard-video-file'),
+  discardVideoFile: (filePath) => ipcRenderer.invoke('discard-video-file', filePath),
 })
 

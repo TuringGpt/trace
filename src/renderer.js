@@ -117,10 +117,10 @@ const recordVideo = async () => {
     const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=vp9' });
     const arrayBuffer = await blob.arrayBuffer();
     const { logContent, keyLogFileName } = await electronAPI.stopKeystrokesLogging();
-    const { videoFileName } = await electronAPI.remuxVideoFile(new Uint8Array(arrayBuffer));
+    const { videoFileName, videoFilePath } = await electronAPI.remuxVideoFile(new Uint8Array(arrayBuffer));
     hide('loadingOverlay');
 
-    displayFileOptions(logContent, videoFileName, keyLogFileName);
+    displayFileOptions(logContent, keyLogFileName, videoFileName, videoFilePath);
 
     recordedChunks = [];
   };
@@ -184,7 +184,7 @@ function checkFilesProcessed() {
   }
 }
 
-function displayFileOptions(logContent, videoFileName, keyLogFileName) {
+function displayFileOptions(logContent, keyLogFileName, videoFileName, videoFilePath) {
   const fileOptionsDiv = document.getElementById('fileOptions');
   fileOptionsDiv.innerHTML = `
     <div class="flex flex-col justify-center items-center">
@@ -218,7 +218,7 @@ function displayFileOptions(logContent, videoFileName, keyLogFileName) {
   });
   document.getElementById('discardVideoBtn').addEventListener('click', () => {
     if (!videoFileProcessed) {
-      electronAPI.discardVideoFile().then(() => {
+      electronAPI.discardVideoFile(videoFilePath).then(() => {
         videoFileProcessed = true;
         disableButton(document.getElementById('saveVideoBtn'));
         disableButton(document.getElementById('discardVideoBtn'));

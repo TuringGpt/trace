@@ -7,7 +7,8 @@ const fs = require('fs');
 require('dotenv').config();
 const Keylogger = require('./keylogger.js');
 let keylogger;
-const isDev = process.env.MODE === 'development'
+const isDev = process.env.MODE === 'development';
+const useMp4 = false;
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -123,6 +124,26 @@ ipcMain.handle('save-keystrokes-file', async (event, logContent) => {
   }
 });
 
+function remuxVideo(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+          .output(outputPath)
+          .videoCodec('copy')
+          .audioCodec('copy')
+          .format('webm')
+          .on('end', () => {
+              logToFile('Video remuxing completed.');
+              resolve();
+          })
+          .on('error', (err) => {
+              logToFile(`FFmpeg Error: ${err.message}`);
+              if (err.stack) logToFile(`FFmpeg Stack: ${err.stack}`);
+              reject(err);
+          })
+          .run();
+  });
+}
+
 function convertVideoToMp4(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
       ffmpeg(inputPath)
@@ -153,15 +174,23 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
       const buffer = Buffer.from(uint8Array);
       const downloadsPath = app.getPath('downloads');
       tempInputPath = `${downloadsPath}/temp-input-${keylogger.startTime}-video.webm`;
-      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`;
+      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`;
       fs.writeFileSync(tempInputPath, buffer);
 
+      let videoFileName;
       const startTime = Date.now();
-      await convertVideoToMp4(tempInputPath, tempOutputPath);
+      if (useMp4) {
+        tempOutputPath = tempOutputPath.replace('.webm', '.mp4');
+        await convertVideoToMp4(tempInputPath, tempOutputPath);
+        videoFileName = `${keylogger.startTime}-video.mp4`;
+      } else {
+        await remuxVideo(tempInputPath, tempOutputPath);
+        videoFileName = `${keylogger.startTime}-video.webm`;
+      }
       const timeTakenToConvert = Date.now() - startTime;
       logToFile(`Video conversion took ${timeTakenToConvert/(1000)} seconds.`);
       fs.unlinkSync(tempInputPath);
-      return { videoFileName: `${keylogger.startTime}-video.mp4` };
+      return { videoFileName, videoFilePath: tempOutputPath };
     } catch (error) {
       logToFile(`Failed to remux the file, Error: ${JSON.stringify(error) || error}`);
       if (fs.existsSync(tempInputPath)) {
@@ -175,14 +204,21 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
 })
 
 ipcMain.handle('save-video-file', async () => {
-    const downloadsPath = app.getPath('downloads');
-    const tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`
+    let tempOutputPath;
     try {
-      const defaultPath = `${downloadsPath}/${keylogger.startTime}-video.mp4`;
+      const downloadsPath = app.getPath('downloads');
+      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`;
+      let defaultPath = `${downloadsPath}/${keylogger.startTime}-video.webm`;
+      let filters = [{ name: 'WebM', extensions: ['webm'] }]
+      if (useMp4) {
+        tempOutputPath = tempOutputPath.replace('.webm', '.mp4');
+        defaultPath = defaultPath.replace('.webm', '.mp4');
+        filters = [{ name: 'MP4', extensions: ['mp4'] }]
+      }
       let filePath = await dialog.showSaveDialog({
         title: 'Save Recorded Video',
-        defaultPath: defaultPath,
-        filters: [{ name: 'MP4', extensions: ['mp4'] }]
+        defaultPath,
+        filters
       });
 
       if (!filePath.canceled && filePath.filePath) {
@@ -201,13 +237,11 @@ ipcMain.handle('save-video-file', async () => {
     }
 });
 
-ipcMain.handle('discard-video-file', async () => {
-    const downloadsPath = app.getPath('downloads');
-    const tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`
+ipcMain.handle('discard-video-file', async (e, filePath) => {
     try {
-      if (fs.existsSync(tempOutputPath)) {
-        fs.unlinkSync(tempOutputPath);
-        logToFile('Video file discarded.', tempOutputPath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        logToFile('Video file discarded.', filePath);
       }
     } catch (error) {
       logToFile(`Failed to discard the video file, Error: ${JSON.stringify(error) || error}`);
