@@ -121,24 +121,28 @@ ipcMain.handle('save-keystrokes-file', async (event, logContent) => {
   }
 });
 
-function remuxVideo(inputPath, outputPath) {
-    return new Promise((resolve, reject) => {
-        ffmpeg(inputPath)
-            .output(outputPath)
-            .videoCodec('copy')
-            .audioCodec('copy')
-            .format('webm')
-            .on('end', () => {
-                logToFile('Video remuxing completed.');
-                resolve();
-            })
-            .on('error', (err) => {
+function convertVideoToMp4(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+          .output(outputPath)
+          .withVideoCodec('libx264')
+          .noAudio()
+          .addOptions([
+              '-preset veryfast',
+              '-crf 22'
+          ])
+          .toFormat('mp4')
+          .on('end', () => {
+              logToFile('Video conversion to MP4 completed.');
+              resolve();
+          })
+          .on('error', (err) => {
               logToFile(`FFmpeg Error: ${err.message}`);
               if (err.stack) logToFile(`FFmpeg Stack: ${err.stack}`);
               reject(err);
           })
-            .run();
-    });
+          .run();
+  });
 }
 
 ipcMain.handle('remux-video-file', async (event, uint8Array) => {
@@ -147,12 +151,12 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
       const buffer = Buffer.from(uint8Array);
       const downloadsPath = app.getPath('downloads');
       tempInputPath = `${downloadsPath}/temp-input-${keylogger.startTime}-video.webm`;
-      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`;
+      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`;
       fs.writeFileSync(tempInputPath, buffer);
 
-      await remuxVideo(tempInputPath, tempOutputPath);
+      await convertVideoToMp4(tempInputPath, tempOutputPath);
       fs.unlinkSync(tempInputPath);
-      return { videoFileName: `${keylogger.startTime}-video.webm` };
+      return { videoFileName: `${keylogger.startTime}-video.mp4` };
     } catch (error) {
       logToFile(`Failed to remux the file, Error: ${JSON.stringify(error) || error}`);
       if (fs.existsSync(tempInputPath)) {
@@ -167,13 +171,13 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
 
 ipcMain.handle('save-video-file', async () => {
     const downloadsPath = app.getPath('downloads');
-    const tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`
+    const tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`
     try {
-      const defaultPath = `${downloadsPath}/${keylogger.startTime}-video.webm`;
+      const defaultPath = `${downloadsPath}/${keylogger.startTime}-video.mp4`;
       let filePath = await dialog.showSaveDialog({
         title: 'Save Recorded Video',
         defaultPath: defaultPath,
-        filters: [{ name: 'WebM', extensions: ['webm'] }]
+        filters: [{ name: 'MP4', extensions: ['mp4'] }]
       });
 
       if (!filePath.canceled && filePath.filePath) {
@@ -194,7 +198,7 @@ ipcMain.handle('save-video-file', async () => {
 
 ipcMain.handle('discard-video-file', async () => {
     const downloadsPath = app.getPath('downloads');
-    const tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`
+    const tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`
     try {
       if (fs.existsSync(tempOutputPath)) {
         fs.unlinkSync(tempOutputPath);
