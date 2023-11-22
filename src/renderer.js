@@ -151,6 +151,8 @@ stopButton.addEventListener('click', async () => {
   if (mediaRecorder && mediaRecorder.state === "recording") {
     mediaRecorder.stop();
     console.log("Recording stopped");
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+    document.getElementById('main').classList.add('hidden');
   }
 })
 

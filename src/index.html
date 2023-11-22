@@ -14,28 +14,42 @@
 
     <p class="text-center text-xl">Screen Recorder with clicks and keystrokes</p>
  
-    <div class="flex justify-center">
-      <button id="videoSelectBtn" class="bg-slate-600 m-6 mb-0 rounded-full px-4 py-2 text-white">
-        Choose a Video Source
-      </button>
-    </div>
- 
-    <div class="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-450px)]">
-      <video id="videoElement" class="hidden"></video>
-      <div id="videoPlaceholder" class="flex items-center justify-center py-20 w-full text-2xl text-indigo-600">
-        Please select a source to proceed.
+    <div id="main">
+      <div class="flex justify-center">
+        <button id="videoSelectBtn" class="bg-slate-600 m-6 mb-0 rounded-full px-4 py-2 text-white">
+          Choose a Video Source
+        </button>
+      </div>
+
+      <div class="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-450px)]">
+        <video id="videoElement" class="hidden"></video>
+        <div id="videoPlaceholder" class="flex items-center justify-center py-20 w-full text-2xl text-indigo-600">
+          Please select a source to proceed.
+        </div>
+      </div>
+
+      <div class="flex justify-center space-x-2">
+        <div class="recording-dot"></div>
+        <span id="recordingTime" class="text-2xl">00:00:00</span>
+      </div>
+
+      <div class="flex justify-center">
+        <button type="button" id="startButton" class="bg-indigo-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Start</button>
+        <button type="text" id="stopButton" class="bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Stop</button>
       </div>
     </div>
 
-    <div class="flex justify-center space-x-2">
-      <div class="recording-dot"></div>
-      <span id="recordingTime" class="text-2xl">00:00:00</span>
+    <div id="loadingOverlay" class="hidden">
+      <div class="flex justify-center mt-16">
+        <div class="p-1 bg-gradient-to-tr animate-spin from-white to-indigo-600 via-indigo-600 rounded-full">
+            <div class="bg-slate-900 rounded-full">
+                <div class="w-12 h-12 rounded-full"></div>
+            </div>
+        </div>
+      </div>
+      <h1 class="text-xl mt-16 mb-8 flex justify-center font-sans inline-block text-center">Video conversion in progress... <br>This may take several minutes.</h1>
     </div>
-    
-    <div class="flex justify-center">
-      <button type="button" id="startButton" class="bg-indigo-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Start</button>
-      <button type="text" id="stopButton" class="bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Stop</button>
-    </div>
+
     <script type="text/javascript" src="renderer.js"></script>
   </body>
 </html>
