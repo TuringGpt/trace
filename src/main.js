@@ -20,6 +20,8 @@ const logToFile = (message, error) => {
   fs.appendFileSync(logFilePath, logMessage);
   if (error)
     fs.appendFileSync(logFilePath, error);
+  if (isDev)
+    console.log(logMessage);
 };
 
 let mainWindow;
@@ -128,8 +130,8 @@ function convertVideoToMp4(inputPath, outputPath) {
           .withVideoCodec('libx264')
           .noAudio()
           .addOptions([
-              '-preset veryfast',
-              '-crf 22'
+              '-preset superfast',
+              '-crf 35'
           ])
           .toFormat('mp4')
           .on('end', () => {
@@ -154,7 +156,10 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
       tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`;
       fs.writeFileSync(tempInputPath, buffer);
 
+      const startTime = Date.now();
       await convertVideoToMp4(tempInputPath, tempOutputPath);
+      const timeTakenToConvert = Date.now() - startTime;
+      logToFile(`Video conversion took ${timeTakenToConvert/(1000)} seconds.`);
       fs.unlinkSync(tempInputPath);
       return { videoFileName: `${keylogger.startTime}-video.mp4` };
     } catch (error) {
