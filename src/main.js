@@ -130,7 +130,7 @@ function remuxVideo(inputPath, outputPath) {
           .output(outputPath)
           .videoCodec('copy')
           .audioCodec('copy')
-          .format('webm')
+          .format('mp4')
           .on('end', () => {
               logToFile('Video remuxing completed.');
               resolve();
@@ -174,23 +174,17 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
       const buffer = Buffer.from(uint8Array);
       const downloadsPath = app.getPath('downloads');
       tempInputPath = `${downloadsPath}/temp-input-${keylogger.startTime}-video.webm`;
-      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`;
+      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`;
       fs.writeFileSync(tempInputPath, buffer);
 
       let videoFileName;
       const startTime = Date.now();
-      if (useMp4) {
-        tempOutputPath = tempOutputPath.replace('.webm', '.mp4');
-        await convertVideoToMp4(tempInputPath, tempOutputPath);
-        videoFileName = `${keylogger.startTime}-video.mp4`;
-      } else {
-        await remuxVideo(tempInputPath, tempOutputPath);
-        videoFileName = `${keylogger.startTime}-video.webm`;
-      }
+      await remuxVideo(tempInputPath, tempOutputPath);
+      videoFileName = `${keylogger.startTime}-video.mp4`;
       const timeTakenToConvert = Date.now() - startTime;
       logToFile(`Video conversion took ${timeTakenToConvert/(1000)} seconds.`);
       fs.unlinkSync(tempInputPath);
-      return { videoFileName, videoFilePath: tempOutputPath };
+      return { videoFileName, tempOutputPath };
     } catch (error) {
       logToFile(`Failed to remux the file, Error: ${JSON.stringify(error) || error}`);
       if (fs.existsSync(tempInputPath)) {
@@ -203,22 +197,13 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
     }
 })
 
-ipcMain.handle('save-video-file', async () => {
-    let tempOutputPath;
+ipcMain.handle('save-video-file', async (e, videoFileName, tempOutputPath) => {
     try {
       const downloadsPath = app.getPath('downloads');
-      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.webm`;
-      let defaultPath = `${downloadsPath}/${keylogger.startTime}-video.webm`;
-      let filters = [{ name: 'WebM', extensions: ['webm'] }]
-      if (useMp4) {
-        tempOutputPath = tempOutputPath.replace('.webm', '.mp4');
-        defaultPath = defaultPath.replace('.webm', '.mp4');
-        filters = [{ name: 'MP4', extensions: ['mp4'] }]
-      }
       let filePath = await dialog.showSaveDialog({
         title: 'Save Recorded Video',
-        defaultPath,
-        filters
+        defaultPath: `${downloadsPath}/${videoFileName}`,
+        filters: [{ name: 'MP4', extensions: ['mp4'] }]
       });
 
       if (!filePath.canceled && filePath.filePath) {

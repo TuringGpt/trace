@@ -85,6 +85,7 @@ function updateRecordingTime() {
   document.getElementById('recordingTime').textContent = `${hoursStr}:${minutesStr}:${secondsStr}`;
 }
 
+let videoFileName, tempOutputPath;
 const recordVideo = async () => {
   const videoElement = document.querySelector('video');
   const stream = videoElement.srcObject;
@@ -95,8 +96,8 @@ const recordVideo = async () => {
   }
 
   const options = {
-    mimeType: 'video/webm; codecs=vp9',
-    bitsPerSecond: 1000000 // calculated for 1 hour recording to be under 450MB.
+    mimeType: 'video/webm; codecs=H264',
+    bitsPerSecond: 3000000
   };
   mediaRecorder = new MediaRecorder(stream, options);
 
@@ -114,13 +115,15 @@ const recordVideo = async () => {
     console.log('mediaRecorder stopped');
     show('loadingOverlay');
     hide('main');
-    const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=vp9' });
+    const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=H264' });
     const arrayBuffer = await blob.arrayBuffer();
     const { logContent, keyLogFileName } = await electronAPI.stopKeystrokesLogging();
-    const { videoFileName, videoFilePath } = await electronAPI.remuxVideoFile(new Uint8Array(arrayBuffer));
+    const res = await electronAPI.remuxVideoFile(new Uint8Array(arrayBuffer));
+    videoFileName = res.videoFileName;
+    tempOutputPath = res.tempOutputPath;
     hide('loadingOverlay');
 
-    displayFileOptions(logContent, keyLogFileName, videoFileName, videoFilePath);
+    displayFileOptions(logContent, keyLogFileName, videoFileName, tempOutputPath);
 
     recordedChunks = [];
   };
@@ -184,7 +187,7 @@ function checkFilesProcessed() {
   }
 }
 
-function displayFileOptions(logContent, keyLogFileName, videoFileName, videoFilePath) {
+function displayFileOptions(logContent, keyLogFileName, videoFileName, tempOutputPath) {
   const fileOptionsDiv = document.getElementById('fileOptions');
   fileOptionsDiv.innerHTML = `
     <div class="flex flex-col justify-center items-center">
@@ -208,7 +211,7 @@ function displayFileOptions(logContent, keyLogFileName, videoFileName, videoFile
 
   document.getElementById('saveVideoBtn').addEventListener('click', () => {
     if (!videoFileProcessed) {
-      electronAPI.saveVideoFile().then(() => {
+      electronAPI.saveVideoFile(videoFileName, tempOutputPath).then(() => {
         videoFileProcessed = true;
         disableButton(document.getElementById('saveVideoBtn'));
         disableButton(document.getElementById('discardVideoBtn'));
@@ -218,7 +221,7 @@ function displayFileOptions(logContent, keyLogFileName, videoFileName, videoFile
   });
   document.getElementById('discardVideoBtn').addEventListener('click', () => {
     if (!videoFileProcessed) {
-      electronAPI.discardVideoFile(videoFilePath).then(() => {
+      electronAPI.discardVideoFile(tempOutputPath).then(() => {
         videoFileProcessed = true;
         disableButton(document.getElementById('saveVideoBtn'));
         disableButton(document.getElementById('discardVideoBtn'));
