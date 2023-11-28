@@ -1,3 +1,5 @@
+// src/keycodes.js
+
 const keycodesMapping = {
   0x000E: 'Backspace',
   0x000F: 'Tab',
