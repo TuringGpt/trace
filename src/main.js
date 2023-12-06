@@ -3,7 +3,7 @@
 const { app, BrowserWindow, ipcMain, Menu, desktopCapturer, dialog } = require('electron');
 const ffmpeg = require('fluent-ffmpeg');
 var ffmpegStatic = require('ffmpeg-static-electron');
-ffmpeg.setFfmpegPath(ffmpegStatic.path);
+ffmpeg.setFfmpegPath(ffmpegStatic.path.replace("app.asar", "app.asar.unpacked"));
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();

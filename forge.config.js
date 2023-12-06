@@ -6,7 +6,9 @@ const fs = require('node:fs/promises');
 
 module.exports = {
   packagerConfig: {
-    asar: true,
+    asar: {
+      unpack: "**/node_modules/ffmpeg-static-electron/**"
+    },
     icon: `src/assets/icons/icon.${iconExtension}`,
     executableName: 'trace'
   },
