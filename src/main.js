@@ -130,8 +130,8 @@ function remuxVideo(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
       ffmpeg(inputPath)
           .output(outputPath)
-          .videoCodec('copy')
-          .audioCodec('copy')
+          .videoFilters('setpts=N/FRAME_RATE/TB')
+          .noAudio()
           .format('mp4')
           .on('end', () => {
               logToFile('Video remuxing completed.');
