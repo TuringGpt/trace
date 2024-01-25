@@ -37,6 +37,10 @@
         <button type="button" id="startButton" class="bg-indigo-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Start</button>
         <button type="text" id="stopButton" class="bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white opacity-50" disabled>Stop</button>
       </div>
+
+      <button type="text" id="uploadButton">
+        <img src="assets/icons/upload.svg" class="h-12 absolute top-10 right-10"></img>
+      </button>
     </div>
 
     <div id="loadingOverlay" class="hidden">
@@ -57,6 +61,55 @@
         </div>
       </div>
       <h1 class="text-xl mt-16 mb-8 flex justify-center font-sans inline-block text-center">Video conversion in progress... <br>This may take several minutes.</h1>
+    </div>
+
+    <div id="uploadOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+      <div id="uploadModal" class="bg-slate-900 p-4 rounded-lg border border-gray-700 w-1/2 h-1/2 max-w-2xl max-h-md flex flex-col justify-evenly">
+          <h2 class="text-3xl text-white text-center">Upload Files</h2>
+          <div class="flex flex-col items-center space-y-14">
+              <div>
+                  <input type="file" id="mp4FileInput" class="hidden" accept=".mp4"/>
+                  <label for="mp4FileInput" class="bg-indigo-600 text-white rounded-md px-4 py-3 cursor-pointer">Choose MP4 File</label>
+                  <span id="mp4FileName" class="text-white ml-2"></span>
+              </div>
+              <div>
+                  <input type="file" id="logFileInput" class="hidden" accept=".txt"/>
+                  <label for="logFileInput" class="bg-indigo-600 text-white rounded-md px-4 py-3 cursor-pointer">Choose TXT File</label>
+                  <span id="logFileName" class="text-white ml-2"></span>
+              </div>
+              <button id="startUploadBtn" class="bg-green-600 rounded-md px-4 py-3 text-white">Start Upload</button>
+            </div>
+      </div>
+      <div id="uploadLoadingOverlay" class="hidden bg-slate-900 p-4 rounded-lg border border-gray-700 w-1/2 h-1/2 max-w-2xl max-h-md flex flex-col justify-evenly">
+        <div class="relative">
+          <div class="flex justify-center">
+            <div class="p-1 bg-gradient-to-tr animate-spin from-white to-indigo-600 via-indigo-600 rounded-full">
+                <div class="bg-slate-900 rounded-full">
+                    <div class="w-16 h-16 rounded-full"></div>
+                </div>
+            </div>
+          </div>
+          <div class="absolute top-[23%] left-[calc(50%-1.2rem)]">
+            <div class="p-1 bg-gradient-to-tr animate-spin from-white to-indigo-600 via-indigo-600 rounded-full">
+                <div class="bg-slate-900 rounded-full">
+                    <div class="w-8 h-8 rounded-full"></div>
+                </div>
+            </div>
+          </div>
+        </div>
+        <h1 class="text-xl flex justify-center font-sans inline-block text-center">
+          Uploading files...
+        </h1>    
+      </div>
+      <div id="uploadSuccessOverlay" class="hidden bg-slate-900 p-4 rounded-lg border border-gray-700 w-1/2 h-1/2 max-w-2xl max-h-md flex flex-col justify-evenly">
+        <img src="assets/icons/success.svg" class="h-24"></img>
+        <div>
+        <h1 class="text-xl flex justify-center font-sans inline-block text-center">
+          Files uploaded successfully!
+        </h1>
+        <span id="zipFileName" class="text-white flex justify-center mt-4 text-center text-sm ml-2"></span>
+      </div>
+      </div>
     </div>
 
     <div id="fileOptions" class="hidden"></div>

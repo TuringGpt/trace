@@ -6,11 +6,14 @@ var ffmpegStatic = require('ffmpeg-static-electron');
 ffmpeg.setFfmpegPath(ffmpegStatic.path.replace("app.asar", "app.asar.unpacked"));
 const path = require('path');
 const fs = require('fs');
+const JSZip = require('jszip');
+const { BlobServiceClient } = require('@azure/storage-blob');
+const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 const Keylogger = require('./keylogger.js');
 let keylogger;
 const isDev = process.env.MODE === 'development';
-const useMp4 = false;
+const sasUrl = process.env.BLOB_STORAGE_URL;
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -235,3 +238,39 @@ ipcMain.handle('discard-video-file', async (e, filePath) => {
       return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
     }
 });
+
+const uploadZipFile = async (content) => {
+  console.log('Uploading zip file...');
+  if (isDev) {
+    return await new Promise(resolve => {
+      setTimeout(() => {
+        resolve(JSON.stringify({ status: 'Uploaded', zipFileName: '8c3862ee-56c6-4403-b16d-eb8181302a43.zip' }));
+      }, 3000);
+    });
+  } else {
+      if (!sasUrl) throw new Error('Missing BLOB_STORAGE_URL environment variable');
+
+      const blobServiceClient = new BlobServiceClient(sasUrl);
+      const containerClient = blobServiceClient.getContainerClient('turing-videos');
+      const blobName = `${uuidv4()}.zip`;
+      const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+      await blockBlobClient.uploadData(content);
+
+      console.log('Upload complete:', blobName);
+      return JSON.stringify({ status: 'Uploaded', zipFileName: blobName });
+  }
+}
+
+ipcMain.handle('upload-zip-file', async (e, videoFilePath, logFilePath) => {
+  try {
+    const zip = new JSZip();
+    zip.file(path.basename(videoFilePath), fs.readFileSync(videoFilePath));
+    zip.file(path.basename(logFilePath), fs.readFileSync(logFilePath));
+    const content = await zip.generateAsync({type: "nodebuffer"});
+    const uploadResponse = await uploadZipFile(content);
+    return uploadResponse;
+  } catch (error) {
+    logToFile(`Failed to upload the zip file, Error: ${JSON.stringify(error) || error}`);
+    return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
+  }
+})

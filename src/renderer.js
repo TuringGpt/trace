@@ -246,3 +246,72 @@ function displayFileOptions(logContent, keyLogFileName, videoFileName, tempOutpu
     checkFilesProcessed();
   })
 }
+
+document.getElementById('uploadButton').addEventListener('click', () => {
+  document.getElementById('mp4FileName').textContent = '';
+  document.getElementById('logFileName').textContent =  '';
+  document.getElementById('mp4FileInput').value = '';
+  document.getElementById('logFileInput').value = '';
+  document.getElementById('uploadOverlay').classList.remove('hidden');
+});
+
+document.getElementById('uploadOverlay').addEventListener('click', function(event) {
+  if (!document.getElementById('uploadLoadingOverlay').classList.contains('hidden')) {
+      return;
+  }
+
+  if (event.target === this) {
+      this.classList.add('hidden');
+      if (!document.getElementById('uploadSuccessOverlay').classList.contains('hidden')) {
+          document.getElementById('uploadSuccessOverlay').classList.add('hidden');
+      }
+      document.getElementById('uploadModal').classList.remove('hidden');
+  }
+});
+
+document.getElementById('mp4FileInput').addEventListener('change', function() {
+  const fileNameSpan = document.getElementById('mp4FileName');
+  fileNameSpan.textContent = this.files[0] ? this.files[0].name : '';
+});
+
+document.getElementById('logFileInput').addEventListener('change', function() {
+  const fileNameSpan = document.getElementById('logFileName');
+  fileNameSpan.textContent = this.files[0] ? this.files[0].name : '';
+});
+
+document.getElementById('startUploadBtn').addEventListener('click', async () => {
+  const mp4File = document.getElementById('mp4FileInput').files[0];
+  const logFile = document.getElementById('logFileInput').files[0];
+
+  if (!mp4File || !logFile) {
+      alert('Please select both MP4 and TXT files');
+      return;
+  }
+
+  if (mp4File.type !== 'video/mp4' || logFile.type !== 'text/plain') {
+      alert('Invalid file format. Please upload a MP4 video and a TXT file.');
+      return;
+  }
+
+  document.getElementById('uploadModal').classList.add('hidden');
+  document.getElementById('uploadLoadingOverlay').classList.remove('hidden');
+
+  try {
+      const res = JSON.parse(await electronAPI.uploadFiles(mp4File.path, logFile.path));
+      if (res.status === 'Uploaded') {
+        document.getElementById('zipFileName').innerText = `${res.zipFileName}`;
+        document.getElementById('uploadLoadingOverlay').classList.add('hidden');
+        document.getElementById('uploadSuccessOverlay').classList.remove('hidden');
+      } else {
+        document.getElementById('uploadLoadingOverlay').classList.add('hidden');
+        document.getElementById('uploadOverlay').classList.add('hidden');
+        alert('Failed to upload files.');
+      }
+  } catch (error) {
+      console.error('Error during file upload:', error);
+      document.getElementById('uploadLoadingOverlay').classList.add('hidden');
+      document.getElementById('uploadModal').classList.remove('hidden');
+      document.getElementById('uploadOverlay').classList.add('hidden');
+      alert('Failed to upload files. Please try uploading again after some time.');
+  }
+});

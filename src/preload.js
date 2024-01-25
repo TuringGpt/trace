@@ -12,5 +12,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   remuxVideoFile: (uint8Array) => ipcRenderer.invoke('remux-video-file', uint8Array),
   saveVideoFile: (videoFileName, tempOutputPath) => ipcRenderer.invoke('save-video-file', videoFileName, tempOutputPath),
   discardVideoFile: (filePath) => ipcRenderer.invoke('discard-video-file', filePath),
+  uploadFiles: (videoFilePath, logFilePath) => ipcRenderer.invoke('upload-zip-file', videoFilePath, logFilePath),
 })
 
