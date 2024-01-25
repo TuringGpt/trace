@@ -34,6 +34,37 @@ After downloading the correct file for your operating system, run the installer 
 5. Click "Stop" to end the recording. You will be prompted to choose a location to save your video file.
 6. After saving the video, you will also be asked to save the keystroke log file for your session.
 
+## Getting Started
+
+Follow these instructions to get the project up and running on your local machine for development and testing.
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/)
+- [Yarn](https://yarnpkg.com/)
+
+### Environment Setup
+
+Before running the application, set up the necessary environment variables:
+
+1. Clone the repository
+   ```
+   git clone https://github.com/suraj-turing/trace.git
+   cd trace
+   ```
+2. Create a `.env` file in the root directory of the project.
+3. Add the following variables to the `.env` file (modify values as needed):
+   ```plaintext
+   BLOB_STORAGE_URL=your_blob_storage_url_here
+   MODE=development or production  # development mode will skip uploading files to cloud storage.
+   ```
+   development mode will skip uploading files to cloud storage.
+4. Run the application
+    ```
+    yarn install
+    yarn start
+    ```
+
 ## Contributing
 
 Contributions to Trace are always welcome! If you would like to contribute, please fork the repository and submit a pull request, or open an issue with your ideas and suggestions.
