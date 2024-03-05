@@ -117,13 +117,16 @@ const recordVideo = async () => {
     hide('main');
     const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=H264' });
     const arrayBuffer = await blob.arrayBuffer();
-    const { logContent, keyLogFileName } = await electronAPI.stopKeystrokesLogging();
+    const { keyLogFilePath } = await electronAPI.stopKeystrokesLogging();
     const res = await electronAPI.remuxVideoFile(new Uint8Array(arrayBuffer));
-    videoFileName = res.videoFileName;
-    tempOutputPath = res.tempOutputPath;
+    const videoFilePath = res.videoFilePath;
+
+    const { zipFilePath, zipFileName } = await electronAPI.createZipFile(videoFilePath, keyLogFilePath);
+    console.log("New Zip file saved at ", zipFilePath);
+
     hide('loadingOverlay');
 
-    displayFileOptions(logContent, keyLogFileName, videoFileName, tempOutputPath);
+    displayFileOptions(zipFilePath, zipFileName);
 
     recordedChunks = [];
   };
@@ -176,33 +179,24 @@ function enableButton(button) {
 }
 
 let videoFileProcessed = false;
-let logFileProcessed = false;
 
 function checkFilesProcessed() {
-  if (videoFileProcessed && logFileProcessed) {
+  if (videoFileProcessed) {
     hide('fileOptions');
     show('main');
     videoFileProcessed = false;
-    logFileProcessed = false;
   }
 }
 
-function displayFileOptions(logContent, keyLogFileName, videoFileName, tempOutputPath) {
+function displayFileOptions(zipFilePath, zipFileName) {
   const fileOptionsDiv = document.getElementById('fileOptions');
   fileOptionsDiv.innerHTML = `
     <div class="flex flex-col justify-center items-center">
-      <div class="flex items-center justify-between w-full max-w-xl rounded-lg border-[1px] border-indigo-600 m-4 mt-12 p-4">
-        <span class="text-l ml-3">${videoFileName}</span>
+      <div class="flex items-center justify-between w-full max-w-2xl rounded-lg border-[1px] border-indigo-600 m-4 mt-12 p-4">
+        <span class="text-l ml-3">${zipFileName}</span>
         <div class="flex items-center">
           <button id="saveVideoBtn" class="bg-indigo-600 rounded-md px-4 py-3 text-white mx-3">Save</button>
           <button id="discardVideoBtn" class="bg-red-600 rounded-md px-4 py-3 text-white mx-3">Discard</button>
-        </div>
-      </div>
-      <div class="flex items-center justify-between w-full max-w-xl rounded-lg border-[1px] border-indigo-600 m-4 p-4">
-        <span class="text-l ml-3">${keyLogFileName}</span>
-        <div class="flex items-center">
-          <button id="saveLogBtn" class="bg-indigo-600 rounded-md px-4 py-3 text-white mx-3">Save</button>
-          <button id="discardLogBtn" class="bg-red-600 rounded-md px-4 py-3 text-white mx-3">Discard</button>
         </div>
       </div>
     </div>
@@ -211,7 +205,7 @@ function displayFileOptions(logContent, keyLogFileName, videoFileName, tempOutpu
 
   document.getElementById('saveVideoBtn').addEventListener('click', () => {
     if (!videoFileProcessed) {
-      electronAPI.saveVideoFile(videoFileName, tempOutputPath).then(() => {
+      electronAPI.saveVideoFile(zipFileName, zipFilePath).then(() => {
         videoFileProcessed = true;
         disableButton(document.getElementById('saveVideoBtn'));
         disableButton(document.getElementById('discardVideoBtn'));
@@ -221,7 +215,7 @@ function displayFileOptions(logContent, keyLogFileName, videoFileName, tempOutpu
   });
   document.getElementById('discardVideoBtn').addEventListener('click', () => {
     if (!videoFileProcessed) {
-      electronAPI.discardVideoFile(tempOutputPath).then(() => {
+      electronAPI.discardVideoFile(zipFilePath).then(() => {
         videoFileProcessed = true;
         disableButton(document.getElementById('saveVideoBtn'));
         disableButton(document.getElementById('discardVideoBtn'));
@@ -229,22 +223,6 @@ function displayFileOptions(logContent, keyLogFileName, videoFileName, tempOutpu
       })
     }
   });
-  document.getElementById('saveLogBtn').addEventListener('click', () => {
-    if (!logFileProcessed) {
-      electronAPI.saveKeystrokesFile(logContent).then(() => {
-        logFileProcessed = true;
-        disableButton(document.getElementById('saveLogBtn'));
-        disableButton(document.getElementById('discardLogBtn'));
-        checkFilesProcessed();
-      })
-    }
-  });
-  document.getElementById('discardLogBtn').addEventListener('click', () => {
-    logFileProcessed = true;
-    disableButton(document.getElementById('saveLogBtn'));
-    disableButton(document.getElementById('discardLogBtn'));
-    checkFilesProcessed();
-  })
 }
 
 document.getElementById('uploadButton').addEventListener('click', () => {

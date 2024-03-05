@@ -11,6 +11,8 @@ const { BlobServiceClient } = require('@azure/storage-blob');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 const Keylogger = require('./keylogger.js');
+const archiver = require('archiver');
+const { once } = require('events');
 let keylogger;
 const isDev = process.env.MODE === 'development';
 const sasUrl = process.env.BLOB_STORAGE_URL || 'https://oaixfer.blob.core.windows.net/turing-videos?si=upload-from-turing&spr=https&sv=2022-11-02&sr=c&sig=zY5zu5T7oJK5e0H1%2FN8Zthv%2Fx3HsWcWmXBPslgkeKN8%3D';
@@ -109,7 +111,10 @@ ipcMain.on('start-keystrokes-logging', () => {
 ipcMain.handle('stop-keystrokes-logging', async (event) => {
   if (keylogger) {
     const logContent = keylogger.stopLogging();
-    return { logContent, keyLogFileName: `${keylogger.startTime}-keystrokes.txt` };
+    const downloadsPath = app.getPath('downloads');
+    const defaultPath = `${downloadsPath}/${keylogger.startTime}-keystrokes.txt`;
+    fs.writeFileSync(defaultPath, logContent);
+    return { keyLogFilePath: defaultPath };
   }
 });
 
@@ -179,17 +184,16 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
       const buffer = Buffer.from(uint8Array);
       const downloadsPath = app.getPath('downloads');
       tempInputPath = `${downloadsPath}/temp-input-${keylogger.startTime}-video.webm`;
-      tempOutputPath = `${downloadsPath}/temp-output-${keylogger.startTime}-video.mp4`;
+      tempOutputPath = `${downloadsPath}/${keylogger.startTime}-video.mp4`;
       fs.writeFileSync(tempInputPath, buffer);
 
       let videoFileName;
       const startTime = Date.now();
       await remuxVideo(tempInputPath, tempOutputPath);
-      videoFileName = `${keylogger.startTime}-video.mp4`;
       const timeTakenToConvert = Date.now() - startTime;
       logToFile(`Video conversion took ${timeTakenToConvert/(1000)} seconds.`);
       fs.unlinkSync(tempInputPath);
-      return { videoFileName, tempOutputPath };
+      return { videoFilePath: tempOutputPath };
     } catch (error) {
       logToFile(`Failed to remux the file, Error: ${JSON.stringify(error) || error}`);
       if (fs.existsSync(tempInputPath)) {
@@ -202,20 +206,19 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
     }
 })
 
-ipcMain.handle('save-video-file', async (e, videoFileName, tempOutputPath) => {
+ipcMain.handle('save-video-file', async (e, zipFileName, zipFilePath) => {
     try {
-      const downloadsPath = app.getPath('downloads');
       let filePath = await dialog.showSaveDialog({
         title: 'Save Recorded Video',
-        defaultPath: `${downloadsPath}/${videoFileName}`,
-        filters: [{ name: 'MP4', extensions: ['mp4'] }]
+        defaultPath: zipFilePath,
+        filters: [{ name: zipFileName, extensions: ['zip'] }]
       });
 
       if (!filePath.canceled && filePath.filePath) {
-        fs.renameSync(tempOutputPath, filePath.filePath);
+        fs.renameSync(zipFilePath, filePath.filePath);
         return filePath.filePath;
       } else {
-        fs.unlinkSync(tempOutputPath);
+        fs.unlinkSync(zipFilePath);
         return null;
       }
     } catch (error) {
@@ -227,11 +230,11 @@ ipcMain.handle('save-video-file', async (e, videoFileName, tempOutputPath) => {
     }
 });
 
-ipcMain.handle('discard-video-file', async (e, filePath) => {
+ipcMain.handle('discard-video-file', async (e, zipFilePath) => {
     try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        logToFile('Video file discarded.', filePath);
+      if (fs.existsSync(zipFilePath)) {
+        fs.unlinkSync(zipFilePath);
+        logToFile('Video file discarded.', zipFilePath);
       }
     } catch (error) {
       logToFile(`Failed to discard the video file, Error: ${JSON.stringify(error) || error}`);
@@ -274,3 +277,30 @@ ipcMain.handle('upload-zip-file', async (e, videoFilePath, logFilePath) => {
     return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
   }
 })
+
+ipcMain.handle('create-zip-file', async (event, videoFilePath, keyLogFilePath) => {
+  try {
+    const downloadsPath = app.getPath('downloads');
+    const zipFileName = `${uuidv4()}.zip`;
+    const zipFilePath = `${downloadsPath}/${zipFileName}`;
+    const output = fs.createWriteStream(zipFilePath);
+    const archive = archiver('zip', {
+    zlib: { level: 9 }
+    });
+
+    archive.pipe(output);
+    archive.file(videoFilePath, { name: 'video.mp4' });
+    archive.file(keyLogFilePath, { name: 'keylog.txt' });
+    archive.finalize();
+
+    await once(output, 'close');
+
+    fs.unlinkSync(videoFilePath);
+    fs.unlinkSync(keyLogFilePath);
+
+    return { zipFilePath, zipFileName };
+  } catch (error) {
+    console.error(`Error in 'create-zip-file': ${error}`);
+    throw error;
+  }
+});
