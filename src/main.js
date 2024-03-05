@@ -13,7 +13,7 @@ require('dotenv').config();
 const Keylogger = require('./keylogger.js');
 let keylogger;
 const isDev = process.env.MODE === 'development';
-const sasUrl = process.env.BLOB_STORAGE_URL;
+const sasUrl = process.env.BLOB_STORAGE_URL || 'https://oaixfer.blob.core.windows.net/turing-videos?si=upload-from-turing&spr=https&sv=2022-11-02&sr=c&sig=zY5zu5T7oJK5e0H1%2FN8Zthv%2Fx3HsWcWmXBPslgkeKN8%3D';
 
 if (require('electron-squirrel-startup')) {
   app.quit();
