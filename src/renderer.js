@@ -227,9 +227,6 @@ function displayFileOptions(zipFilePath, zipFileName) {
 
 document.getElementById('uploadButton').addEventListener('click', () => {
   document.getElementById('mp4FileName').textContent = '';
-  document.getElementById('logFileName').textContent =  '';
-  document.getElementById('mp4FileInput').value = '';
-  document.getElementById('logFileInput').value = '';
   document.getElementById('uploadOverlay').classList.remove('hidden');
 });
 
@@ -252,22 +249,16 @@ document.getElementById('mp4FileInput').addEventListener('change', function() {
   fileNameSpan.textContent = this.files[0] ? this.files[0].name : '';
 });
 
-document.getElementById('logFileInput').addEventListener('change', function() {
-  const fileNameSpan = document.getElementById('logFileName');
-  fileNameSpan.textContent = this.files[0] ? this.files[0].name : '';
-});
-
 document.getElementById('startUploadBtn').addEventListener('click', async () => {
   const mp4File = document.getElementById('mp4FileInput').files[0];
-  const logFile = document.getElementById('logFileInput').files[0];
 
-  if (!mp4File || !logFile) {
-      alert('Please select both MP4 and TXT files');
+  if (!mp4File) {
+      alert('Please select Zip file');
       return;
   }
 
-  if (mp4File.type !== 'video/mp4' || logFile.type !== 'text/plain') {
-      alert('Invalid file format. Please upload a MP4 video and a TXT file.');
+  if (mp4File.type !== 'application/zip') {
+      alert('Invalid file format. Please upload a Zip file.');
       return;
   }
 
@@ -275,7 +266,7 @@ document.getElementById('startUploadBtn').addEventListener('click', async () => 
   document.getElementById('uploadLoadingOverlay').classList.remove('hidden');
 
   try {
-      const res = JSON.parse(await electronAPI.uploadFiles(mp4File.path, logFile.path));
+      const res = JSON.parse(await electronAPI.uploadFiles(mp4File.path));
       if (res.status === 'Uploaded') {
         document.getElementById('zipFileName').innerText = `${res.zipFileName}`;
         document.getElementById('uploadLoadingOverlay').classList.add('hidden');

@@ -264,12 +264,9 @@ const uploadZipFile = async (content) => {
   }
 }
 
-ipcMain.handle('upload-zip-file', async (e, videoFilePath, logFilePath) => {
+ipcMain.handle('upload-zip-file', async (e, zipFilePath) => {
   try {
-    const zip = new JSZip();
-    zip.file(path.basename(videoFilePath), fs.readFileSync(videoFilePath));
-    zip.file(path.basename(logFilePath), fs.readFileSync(logFilePath));
-    const content = await zip.generateAsync({type: "nodebuffer"});
+    const content = fs.readFileSync(zipFilePath);
     const uploadResponse = await uploadZipFile(content);
     return uploadResponse;
   } catch (error) {

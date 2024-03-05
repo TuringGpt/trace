@@ -13,6 +13,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveVideoFile: (videoFileName, tempOutputPath) => ipcRenderer.invoke('save-video-file', videoFileName, tempOutputPath),
   discardVideoFile: (filePath) => ipcRenderer.invoke('discard-video-file', filePath),
   createZipFile: (videoFilePath, keyLogFilePath) => ipcRenderer.invoke('create-zip-file', videoFilePath, keyLogFilePath),
-  uploadFiles: (videoFilePath, logFilePath) => ipcRenderer.invoke('upload-zip-file', videoFilePath, logFilePath),
+  uploadFiles: (zipFilePath) => ipcRenderer.invoke('upload-zip-file', zipFilePath),
 })
 
