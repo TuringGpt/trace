@@ -49,7 +49,7 @@ Before running the application, set up the necessary environment variables:
 
 1. Clone the repository
    ```
-   git clone https://github.com/suraj-turing/trace.git
+   git clone https://github.com/TuringGpt/trace.git
    cd trace
    ```
 2. Create a `.env` file in the root directory of the project.
