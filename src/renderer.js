@@ -226,7 +226,7 @@ function displayFileOptions(zipFilePath, zipFileName) {
 }
 
 document.getElementById('uploadButton').addEventListener('click', () => {
-  document.getElementById('mp4FileName').textContent = '';
+  document.getElementById("mp4FileName").innerHTML = "";
   document.getElementById('uploadOverlay').classList.remove('hidden');
 });
 
@@ -250,6 +250,7 @@ document.getElementById('mp4FileInput').addEventListener('change', function() {
 });
 
 document.getElementById('startUploadBtn').addEventListener('click', async () => {
+  document.getElementById("mp4FileName").innerHTML = "";
   const mp4File = document.getElementById('mp4FileInput').files[0];
 
   if (!mp4File) {
@@ -283,4 +284,5 @@ document.getElementById('startUploadBtn').addEventListener('click', async () => 
       document.getElementById('uploadOverlay').classList.add('hidden');
       alert('Failed to upload files. Please try uploading again after some time.');
   }
+  mp4FileInput.value = '';
 });
