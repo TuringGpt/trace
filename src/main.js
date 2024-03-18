@@ -25,11 +25,13 @@ const logToFile = (message, error) => {
   const logFilePath = path.join(app.getPath('userData'), 'app.log');
   const timestamp = new Date().toISOString();
   const logMessage = `${timestamp} - ${message}`;
+  if (isDev) {
+    console.log(logMessage);
+    return;
+  }
   fs.appendFileSync(logFilePath, logMessage);
   if (error)
     fs.appendFileSync(logFilePath, error);
-  if (isDev)
-    console.log(logMessage);
 };
 
 let mainWindow;
@@ -49,9 +51,9 @@ const createWindow = () => {
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
   } else {
     mainWindow = new BrowserWindow({
-      x: 2560,
+      x: 2650,
       y: 291,
-      width: 1200,
+      width: 1300,
       height: 1000,
       icon: iconPath,
       webPreferences: {
