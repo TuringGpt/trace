@@ -90,3 +90,6 @@ typings/
 
 # Electron-Forge
 out/
+
+# Azure local storage
+./azure-blob-storage
