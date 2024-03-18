@@ -5,7 +5,7 @@
   "description": "Trace: Cross Platform Screen Recorder with clicks and keystrokes",
   "main": "src/main.js",
   "scripts": {
-    "watch": "nodemon --exec electron .",
+    "watch": "nodemon --exec electron --ignore 'azure-blob-storage/*' .",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",

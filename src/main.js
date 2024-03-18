@@ -14,8 +14,8 @@ const Keylogger = require('./keylogger.js');
 const archiver = require('archiver');
 const { once } = require('events');
 let keylogger;
-const isDev = process.env.MODE === 'development';
-const sasUrl = process.env.BLOB_STORAGE_URL || 'https://oaixfer.blob.core.windows.net/turing-videos?si=upload-from-turing&spr=https&sv=2022-11-02&sr=c&sig=zY5zu5T7oJK5e0H1%2FN8Zthv%2Fx3HsWcWmXBPslgkeKN8%3D';
+const isDev = process.env.MODE !== 'production';
+const blobUrl = process.env.BLOB_STORAGE_URL;
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -65,10 +65,15 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   createWindow()
-	logToFile("SUCCESS : MAIN : APPLICATION_STARTUP : application started successfully")
-  logToFile("Environment Variables")
-  logToFile(`MODE: ${process.env.MODE}`)
-  logToFile(`BLOB URL: ${process.env.BLOB_STORAGE_URL}`.slice(0,40) + '...')
+  logToFile("Checking Environment Variables...")
+  if(!process.env.MODE || !process.env.BLOB_STORAGE_URL) {
+    logToFile(`ERROR : MAIN : APPLICATION_STARTUP : Missing environment variables. Please set the environment variables for local development`);
+    app.quit();
+  } else {
+    logToFile(`MODE: ${process.env.MODE}`)
+    logToFile(`BLOB URL: ${process.env.BLOB_STORAGE_URL}`.slice(0,40) + '...')
+    logToFile("SUCCESS : MAIN : APPLICATION_STARTUP : application started successfully")
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -246,25 +251,19 @@ ipcMain.handle('discard-video-file', async (e, zipFilePath) => {
 });
 
 const uploadZipFile = async (content) => {
-  console.log('Uploading zip file...');
-  if (isDev) {
+    console.log('Uploading zip file...');
+    const blobServiceClient = isDev ? BlobServiceClient.fromConnectionString(blobUrl) : (new BlobServiceClient(blobUrl));
+    const containerClient = blobServiceClient.getContainerClient('turing-videos');
+    const blobName = `${uuidv4()}.zip`;
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    await blockBlobClient.uploadData(content);
+
+    console.log('Upload complete:', blobName);
     return await new Promise(resolve => {
       setTimeout(() => {
-        resolve(JSON.stringify({ status: 'Uploaded', zipFileName: '8c3862ee-56c6-4403-b16d-eb8181302a43.zip' }));
-      }, 3000);
+        resolve(JSON.stringify({ status: 'Uploaded', zipFileName: blobName }));
+      }, 2000);
     });
-  } else {
-      if (!sasUrl) throw new Error('Missing BLOB_STORAGE_URL environment variable');
-
-      const blobServiceClient = new BlobServiceClient(sasUrl);
-      const containerClient = blobServiceClient.getContainerClient('turing-videos');
-      const blobName = `${uuidv4()}.zip`;
-      const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-      await blockBlobClient.uploadData(content);
-
-      console.log('Upload complete:', blobName);
-      return JSON.stringify({ status: 'Uploaded', zipFileName: blobName });
-  }
 }
 
 ipcMain.handle('upload-zip-file', async (e, zipFilePath) => {
@@ -274,6 +273,7 @@ ipcMain.handle('upload-zip-file', async (e, zipFilePath) => {
     return uploadResponse;
   } catch (error) {
     logToFile(`Failed to upload the zip file, Error: ${JSON.stringify(error) || error}`);
+    console.error("ERROR:", error);
     return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
   }
 })
