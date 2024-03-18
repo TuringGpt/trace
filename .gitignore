@@ -92,4 +92,4 @@ typings/
 out/
 
 # Azure local storage
-./azure-blob-storage
+azure-blob-storage/
