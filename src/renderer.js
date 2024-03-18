@@ -226,7 +226,7 @@ function displayFileOptions(zipFilePath, zipFileName) {
 }
 
 document.getElementById('uploadButton').addEventListener('click', () => {
-  document.getElementById("mp4FileName").innerHTML = "";
+  document.getElementById("zipFileInputName").innerHTML = "";
   document.getElementById('uploadOverlay').classList.remove('hidden');
 });
 
@@ -244,21 +244,21 @@ document.getElementById('uploadOverlay').addEventListener('click', function(even
   }
 });
 
-document.getElementById('mp4FileInput').addEventListener('change', function() {
-  const fileNameSpan = document.getElementById('mp4FileName');
+document.getElementById('zipFileInput').addEventListener('change', function() {
+  const fileNameSpan = document.getElementById('zipFileInputName');
   fileNameSpan.textContent = this.files[0] ? this.files[0].name : '';
 });
 
 document.getElementById('startUploadBtn').addEventListener('click', async () => {
-  document.getElementById("mp4FileName").innerHTML = "";
-  const mp4File = document.getElementById('mp4FileInput').files[0];
+  document.getElementById("zipFileInputName").innerHTML = "";
+  const zipFile = document.getElementById('zipFileInput').files[0];
 
-  if (!mp4File) {
+  if (!zipFile) {
       alert('Please select Zip file');
       return;
   }
 
-  if (mp4File.type !== 'application/zip') {
+  if (zipFile.type !== 'application/zip') {
       alert('Invalid file format. Please upload a Zip file.');
       return;
   }
@@ -267,9 +267,9 @@ document.getElementById('startUploadBtn').addEventListener('click', async () => 
   document.getElementById('uploadLoadingOverlay').classList.remove('hidden');
 
   try {
-      const res = JSON.parse(await electronAPI.uploadFiles(mp4File.path));
+      const res = JSON.parse(await electronAPI.uploadFiles(zipFile.path));
       if (res.status === 'Uploaded') {
-        document.getElementById('zipFileName').innerText = `${res.zipFileName}`;
+        document.getElementById('uploadedZipFileName').innerText = `${res.uploadedZipFileName}`;
         document.getElementById('uploadLoadingOverlay').classList.add('hidden');
         document.getElementById('uploadSuccessOverlay').classList.remove('hidden');
       } else {
@@ -284,5 +284,5 @@ document.getElementById('startUploadBtn').addEventListener('click', async () => 
       document.getElementById('uploadOverlay').classList.add('hidden');
       alert('Failed to upload files. Please try uploading again after some time.');
   }
-  mp4FileInput.value = '';
+  zipFileInput.value = '';
 });

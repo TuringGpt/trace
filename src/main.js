@@ -262,7 +262,7 @@ const uploadZipFile = async (content) => {
   await blockBlobClient.uploadData(content);
   return await new Promise(resolve => {
     setTimeout(() => {
-      resolve(JSON.stringify({ status: 'Uploaded', zipFileName: blobName }));
+      resolve(JSON.stringify({ status: 'Uploaded', uploadedZipFileName: blobName }));
     }, 2000);
   });
 }
@@ -271,7 +271,7 @@ ipcMain.handle('upload-zip-file', async (e, zipFilePath) => {
   try {
     const content = fs.readFileSync(zipFilePath);
     const uploadResponse = await uploadZipFile(content);
-    logToFile("SUCCESS", "UPLOAD", `Zip file uploaded successfully. File name - ${JSON.parse(uploadResponse).zipFileName}`);
+    logToFile("SUCCESS", "UPLOAD", `Zip file uploaded successfully. File name - ${JSON.parse(uploadResponse).uploadedZipFileName}`);
     return uploadResponse;
   } catch (error) {
     logToFile("ERROR", "UPLOAD", "Failed to upload the zip file.", error);

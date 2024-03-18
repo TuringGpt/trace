@@ -68,9 +68,9 @@
           <h2 class="text-3xl text-white text-center">Upload</h2>
           <div class="flex flex-col items-center space-y-16">
               <div>
-                  <input type="file" id="mp4FileInput" class="hidden" accept=".zip"/>
-                  <span id="mp4FileName" class="text-white ml-2"></span>
-                  <label for="mp4FileInput" class="bg-indigo-600 text-white rounded-md px-4 py-3 cursor-pointer">Choose Zip File</label>
+                  <input type="file" id="zipFileInput" class="hidden" accept=".zip"/>
+                  <span id="zipFileInputName" class="text-white ml-2"></span>
+                  <label for="zipFileInput" class="bg-indigo-600 text-white rounded-md px-4 py-3 cursor-pointer">Choose Zip File</label>
               </div>
               <button id="startUploadBtn" class="bg-green-600 rounded-md px-4 py-3 text-white">Start Upload</button>
             </div>
@@ -102,7 +102,7 @@
         <h1 class="text-xl flex justify-center font-sans inline-block text-center">
           Files uploaded successfully!
         </h1>
-        <span id="zipFileName" class="text-white flex justify-center mt-4 text-center text-sm mr-4"></span>
+        <span id="uploadedZipFileName" class="text-white flex justify-center mt-4 text-center text-sm mr-4"></span>
       </div>
       </div>
     </div>
