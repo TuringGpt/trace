@@ -24,7 +24,7 @@ if (require('electron-squirrel-startup')) {
 const logToFile = (message, error) => {
   const logFilePath = path.join(app.getPath('userData'), 'app.log');
   const timestamp = new Date().toISOString();
-  const logMessage = `${timestamp} - ${message}\n`;
+  const logMessage = `${timestamp} - ${message}`;
   fs.appendFileSync(logFilePath, logMessage);
   if (error)
     fs.appendFileSync(logFilePath, error);
@@ -66,6 +66,9 @@ const createWindow = () => {
 app.whenReady().then(() => {
   createWindow()
 	logToFile("SUCCESS : MAIN : APPLICATION_STARTUP : application started successfully")
+  logToFile("Environment Variables")
+  logToFile(`MODE: ${process.env.MODE}`)
+  logToFile(`BLOB URL: ${process.env.BLOB_STORAGE_URL}`.slice(0,40) + '...')
 });
 
 app.on('window-all-closed', () => {
