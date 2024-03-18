@@ -205,7 +205,7 @@ function displayFileOptions(zipFilePath, zipFileName) {
 
   document.getElementById('saveVideoBtn').addEventListener('click', () => {
     if (!videoFileProcessed) {
-      electronAPI.saveVideoFile(zipFileName, zipFilePath).then(() => {
+      electronAPI.saveZipFile(zipFileName, zipFilePath).then(() => {
         videoFileProcessed = true;
         disableButton(document.getElementById('saveVideoBtn'));
         disableButton(document.getElementById('discardVideoBtn'));
@@ -215,7 +215,7 @@ function displayFileOptions(zipFilePath, zipFileName) {
   });
   document.getElementById('discardVideoBtn').addEventListener('click', () => {
     if (!videoFileProcessed) {
-      electronAPI.discardVideoFile(zipFilePath).then(() => {
+      electronAPI.discardZipFile(zipFilePath).then(() => {
         videoFileProcessed = true;
         disableButton(document.getElementById('saveVideoBtn'));
         disableButton(document.getElementById('discardVideoBtn'));

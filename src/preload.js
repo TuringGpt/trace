@@ -10,8 +10,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   stopKeystrokesLogging: () => ipcRenderer.invoke('stop-keystrokes-logging'),
   saveKeystrokesFile: (logContent) => ipcRenderer.invoke('save-keystrokes-file', logContent),
   remuxVideoFile: (uint8Array) => ipcRenderer.invoke('remux-video-file', uint8Array),
-  saveVideoFile: (videoFileName, tempOutputPath) => ipcRenderer.invoke('save-video-file', videoFileName, tempOutputPath),
-  discardVideoFile: (filePath) => ipcRenderer.invoke('discard-video-file', filePath),
+  saveZipFile: (videoFileName, tempOutputPath) => ipcRenderer.invoke('save-zip-file', videoFileName, tempOutputPath),
+  discardZipFile: (filePath) => ipcRenderer.invoke('discard-zip-file', filePath),
   createZipFile: (videoFilePath, keyLogFilePath) => ipcRenderer.invoke('create-zip-file', videoFilePath, keyLogFilePath),
   uploadFiles: (zipFilePath) => ipcRenderer.invoke('upload-zip-file', zipFilePath),
 })

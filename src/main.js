@@ -131,25 +131,6 @@ ipcMain.handle('stop-keystrokes-logging', async (event) => {
   }
 });
 
-ipcMain.handle('save-keystrokes-file', async (event, logContent) => {
-  if (keylogger) {
-    const downloadsPath = app.getPath('downloads');
-    const defaultPath = `${downloadsPath}/${keylogger.startTime}-keystrokes.txt`;
-    const { filePath } = await dialog.showSaveDialog({
-      buttonLabel: 'Save log',
-      defaultPath: defaultPath,
-    });
-    if (filePath) {
-      fs.writeFileSync(filePath, logContent);
-      logToFile("INFO", "KEYSTROKES_LOGGING", "Keystrokes file saved.");
-    } else {
-      logToFile("WARN", "KEYSTROKES_LOGGING", "Keystrokes file save cancelled.");
-    }
-    const directoryPath = path.dirname(filePath);
-    return { directoryPath };
-  }
-});
-
 function remuxVideo(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
@@ -163,29 +144,6 @@ function remuxVideo(inputPath, outputPath) {
       })
       .on('error', (err) => {
         logToFile("ERROR", "VIDEO_REMUXING", `FFmpeg Error: ${err.message}`, err);
-        reject(err);
-      })
-      .run();
-  });
-}
-
-function convertVideoToMp4(inputPath, outputPath) {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .output(outputPath)
-      .withVideoCodec('libx264')
-      .noAudio()
-      .addOptions([
-        '-preset superfast',
-        '-crf 35'
-      ])
-      .toFormat('mp4')
-      .on('end', () => {
-        logToFile("INFO", "VIDEO_CONVERSION", "Video conversion to MP4 completed.");
-        resolve();
-      })
-      .on('error', (err) => {
-        logToFile("ERROR", "VIDEO_CONVERSION", `FFmpeg Error: ${err.message}`, err);
         reject(err);
       })
       .run();
@@ -219,7 +177,7 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
   }
 })
 
-ipcMain.handle('save-video-file', async (e, zipFileName, zipFilePath) => {
+ipcMain.handle('save-zip-file', async (e, zipFileName, zipFilePath) => {
   try {
     const filePath = await dialog.showSaveDialog({
       title: 'Save Recorded Video',
@@ -229,27 +187,27 @@ ipcMain.handle('save-video-file', async (e, zipFileName, zipFilePath) => {
 
     if (!filePath.canceled && filePath.filePath) {
       fs.renameSync(zipFilePath, filePath.filePath);
-      logToFile("INFO", "VIDEO_SAVE", "Recorded video saved successfully.");
+      logToFile("INFO", "ZIP_FILE_SAVE", "Zip file saved successfully.");
       return filePath.filePath;
     } else {
       fs.unlinkSync(zipFilePath);
-      logToFile("WARN", "VIDEO_SAVE", "Video save operation cancelled.");
+      logToFile("WARN", "ZIP_FILE_SAVE", "Zip file save operation cancelled.");
       return null;
     }
   } catch (error) {
-    logToFile("ERROR", "VIDEO_SAVE", "Failed to save the video file.", error);
+    logToFile("ERROR", "ZIP_FILE_SAVE", "Failed to save the zip file.", error);
     return `ERROR: check logs at ${path.join(app.getPath('userData'), 'app.log')}`;
   }
 });
 
-ipcMain.handle('discard-video-file', async (e, zipFilePath) => {
+ipcMain.handle('discard-zip-file', async (e, zipFilePath) => {
   try {
     if (fs.existsSync(zipFilePath)) {
       fs.unlinkSync(zipFilePath);
-      logToFile("INFO", "VIDEO_DISCARD", "Video file discarded successfully.");
+      logToFile("INFO", "ZIP_FILE_DISCARD", "Zip file discarded successfully.");
     }
   } catch (error) {
-    logToFile("ERROR", "VIDEO_DISCARD", "Failed to discard the video file.", error);
+    logToFile("ERROR", "ZIP_FILE_DISCARD", "Failed to discard the Zip file.", error);
   }
 });
 
@@ -260,11 +218,7 @@ const uploadZipFile = async (content) => {
   const blobName = `${uuidv4()}.zip`;
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
   await blockBlobClient.uploadData(content);
-  return await new Promise(resolve => {
-    setTimeout(() => {
-      resolve(JSON.stringify({ status: 'Uploaded', uploadedZipFileName: blobName }));
-    }, 2000);
-  });
+  return JSON.stringify({ status: 'Uploaded', uploadedZipFileName: blobName });
 }
 
 ipcMain.handle('upload-zip-file', async (e, zipFilePath) => {
