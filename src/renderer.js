@@ -257,6 +257,7 @@ document.getElementById('uploadOverlay').addEventListener('click', function(even
 document.getElementById('zipFileInput').addEventListener('change', function() {
   const fileNameSpan = document.getElementById('zipFileInputName');
   fileNameSpan.textContent = this.files[0] ? this.files[0].name : '';
+  this.value = '';
 });
 
 document.getElementById('startUploadBtn').addEventListener('click', async () => {
