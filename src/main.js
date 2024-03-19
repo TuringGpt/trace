@@ -188,9 +188,12 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
 
 ipcMain.handle('save-zip-file', async (e, zipFileName, zipFilePath) => {
   try {
+    logToFile("INFO", "ZIP_FILE_SAVE", `zipFileName: ${zipFileName}, zipFilePath: ${zipFilePath}`);
+    const desktopPath = app.getPath('desktop'); // Get path to the Desktop
+    const defaultDesktopPath = path.join(desktopPath, path.basename(zipFilePath)); // Construct the default save path on the Desktop
     const filePath = await dialog.showSaveDialog({
       title: 'Save Recorded Video',
-      defaultPath: zipFilePath,
+      defaultPath: defaultDesktopPath,
       filters: [{ name: zipFileName, extensions: ['zip'] }]
     });
 
