@@ -9,7 +9,7 @@ const fs = require('fs');
 const JSZip = require('jszip');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const Keylogger = require('./keylogger.js');
 const archiver = require('archiver');
 const { once } = require('events');
@@ -17,20 +17,25 @@ let keylogger;
 const isDev = process.env.MODE !== 'production';
 const blobUrl = process.env.BLOB_STORAGE_URL;
 
+let isQuitting = false;
+app.on('before-quit', async (event) => {
+  if (isQuitting) return;
+  isQuitting = true;
+  logToFile('INFO', 'APPLICATION_SHUTDOWN', 'Application is quitting.');
+  event.preventDefault();
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  app.quit();
+});
+
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+const logFilePath = path.join(app.getPath('userData'), 'app.log');
 const logToFile = (level, context, message, error) => {
-  const logFilePath = path.join(app.getPath('userData'), 'app.log');
   const timestamp = new Date().toISOString();
   const logMessage = `${timestamp} - ${level} - ${context} : ${message}\n`;
-
-  if (isDev) {
-    console.log(logMessage, error ? `Error: ${error}` : '');
-    return;
-  }
-
+  if (isDev) console.log(logMessage, error ? `Error: ${error}` : '');
   fs.appendFileSync(logFilePath, logMessage);
   if (error) fs.appendFileSync(logFilePath, `Error: ${error}\n`);
 };
@@ -89,6 +94,10 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+ipcMain.handle('get-log-path', async () => {
+  return logFilePath;
 });
 
 ipcMain.handle('context-menu', async (event, sources) => {

@@ -1,5 +1,15 @@
 // src/renderer.js
 
+let hasFetchedLogPath = false;
+let logPath = '';
+async function getLogPath() {
+  if (hasFetchedLogPath) return;
+  logPath = await window.electronAPI.getLogPath();
+  console.log("SUCCESS : RENDERER : Backend Log file - ", logPath);
+  hasFetchedLogPath = true;
+}
+getLogPath();
+
 const startButton = document.getElementById('startButton')
 const stopButton = document.getElementById('stopButton')
 const videoSelectBtn = document.getElementById('videoSelectBtn')
