@@ -236,7 +236,7 @@ function displayFileOptions(zipFilePath, zipFileName) {
 }
 
 document.getElementById('uploadButton').addEventListener('click', () => {
-  document.getElementById("zipFileInputName").innerHTML = "";
+  // document.getElementById("zipFileInputName").innerHTML = "";
   document.getElementById('uploadOverlay').classList.remove('hidden');
 });
 
@@ -257,11 +257,9 @@ document.getElementById('uploadOverlay').addEventListener('click', function(even
 document.getElementById('zipFileInput').addEventListener('change', function() {
   const fileNameSpan = document.getElementById('zipFileInputName');
   fileNameSpan.textContent = this.files[0] ? this.files[0].name : '';
-  this.value = '';
 });
 
 document.getElementById('startUploadBtn').addEventListener('click', async () => {
-  document.getElementById("zipFileInputName").innerHTML = "";
   const zipFile = document.getElementById('zipFileInput').files[0];
 
   if (!zipFile) {
@@ -283,6 +281,8 @@ document.getElementById('startUploadBtn').addEventListener('click', async () => 
         document.getElementById('uploadedZipFileName').innerText = `${res.uploadedZipFileName}`;
         document.getElementById('uploadLoadingOverlay').classList.add('hidden');
         document.getElementById('uploadSuccessOverlay').classList.remove('hidden');
+        document.getElementById("zipFileInputName").innerHTML = "";
+        document.getElementById("zipFileInput").value = "";
       } else {
         document.getElementById('uploadLoadingOverlay').classList.add('hidden');
         document.getElementById('uploadOverlay').classList.add('hidden');
