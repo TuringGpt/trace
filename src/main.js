@@ -14,7 +14,8 @@ const Keylogger = require('./keylogger.js');
 const archiver = require('archiver');
 const { once } = require('events');
 let keylogger;
-const isDev = process.env.MODE !== 'production';
+const isDemo = process.env.MODE === 'demo';
+const isDev = !isDemo && process.env.MODE !== 'production';
 const blobUrl = process.env.BLOB_STORAGE_URL;
 
 let isQuitting = false;
@@ -35,7 +36,7 @@ const logFilePath = path.join(app.getPath('userData'), 'app.log');
 const logToFile = (level, context, message, error) => {
   const timestamp = new Date().toISOString();
   const logMessage = `${timestamp} - ${level} - ${context} : ${message}\n`;
-  if (isDev) console.log(logMessage, error ? `Error: ${error}` : '');
+  if (isDev || isDemo) console.log(logMessage, error ? `Error: ${error}` : '');
   fs.appendFileSync(logFilePath, logMessage);
   if (error) fs.appendFileSync(logFilePath, `Error: ${error}\n`);
 };
@@ -45,7 +46,7 @@ const iconExtension = process.platform === 'win32' ? 'ico' : (process.platform =
 let iconPath = path.join(__dirname, `assets/icons/icon.${iconExtension}`);
 let preloadPath = path.join(__dirname, 'preload.js');
 const createWindow = () => {
-  if (!isDev) {
+  if (!isDev || isDemo) {
     mainWindow = new BrowserWindow({
       width: 1200,
       height: 1000,
@@ -224,6 +225,7 @@ ipcMain.handle('discard-zip-file', async (e, zipFilePath) => {
 });
 
 const uploadZipFile = async (content) => {
+  if (isDemo) return await new Promise(resolve => setTimeout(() => resolve(JSON.stringify({ status: 'Uploaded', uploadedZipFileName: 'sample-file.zip' })), 3000));
   logToFile("INFO", "UPLOAD", "Uploading zip file...");
   const blobServiceClient = isDev ? BlobServiceClient.fromConnectionString(blobUrl) : (new BlobServiceClient(blobUrl));
   const containerClient = blobServiceClient.getContainerClient('turing-videos');
