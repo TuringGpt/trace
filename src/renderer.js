@@ -268,7 +268,7 @@ document.getElementById('startUploadBtn').addEventListener('click', async () => 
   }
 
   if (zipFile.type !== 'application/zip') {
-      alert('Invalid file format. Please upload a Zip file.');
+      alert(`Invalid file format. Please upload a Zip file. Given file type is ${zipFile.type}.`);
       return;
   }
 
