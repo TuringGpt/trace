@@ -39,6 +39,11 @@ class Keylogger {
       const timestamp = this.getFormattedTime();
       this.logEntries.push(`${timestamp}: Mouse Button Press : ${e.button}`);
     });
+
+    uIOhook.on('mouseup', (e) => {
+      const timestamp = this.getFormattedTime();
+      this.logEntries.push(`${timestamp}: Mouse Button Release : ${e.button}`);
+    });
   
     const throttledMouseMove = throttle((e) => {
       const timestamp = this.getFormattedTime();

@@ -1,7 +1,7 @@
 {
   "name": "trace",
   "productName": "Trace",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Trace: Cross Platform Screen Recorder with clicks and keystrokes",
   "main": "src/main.js",
   "scripts": {
