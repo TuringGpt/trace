@@ -13,7 +13,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   remuxVideoFile: (uint8Array) => ipcRenderer.invoke('remux-video-file', uint8Array),
   saveZipFile: (videoFileName, tempOutputPath) => ipcRenderer.invoke('save-zip-file', videoFileName, tempOutputPath),
   discardZipFile: (filePath) => ipcRenderer.invoke('discard-zip-file', filePath),
-  createZipFile: (videoFilePath, keyLogFilePath) => ipcRenderer.invoke('create-zip-file', videoFilePath, keyLogFilePath),
+  createZipFile: (videoFilePath, keyLogFilePath, metadataFilePath) => ipcRenderer.invoke('create-zip-file', videoFilePath, keyLogFilePath, metadataFilePath),
   uploadFiles: (zipFilePath) => ipcRenderer.invoke('upload-zip-file', zipFilePath),
+  getDeviceMetadata: (screenId) => ipcRenderer.invoke('get-device-metadata', screenId),
 })
 

@@ -14,6 +14,8 @@ const startButton = document.getElementById('startButton')
 const stopButton = document.getElementById('stopButton')
 const videoSelectBtn = document.getElementById('videoSelectBtn')
 
+let screenId;
+
 async function openContextMenu(sources) {
   try {
     await window.electronAPI.invokeContextMenu(JSON.stringify(sources));
@@ -68,6 +70,7 @@ const playVideo = async (source) => {
 window.electronAPI.selectSource(async (event, value) => {
   const source = value
   console.log("SUCCESS : RENDERER : selectSource callback : selected source > ", source);
+  screenId = source.display_id
   await playVideo(source);
   console.log("SUCCESS : RENDERER : playVideo > ", source);
   enableButton(startButton);
@@ -128,10 +131,11 @@ const recordVideo = async () => {
     const blob = new Blob(recordedChunks, { type: 'video/webm; codecs=H264' });
     const arrayBuffer = await blob.arrayBuffer();
     const { keyLogFilePath } = await electronAPI.stopKeystrokesLogging();
+    const { metadataFilePath } = await electronAPI.getDeviceMetadata(screenId);
     const res = await electronAPI.remuxVideoFile(new Uint8Array(arrayBuffer));
     const videoFilePath = res.videoFilePath;
 
-    const { zipFilePath, zipFileName } = await electronAPI.createZipFile(videoFilePath, keyLogFilePath);
+    const { zipFilePath, zipFileName } = await electronAPI.createZipFile(videoFilePath, keyLogFilePath, metadataFilePath);
     console.log("New Zip file saved at ", zipFilePath);
 
     hide('loadingOverlay');

@@ -1,11 +1,12 @@
 // src/main.js
 
-const { app, BrowserWindow, ipcMain, Menu, desktopCapturer, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, desktopCapturer, dialog, screen } = require('electron');
 const ffmpeg = require('fluent-ffmpeg');
 var ffmpegStatic = require('ffmpeg-static-electron');
 ffmpeg.setFfmpegPath(ffmpegStatic.path.replace("app.asar", "app.asar.unpacked"));
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const JSZip = require('jszip');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const { v4: uuidv4 } = require('uuid');
@@ -145,7 +146,8 @@ function remuxVideo(inputPath, outputPath) {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .output(outputPath)
-      .videoFilters('setpts=N/FRAME_RATE/TB')
+      // .videoFilters('setpts=N/FRAME_RATE/TB')
+      .videoCodec('copy')
       .noAudio()
       .format('mp4')
       .on('end', () => {
@@ -224,6 +226,34 @@ ipcMain.handle('discard-zip-file', async (e, zipFilePath) => {
   }
 });
 
+ipcMain.handle('get-device-metadata', async (e, screenId) => {
+  try {
+    logToFile("INFO", "GET_DEVICE_METADATA", `screenId: ${screenId}`);
+    const display = screen.getAllDisplays().find(d => d.id === Number(screenId));
+
+    const metadata = {
+      osType: os.type(),
+      osRelease: os.release(),
+      cpuModel: os.cpus()[0].model,
+      cpuSpeed: os.cpus()[0].speed,
+      numCores: os.cpus().length,
+      totalMemory: os.totalmem(),
+      freeMemory: os.freemem(),
+      screenSize: display.size,
+      screenResolution: display.bounds,
+      screenRotation: display.rotation,
+      screenScaleFactor: display.scaleFactor,
+    };
+    const downloadsPath = app.getPath('downloads');
+    const defaultPath = `${downloadsPath}/${keylogger.startTime}-metadata.json`;
+    fs.writeFileSync(defaultPath, JSON.stringify(metadata));
+    logToFile("SUCCESS", "GET_DEVICE_METADATA", JSON.stringify(metadata));
+    return { metadataFilePath: defaultPath };
+  } catch (error) {
+    logToFile("ERROR", "GET_DEVICE_METADATA", "Failed to get device metadata.", error);
+  }
+});
+
 const uploadZipFile = async (content) => {
   if (isDemo) return await new Promise(resolve => setTimeout(() => resolve(JSON.stringify({ status: 'Uploaded', uploadedZipFileName: 'sample-file.zip' })), 3000));
   logToFile("INFO", "UPLOAD", "Uploading zip file...");
@@ -247,7 +277,7 @@ ipcMain.handle('upload-zip-file', async (e, zipFilePath) => {
   }
 });
 
-ipcMain.handle('create-zip-file', async (event, videoFilePath, keyLogFilePath) => {
+ipcMain.handle('create-zip-file', async (event, videoFilePath, keyLogFilePath, metadataFilePath) => {
   try {
     const downloadsPath = app.getPath('downloads');
     const zipFileName = `${uuidv4()}.zip`;
@@ -258,12 +288,14 @@ ipcMain.handle('create-zip-file', async (event, videoFilePath, keyLogFilePath) =
     archive.pipe(output);
     archive.file(videoFilePath, { name: 'video.mp4' });
     archive.file(keyLogFilePath, { name: 'keylog.txt' });
+    archive.file(metadataFilePath, { name: 'metadata.json' });
     await archive.finalize();
 
     await once(output, 'close');
     logToFile("SUCCESS", "ZIP_CREATION", "Zip file created successfully.");
 
     fs.unlinkSync(videoFilePath);
+    fs.unlinkSync(metadataFilePath);
     fs.unlinkSync(keyLogFilePath);
 
     return { zipFilePath, zipFileName };
