@@ -1,5 +1,10 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 
+import './ipc';
+
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
 /**
  * This module executes inside of electron's main process. You can start
  * electron renderer process from here and communicate with the other processes
@@ -9,9 +14,7 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
+
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
