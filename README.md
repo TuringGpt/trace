@@ -97,4 +97,4 @@ Contributions to Trace are always welcome! If you would like to contribute, plea
 
 If you encounter any issues or have any questions about using Trace, please file an issue on our GitHub repository.
 
-Thank you for using Trace – Happy Recording!
+Thank you for using Trace – Happy Recording!!
