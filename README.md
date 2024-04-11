@@ -1,5 +1,5 @@
 <!-- README.md -->
-
+# Trace - Dev
 # Trace - Screen Recorder
 
 Welcome to Trace, the intuitive, cross-platform screen recording application that not only captures your screen but also records your clicks and keystrokes to provide a comprehensive viewing experience.
