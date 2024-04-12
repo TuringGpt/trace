@@ -214,11 +214,7 @@
     },
     "extraResources": [
       "./assets/**"
-    ],
-    "publish": {
-      "provider": "github",
-      "owner": "turing"
-    }
+    ]
   },
   "devEngines": {
     "node": ">=18.x",

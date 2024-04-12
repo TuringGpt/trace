@@ -147,6 +147,7 @@ const configuration: webpack.Configuration = {
 
     new webpack.DefinePlugin({
       'process.type': '"renderer"',
+      'process.env.FLUENTFFMPEG_COV': false,
     }),
   ],
 };

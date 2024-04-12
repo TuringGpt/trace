@@ -1,12 +1,11 @@
-
 # Trace - Screen Recorder
 
 Welcome to Trace, the intuitive, cross-platform screen recording application that not only captures your screen but also records your clicks and keystrokes to provide a comprehensive viewing experience.
 
-
 ![screenshot](.erb/img/ss.png)
 
 ## Features
+
 - Cross-Platform: Runs on Windows, macOS, and Linux.
 - Screen Recording: Capture your entire screen.
 - Clicks and Keystrokes: Records all mouse clicks and keystrokes alongside the video.
@@ -26,9 +25,7 @@ Depending on your operating system, download the respective executable:
   - Debian-based distributions: Download `Trace_x.x.x_amd64.deb`.
   - Red Hat-based distributions: Download `Trace-x.x.x.x86_64.rpm`.
 
-
 After downloading the correct file for your operating system, run the installer or executable to install Trace on your machine.
-
 
 ## How to Use Trace
 
@@ -41,7 +38,6 @@ After downloading the correct file for your operating system, run the installer 
 7. Once saved/discarded, You'll be redirected to home page where upload feature is available in top right corner.
 8. Select zip file and start the upload. It'll show finished status when file is uploaded completely.
 
-
 ## Getting Started
 
 Follow these instructions to get the project up and running on your local machine for development and testing.
@@ -49,8 +45,7 @@ Follow these instructions to get the project up and running on your local machin
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18.x)
-
-
+- Python (v3.11 or lower) (required for `node-gyp` to build native modules, python 3.12 is not supported)
 
 ## Starting Development
 

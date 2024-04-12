@@ -142,7 +142,9 @@ export default function VideoRecorder() {
             <video
               id="videoElement"
               ref={videoRef}
-              className={source ? '' : 'hidden'}
+              className={clsx({
+                hidden: !source,
+              })}
             />
             <div
               id="videoPlaceholder"
@@ -165,10 +167,10 @@ export default function VideoRecorder() {
               className={clsx(
                 `bg-indigo-600 m-6 mb-0 rounded-md px-4 py-4 text-white`,
                 {
-                  'opacity-50': !source,
+                  'opacity-50': !source || isRecording,
                 },
               )}
-              disabled={!source}
+              disabled={!source || isRecording}
               ref={startButtonRef}
               onClick={onStartRecording}
             >
