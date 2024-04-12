@@ -1,5 +1,5 @@
 <!-- README.md -->
-# Trace - Dev
+
 # Trace - Screen Recorder
 
 Welcome to Trace, the intuitive, cross-platform screen recording application that not only captures your screen but also records your clicks and keystrokes to provide a comprehensive viewing experience.
@@ -26,7 +26,6 @@ Depending on your operating system, download the respective executable:
 - **Linux**:
   - Debian-based distributions: Download `Trace_x.x.x_amd64.deb`.
   - Red Hat-based distributions: Download `Trace-x.x.x.x86_64.rpm`.
-
 
 After downloading the correct file for your operating system, run the installer or executable to install Trace on your machine.
 
@@ -67,27 +66,27 @@ Before running the application, set up the necessary environment variables:
    ```
    development mode will skip uploading files to cloud storage.
 4. Install the application dependencies (use **node version 18**)
-    ```
-    npm install
-    ```
+   ```
+   npm install
+   ```
 5. Install azure cli. follow [instructions](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) for your platform.
 6. Verify azure cli installation.
-    ```
-    az version
-    ```
+   ```
+   az version
+   ```
 7. Install nodemon and azurite for local development. azurite is used to create local azure blob storage for testing purpose. we're creating `azure-blob-storage` folder in project root which will be used to mimic upload recordings.
-    ```
-    npm i -g nodemon azurite
-    azurite-blob -l ./azure-blob-storage
-    ```
+   ```
+   npm i -g nodemon azurite
+   azurite-blob -l ./azure-blob-storage
+   ```
 8. Create Blob storage container using azure cli.
-    ```
-    az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
-    ```
+   ```
+   az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+   ```
 9. Start the application in development mode.
-    ```
-    npm run watch
-    ```
+   ```
+   npm run watch
+   ```
 
 ## Contributing
 
