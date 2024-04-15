@@ -1,6 +1,8 @@
 import ffmpegStatic from 'ffmpeg-static-electron';
 import ffmpeg from 'fluent-ffmpeg';
 
+import logToFile from './log';
+
 ffmpeg.setFfmpegPath(
   ffmpegStatic.path.replace('app.asar', 'app.asar.unpacked'),
 );
@@ -14,11 +16,11 @@ export default function remuxVideo(inputPath: string, outputPath: string) {
       .noAudio()
       .format('mp4')
       .on('end', () => {
-        console.log('INFO', 'VIDEO_REMUXING', 'Video remuxing completed.');
+        logToFile('INFO', 'VIDEO_REMUXING', 'Video remuxing completed.');
         resolve();
       })
       .on('error', (err: any) => {
-        console.log(
+        logToFile(
           'ERROR',
           'VIDEO_REMUXING',
           `FFmpeg Error: ${err.message}`,

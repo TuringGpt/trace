@@ -1,5 +1,8 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 
+// Make sure the configLoader is the first import always, so that the env vars are loaded first
+// before any other imports happen
+import './configLoader';
 import './ipc';
 
 import { app, BrowserWindow, ipcMain, shell } from 'electron';

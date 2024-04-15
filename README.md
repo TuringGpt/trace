@@ -62,3 +62,5 @@ To package apps for the local platform:
 ```bash
 npm run package
 ```
+
+The packaged executable will be available in the `release/build` directory.

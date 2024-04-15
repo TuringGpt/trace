@@ -11,8 +11,3 @@ export function resolveHtmlPath(htmlFileName: string) {
   }
   return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
 }
-
-// TODO: implement this function
-export function logToFile(...args: any[]) {
-  console.log(args);
-}
