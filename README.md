@@ -49,11 +49,44 @@ Follow these instructions to get the project up and running on your local machin
 
 ## Starting Development
 
-Start the app in the `dev` environment:
+### Environment Setup
 
-```bash
-npm start
-```
+Before running the application, set up the necessary environment variables:
+
+1. Clone the repository
+   ```
+   git clone https://github.com/TuringGpt/trace.git
+   cd trace
+   ```
+2. Create a `.env` file in the root directory of the project.
+3. Add the following variables to the `.env` file (modify values as needed):
+   ```plaintext
+   MODE='development'
+   BLOB_STORAGE_URL='DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;'
+   ```
+   development mode will skip uploading files to cloud storage.
+4. Install the application dependencies (use **node version 18**)
+   ```
+   npm install
+   ```
+5. Install azure cli. follow [instructions](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) for your platform.
+6. Verify azure cli installation.
+   ```
+   az version
+   ```
+7. Install nodemon and azurite for local development. azurite is used to create local azure blob storage for testing purpose. we're creating `azure-blob-storage` folder in project root which will be used to mimic upload recordings.
+   ```
+   npm i -g nodemon azurite
+   azurite-blob -l ./azure-blob-storage
+   ```
+8. Create Blob storage container using azure cli.
+   ```
+   az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+   ```
+9. Start the application in development mode.
+   ```
+   npm start
+   ```
 
 ## Packaging for Production
 
@@ -64,3 +97,13 @@ npm run package
 ```
 
 The packaged executable will be available in the `release/build` directory.
+
+## Contributing
+
+Contributions to Trace are always welcome! If you would like to contribute, please fork the repository and submit a pull request, or open an issue with your ideas and suggestions.
+
+## Support
+
+If you encounter any issues or have any questions about using Trace, please file an issue on our GitHub repository.
+
+Thank you for using Trace – Happy Recording!
