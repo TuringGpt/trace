@@ -13,6 +13,7 @@
     "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
   },
   "dependencies": {
+    "ffmpeg-static-electron": "^2.0.3",
     "uiohook-napi": "^1.5.4"
   }
 }
