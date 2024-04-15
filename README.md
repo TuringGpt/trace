@@ -74,9 +74,9 @@ Before running the application, set up the necessary environment variables:
    ```
    az version
    ```
-7. Install nodemon and azurite for local development. azurite is used to create local azure blob storage for testing purpose. we're creating `azure-blob-storage` folder in project root which will be used to mimic upload recordings.
+7. Install azurite for local development. azurite is used to create local azure blob storage for testing purpose. we're creating `azure-blob-storage` folder in project root which will be used to mimic upload recordings.
    ```
-   npm i -g nodemon azurite
+   npm i -g azurite
    azurite-blob -l ./azure-blob-storage
    ```
 8. Create Blob storage container using azure cli.
