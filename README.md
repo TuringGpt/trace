@@ -96,6 +96,12 @@ To package apps for the local platform:
 npm run package
 ```
 
+To debug the packaged app, will add inspect elements and other capabilities to the packaged app. Run the following command to package the app in debug mode:
+
+```bash
+DEBUG_PROD= true npm run package
+```
+
 The packaged executable will be available in the `release/build` directory.
 
 ## Contributing
