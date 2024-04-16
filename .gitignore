@@ -4,6 +4,10 @@ logs
 
 .env
 
+
+# Azure local storage
+azure-blob-storage/
+
 # Runtime data
 pids
 *.pid
