@@ -4,8 +4,11 @@ import fs from 'fs';
 import keyLogger from '../util/keylogger';
 import logToFile from '../util/log';
 
+let startTime: number;
+
 ipcMain.on('start-keystrokes-logging', () => {
-  keyLogger.startLogging();
+  startTime = Date.now();
+  keyLogger.startLogging(startTime);
   logToFile('INFO', 'KEYSTROKES_LOGGING', 'Keystrokes logging started');
 });
 
@@ -21,7 +24,7 @@ ipcMain.handle('stop-keystrokes-logging', async () => {
   }
   const downloadsPath = app.getPath('downloads');
 
-  const defaultPath = `${downloadsPath}/${keyLogger.startTime}-keystrokes.txt`;
+  const defaultPath = `${downloadsPath}/${startTime}-keystrokes.txt`;
   fs.writeFileSync(defaultPath, logContent);
   logToFile(
     'INFO',
