@@ -2,7 +2,7 @@
 /* eslint no-unused-vars: off */
 import { contextBridge, DesktopCapturerSource, ipcRenderer } from 'electron';
 
-import { CapturedSource, UploadResult } from '../../customTypes';
+import { CapturedSource, UploadResult } from '../types/customTypes';
 
 export type ElectronHandler = {
   getVideoSources: () => Promise<DesktopCapturerSource[]>;

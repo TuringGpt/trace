@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 
-import { UploadResult } from '../../../customTypes';
+import { UploadResult } from '../../types/customTypes';
 import logToFile from './log';
 
 const isDemo = process.env.MODE === 'demo';

@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { CapturedSource } from '../../../customTypes';
+import { CapturedSource } from '../../types/customTypes';
 import {
   hideBusyIndicator,
   setZipData,
