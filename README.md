@@ -104,6 +104,12 @@ DEBUG_PROD= true npm run package
 
 The packaged executable will be available in the `release/build` directory.
 
+To run an analysis of the bundle size:
+
+```bash
+ANALYZE=true npm run build
+```
+
 ## Contributing
 
 Contributions to Trace are always welcome! If you would like to contribute, please fork the repository and submit a pull request, or open an issue with your ideas and suggestions.
