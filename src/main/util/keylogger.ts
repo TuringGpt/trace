@@ -2,91 +2,96 @@ import { uIOhook } from 'uiohook-napi';
 import throttle from '../../renderer/util/throttle';
 import keycodesMapping from './keycodes';
 
-let isLogging = false;
-let logEntries: string[] = [];
-const mouseLogInterval = 50;
-const scrollLogInterval = 50;
+class KeyLogger {
+  isLogging: boolean;
 
-const getFormattedTime = (startTime: number, currentTime: number) => {
-  const time = currentTime - startTime;
-  const milliseconds = time % 1000;
-  const seconds = Math.floor((time / 1000) % 60);
-  const minutes = Math.floor((time / (1000 * 60)) % 60);
-  const hours = Math.floor((time / (1000 * 60 * 60)) % 24);
+  logEntries: Set<string>;
 
-  const fHours = hours < 10 ? `0${hours}` : hours;
-  const fMinutes = minutes < 10 ? `0${minutes}` : minutes;
-  const fSeconds = seconds < 10 ? `0${seconds}` : seconds;
-  const fMilliseconds = milliseconds.toString().padStart(3, '0');
+  startTime: number | undefined;
 
-  return `${fHours}:${fMinutes}:${fSeconds}:${fMilliseconds}`;
-};
+  lastMouseLogTime: number;
 
-const startLogging = (startTime: number) => {
-  if (isLogging) return;
-  isLogging = true;
+  mouseLogInterval: number;
 
-  uIOhook.on('keyup', (e) => {
-    const currentTime = Date.now();
-    const timestamp = getFormattedTime(startTime, currentTime);
-    logEntries.push(
-      `${timestamp}: Keyboard Button Press : ${keycodesMapping[e.keycode]}`,
-    );
-  });
+  scrollLogInterval: number;
 
-  uIOhook.on('mousedown', (e) => {
-    const currentTime = Date.now();
-    const timestamp = getFormattedTime(startTime, currentTime);
-    logEntries.push(`${timestamp}: Mouse Button Press : ${e.button}`);
-  });
+  constructor() {
+    this.isLogging = false;
+    this.logEntries = new Set<string>();
+    this.lastMouseLogTime = 0;
+    this.mouseLogInterval = 50;
+    this.scrollLogInterval = 50;
+  }
 
-  uIOhook.on('mouseup', (e) => {
-    const currentTime = Date.now();
-    const timestamp = getFormattedTime(startTime, currentTime);
-    logEntries.push(`${timestamp}: Mouse Button Release : ${e.button}`);
-  });
+  startLogging() {
+    // #todo: use e.time instead of Date.now()
+    if (this.isLogging) return;
+    this.isLogging = true;
+    this.startTime = Date.now();
 
-  const throttledMouseMove = throttle((e) => {
-    const currentTime = Date.now();
-    const timestamp = getFormattedTime(startTime, currentTime);
-    logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
-  }, mouseLogInterval);
+    const getFormattedTime = (now: number) => {
+      const time = now - (this.startTime ?? 0);
+      const milliseconds = time % 1000;
+      const seconds = Math.floor((time / 1000) % 60);
+      const minutes = Math.floor((time / (1000 * 60)) % 60);
+      const hours = Math.floor((time / (1000 * 60 * 60)) % 24);
 
-  uIOhook.on('mousemove', throttledMouseMove);
+      const fHours = hours < 10 ? `0${hours}` : hours;
+      const fMinutes = minutes < 10 ? `0${minutes}` : minutes;
+      const fSeconds = seconds < 10 ? `0${seconds}` : seconds;
+      const fMilliseconds = milliseconds.toString().padStart(3, '0');
 
-  const logScroll = throttle((e) => {
-    const currentTime = Date.now();
-    const timestamp = getFormattedTime(startTime, currentTime);
-    const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
-    let direction;
-    if (axis === 'Vertical') {
-      direction = e.rotation > 0 ? 'UP' : 'DOWN';
-    } else {
-      direction = e.rotation > 0 ? 'LEFT' : 'RIGHT';
-    }
-    logEntries.push(
-      `${timestamp}: Scrolled ${axis}, Direction: ${direction}, Intensity: ${
-        e.rotation < 0 ? e.rotation * -1 : e.rotation
-      }`,
-    );
-  }, scrollLogInterval);
+      return `${fHours}:${fMinutes}:${fSeconds}.${fMilliseconds}`;
+    };
 
-  uIOhook.on('wheel', logScroll);
+    const addKeyboardLogEntry = (e: any) => {
+      const now = Date.now();
+      const timestamp = getFormattedTime(now);
+      this.logEntries.add(
+        `${timestamp}: Keyboard Button Press : ${keycodesMapping[e.keycode]}`,
+      );
+    };
 
-  uIOhook.start();
-};
+    const addMouseLogEntry = (e: any) => {
+      const now = Date.now();
+      const timestamp = getFormattedTime(now);
+      this.logEntries.add(`${timestamp}: Mouse Button ${e.type} : ${e.button}`);
+    };
 
-const stopLogging = (): string | null => {
-  if (!isLogging) return null;
-  isLogging = false;
-  uIOhook.removeAllListeners();
-  uIOhook.stop();
-  const logContent = logEntries.join('\n');
-  logEntries = [];
-  return logContent;
-};
+    const addMouseMoveLogEntry = throttle((e: any) => {
+      const now = Date.now();
+      const timestamp = getFormattedTime(now);
+      this.logEntries.add(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
+    }, this.mouseLogInterval);
 
-export default {
-  startLogging,
-  stopLogging,
-};
+    const addScrollLogEntry = throttle((e: any) => {
+      const now = Date.now();
+      const timestamp = getFormattedTime(now);
+      const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
+      const direction = e.rotation > 0 ? 'UP' : 'DOWN';
+      const intensity = e.rotation < 0 ? e.rotation * -1 : e.rotation;
+      this.logEntries.add(
+        `${timestamp}: Scrolled ${axis}, Direction: ${direction}, Intensity: ${intensity}`,
+      );
+    }, this.scrollLogInterval);
+
+    uIOhook.on('keyup', addKeyboardLogEntry);
+    uIOhook.on('mousedown', addMouseLogEntry);
+    uIOhook.on('mouseup', addMouseLogEntry);
+    uIOhook.on('mousemove', addMouseMoveLogEntry);
+    uIOhook.on('wheel', addScrollLogEntry);
+
+    uIOhook.start();
+  }
+
+  stopLogging(): string | null {
+    this.isLogging = false;
+    uIOhook.removeAllListeners();
+    uIOhook.stop();
+    const logContent = Array.from(this.logEntries).join('\n');
+    this.logEntries.clear();
+    return logContent;
+  }
+}
+
+export default new KeyLogger();
