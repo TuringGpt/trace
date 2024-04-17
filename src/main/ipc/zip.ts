@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import logger from '../util/logger';
+import logger, { logDirectory } from '../util/logger';
 
 const log = logger.child({ module: 'ipc.zip' });
 
@@ -77,9 +77,21 @@ ipcMain.handle('save-zip-file', async (e, zipFileName, zipFilePath) => {
     return null;
   } catch (error) {
     log.error('Failed to save the zip file.', error);
-    return `ERROR: check logs at ${path.join(
-      app.getPath('userData'),
-      'app.log',
-    )}`;
+    return `ERROR: check logs at ${logDirectory}`;
+  }
+});
+
+ipcMain.handle('discard-zip-file', async (e, zipFilePath) => {
+  try {
+    if (fs.existsSync(zipFilePath)) {
+      fs.unlinkSync(zipFilePath);
+      log.info('Zip file discarded successfully.');
+      return true;
+    }
+    log.warn('Cannot discard zip. Zip file does not exist.');
+    return false;
+  } catch (error) {
+    log.error('Failed to discard the zip file.', error);
+    return `ERROR: check logs at ${logDirectory} `;
   }
 });
