@@ -5,9 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import loggger from '../util/logger';
+import logger from '../util/logger';
 
-const log = loggger.child({ module: 'ipc.zip' });
+const log = logger.child({ module: 'ipc.zip' });
 
 ipcMain.handle(
   'create-zip-file',
