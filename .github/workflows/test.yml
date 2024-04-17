@@ -4,6 +4,8 @@ on: [push, pull_request]
 
 jobs:
   test:
+    # Remove this if condition later, when the github workflow is stable
+    if: github.env.ENABLE_BUILD == 'true'
     runs-on: ${{ matrix.os }}
 
     strategy:
