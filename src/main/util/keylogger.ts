@@ -12,7 +12,7 @@ class KeyLogger {
 
   logEntries: string[];
 
-  startTime: number | undefined;
+  startTime: number;
 
   lastMouseLogTime: number;
 
@@ -26,6 +26,7 @@ class KeyLogger {
     this.lastMouseLogTime = 0;
     this.mouseLogInterval = 50;
     this.scrollLogInterval = 50;
+    this.startTime = 0;
   }
 
   startLogging() {
@@ -81,7 +82,7 @@ class KeyLogger {
   };
 
   getFormattedTime() {
-    const time = Date.now() - (this.startTime ?? 0);
+    const time = Date.now() - this.startTime;
     const milliseconds = time % 1000;
     const seconds = Math.floor((time / 1000) % 60);
     const minutes = Math.floor((time / (1000 * 60)) % 60);
