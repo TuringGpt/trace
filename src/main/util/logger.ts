@@ -11,6 +11,8 @@ if (!fs.existsSync(logDirectory)) {
   fs.mkdirSync(logDirectory);
 }
 
+export { logDirectory };
+
 // get this only once per run, so that the log file name is unique per run
 const getHourAndMin = (() => {
   const date = new Date();

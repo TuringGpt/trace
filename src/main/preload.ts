@@ -35,6 +35,8 @@ export type ElectronHandler = {
     tempOutputPath: string,
   ) => Promise<string | null>;
 
+  discardZipFile: (zipFilePath: string) => Promise<boolean | string>;
+
   getDeviceMetadata: (
     screenId: string,
     startTime: string,
@@ -76,6 +78,8 @@ const electronHandler: ElectronHandler = {
     ),
   saveZipFile: (videoFileName, tempOutputPath) =>
     ipcRenderer.invoke('save-zip-file', videoFileName, tempOutputPath),
+  discardZipFile: (zipFilePath) =>
+    ipcRenderer.invoke('discard-zip-file', zipFilePath),
   getDeviceMetadata: (screenId, startTime) =>
     ipcRenderer.invoke('get-device-metadata', screenId, startTime),
   startKeystrokesLogging: () => ipcRenderer.send('start-keystrokes-logging'),
