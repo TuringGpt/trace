@@ -8,9 +8,10 @@ import {
 import fs from 'fs';
 import path from 'path';
 
-import logToFile from '../util/log';
+import logger from '../util/logger';
 import remuxVideo from '../util/remuxVideo';
 
+const log = logger.child({ module: 'ipc.video' });
 ipcMain.handle('get-video-sources', async (event) => {
   const sources = await desktopCapturer.getSources({ types: ['screen'] });
   try {
@@ -20,7 +21,7 @@ ipcMain.handle('get-video-sources', async (event) => {
     }));
     Menu.buildFromTemplate(template).popup();
   } catch (e) {
-    logToFile('ERROR', 'GET_VIDEO_SOURCES', 'Failed to get video sources', e);
+    log.error('Failed to get video sources', e);
     throw e;
   }
   return sources;
@@ -39,20 +40,11 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
     const startTime = Date.now();
     await remuxVideo(tempInputPath, tempOutputPath);
     const timeTakenToConvert = Date.now() - startTime;
-    logToFile(
-      'SUCCESS',
-      'VIDEO_REMUXING',
-      `Video conversion took ${timeTakenToConvert / 1000} seconds.`,
-    );
+    log.info(`Video conversion took ${timeTakenToConvert / 1000} seconds.`);
     fs.unlinkSync(tempInputPath);
     return { videoFilePath: tempOutputPath };
   } catch (error) {
-    logToFile(
-      'ERROR',
-      'VIDEO_REMUXING',
-      'Failed to remux the video file.',
-      error,
-    );
+    log.error('Failed to remux the video file.', error);
     if (fs.existsSync(tempInputPath)) {
       fs.unlinkSync(tempInputPath);
     }

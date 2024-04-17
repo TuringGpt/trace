@@ -5,9 +5,9 @@
 import './configLoader';
 import './ipc';
 
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import log from 'electron-log';
+import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
+import { ipcMain } from 'electron/main';
 /**
  * This module executes inside of electron's main process. You can start
  * electron renderer process from here and communicate with the other processes
@@ -20,22 +20,20 @@ import path from 'path';
 
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import logger from './util/logger';
+
+const log = logger.child({ module: 'main' });
+
+logger.info('App starting...');
 
 class AppUpdater {
   constructor() {
-    log.transports.file.level = 'info';
     autoUpdater.logger = log;
     autoUpdater.checkForUpdatesAndNotify();
   }
 }
 
 let mainWindow: BrowserWindow | null = null;
-
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -140,4 +138,21 @@ app
       if (mainWindow === null) createWindow();
     });
   })
-  .catch(console.log);
+  .catch(log.error);
+
+app.on('before-quit', () => {
+  log.info('App about to quit.');
+});
+
+process.on('uncaughtException', (error) => {
+  log.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  log.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+// custom event listener
+ipcMain.on('report-renderer-unhandled-error', (e, error) => {
+  log.error('Unhandled Error from renderer:', error);
+});
