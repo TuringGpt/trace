@@ -1,12 +1,14 @@
-import { app, ipcMain, screen } from 'electron';
+import { app, screen } from 'electron';
 import fs from 'fs';
 import os from 'os';
 
+import { ipc } from '../../types/customTypes';
 import logger from '../util/logger';
+import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.metadata' });
 
-ipcMain.handle('get-device-metadata', async (e, screenId, startTime) => {
+ipcHandle('get-device-metadata', async (e, screenId, startTime) => {
   try {
     log.info('screenId: %s', screenId);
     const display = screen
@@ -31,9 +33,9 @@ ipcMain.handle('get-device-metadata', async (e, screenId, startTime) => {
     fs.writeFileSync(defaultPath, JSON.stringify(metadata));
     log.info(JSON.stringify(metadata));
 
-    return { metadataFilePath: defaultPath };
+    return ipc.success({ metadataFilePath: defaultPath });
   } catch (error) {
     log.error('Failed to get device metadata.', error);
+    return ipc.error('Failed to get device metadata.', error);
   }
-  return null;
 });

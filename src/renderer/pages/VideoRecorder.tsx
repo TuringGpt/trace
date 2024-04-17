@@ -119,20 +119,31 @@ export default function VideoRecorder() {
       );
 
       setIsRecording(false);
-      if (typeof res === 'string') {
-        log.error('Failed to remux video', res);
+      if (
+        res.status === 'error' ||
+        keyLogRes.status === 'error' ||
+        metaDataRes.status === 'error'
+      ) {
+        log.error('Cannot proceed to zip file creation', {
+          remuxRes: res,
+          keyLogRes,
+          metaDataRes,
+        });
         return;
       }
+
+      const { videoFilePath } = res.data;
+
       const createZipRes = await window.electron.createZipFile(
-        res.videoFilePath,
-        keyLogRes?.keyLogFilePath,
-        metaDataRes?.metadataFilePath,
+        videoFilePath,
+        keyLogRes.data.keyLogFilePath,
+        metaDataRes.data.metadataFilePath,
       );
-      if (typeof createZipRes === 'string') {
+      if (createZipRes.status === 'error') {
         log.error('Failed to create zip file', createZipRes);
         return;
       }
-      const { zipFilePath, zipFileName } = createZipRes;
+      const { zipFilePath, zipFileName } = createZipRes.data;
 
       dispatch(hideBusyIndicator());
       dispatch(setZipData(zipFileName, zipFilePath));

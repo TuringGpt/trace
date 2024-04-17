@@ -1,15 +1,17 @@
 import archiver from 'archiver';
-import { app, dialog, ipcMain } from 'electron';
+import { app, dialog } from 'electron';
 import { once } from 'events';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import logger, { logDirectory } from '../util/logger';
+import { ipc } from '../../types/customTypes';
+import logger from '../util/logger';
+import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.zip' });
 
-ipcMain.handle(
+ipcHandle(
   'create-zip-file',
   async (event, videoFilePath, keyLogFilePath, metadataFilePath) => {
     try {
@@ -41,18 +43,18 @@ ipcMain.handle(
         fs.unlinkSync(metadataFilePath);
       }
 
-      return { zipFilePath, zipFileName };
+      return ipc.success({
+        zipFileName,
+        zipFilePath,
+      });
     } catch (error) {
       log.error('Failed to create zip file.', error);
-      return `ERROR: check logs at ${path.join(
-        app.getPath('userData'),
-        'app.log',
-      )}`;
+      return ipc.error('Failed to create zip file.', error);
     }
   },
 );
 
-ipcMain.handle('save-zip-file', async (e, zipFileName, zipFilePath) => {
+ipcHandle('save-zip-file', async (e, zipFileName, zipFilePath) => {
   try {
     log.info(`saving zipFileName: ${zipFileName}, zipFilePath: ${zipFilePath}`);
     const desktopPath = app.getPath('desktop'); // Get path to the Desktop
@@ -69,29 +71,29 @@ ipcMain.handle('save-zip-file', async (e, zipFileName, zipFilePath) => {
     if (!filePath.canceled && filePath.filePath) {
       fs.renameSync(zipFilePath, filePath.filePath);
       log.info('Zip file saved successfully.');
-      return filePath.filePath;
+      return ipc.success(filePath.filePath);
     }
 
     fs.unlinkSync(zipFilePath);
     log.warn('Zip file save operation cancelled.');
-    return null;
+    return ipc.error('Zip file save operation cancelled.');
   } catch (error) {
     log.error('Failed to save the zip file.', error);
-    return `ERROR: check logs at ${logDirectory}`;
+    return ipc.error('Failed to save the zip file.', error);
   }
 });
 
-ipcMain.handle('discard-zip-file', async (e, zipFilePath) => {
+ipcHandle('discard-zip-file', async (e, zipFilePath) => {
   try {
     if (fs.existsSync(zipFilePath)) {
       fs.unlinkSync(zipFilePath);
       log.info('Zip file discarded successfully.');
-      return true;
+      return ipc.success(true);
     }
     log.warn('Cannot discard zip. Zip file does not exist.');
-    return false;
+    return ipc.error('Cannot discard zip. Zip file does not exist.');
   } catch (error) {
     log.error('Failed to discard the zip file.', error);
-    return `ERROR: check logs at ${logDirectory} `;
+    return ipc.error('Failed to discard the zip file.', error);
   }
 });

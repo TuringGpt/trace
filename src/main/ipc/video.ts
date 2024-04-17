@@ -1,18 +1,13 @@
-import {
-  app,
-  desktopCapturer,
-  DesktopCapturerSource,
-  ipcMain,
-  Menu,
-} from 'electron';
+import { app, desktopCapturer, DesktopCapturerSource, Menu } from 'electron';
 import fs from 'fs';
-import path from 'path';
 
+import { ipc } from '../../types/customTypes';
 import logger from '../util/logger';
 import remuxVideo from '../util/remuxVideo';
+import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.video' });
-ipcMain.handle('get-video-sources', async (event) => {
+ipcHandle('get-video-sources', async (event) => {
   const sources = await desktopCapturer.getSources({ types: ['screen'] });
   try {
     const template = sources.map((item: DesktopCapturerSource) => ({
@@ -22,12 +17,12 @@ ipcMain.handle('get-video-sources', async (event) => {
     Menu.buildFromTemplate(template).popup();
   } catch (e) {
     log.error('Failed to get video sources', e);
-    throw e;
+    return ipc.error('Failed to get video sources', e);
   }
-  return sources;
+  return ipc.success(undefined);
 });
 
-ipcMain.handle('remux-video-file', async (event, uint8Array) => {
+ipcHandle('remux-video-file', async (event, uint8Array) => {
   let tempInputPath = '';
   let tempOutputPath = '';
   try {
@@ -42,7 +37,7 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
     const timeTakenToConvert = Date.now() - startTime;
     log.info(`Video conversion took ${timeTakenToConvert / 1000} seconds.`);
     fs.unlinkSync(tempInputPath);
-    return { videoFilePath: tempOutputPath };
+    return ipc.success({ videoFilePath: tempOutputPath });
   } catch (error) {
     log.error('Failed to remux the video file.', error);
     if (fs.existsSync(tempInputPath)) {
@@ -51,9 +46,6 @@ ipcMain.handle('remux-video-file', async (event, uint8Array) => {
     if (fs.existsSync(tempOutputPath)) {
       fs.unlinkSync(tempOutputPath);
     }
-    return `ERROR: check logs at ${path.join(
-      app.getPath('userData'),
-      'app.log',
-    )}`;
+    return ipc.error('Failed to remux the video file.', error);
   }
 });

@@ -15,11 +15,11 @@ function FileUploadSuccess() {
     <div className="flex flex-col items-center space-y-4">
       <div
         id="uploadSuccessOverlay"
-        className=" bg-slate-900 p-4 rounded-lg border border-gray-700 w-1/2 h-1/2 max-w-2xl max-h-md flex flex-col justify-evenly"
+        className=" p-4 rounded-lg   w-1/2 h-1/2 max-w-2xl max-h-md flex flex-col justify-evenly"
       >
-        <img src={successIcon} alt="Upload Successful" className="h-24" />
+        <img src={successIcon} alt="Upload Successful" className="h-40" />
         <div>
-          <h1 className="text-xl flex justify-center font-sans text-center">
+          <h1 className="text-xl flex justify-center font-sans text-center mt-8">
             Files uploaded successfully!
           </h1>
           <span
@@ -34,7 +34,7 @@ function FileUploadSuccess() {
         id="closeUploadModalBtn"
         className="bg-green-600 rounded-md px-4 py-3 text-white"
       >
-        Close
+        Back
       </button>
     </div>
   );
@@ -74,7 +74,7 @@ export default function Upload() {
       name: '',
       filePath: '',
     });
-    if (response.status === 'Uploaded') {
+    if (response.status === 'success') {
       dispatch(hideBusyIndicator());
       setIsUploadSuccess(true);
     } else {
