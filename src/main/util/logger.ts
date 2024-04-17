@@ -1,4 +1,4 @@
-import { app } from 'electron/main';
+import { app } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import * as winston from 'winston';
