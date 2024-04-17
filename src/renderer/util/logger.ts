@@ -5,11 +5,11 @@ const log = {
     window.electron.logFromRenderer('error', ...args);
   },
   info: (...args: any[]) => {
-    console.log('[R]', args);
+    console.log('[R]', ...args);
     window.electron.logFromRenderer('info', ...args);
   },
   warn: (...args: any[]) => {
-    console.warn('[R]', args);
+    console.warn('[R]', ...args);
     window.electron.logFromRenderer('warn', ...args);
   },
 };

@@ -1,5 +1,5 @@
 import './keylogging';
-import './logger';
+import './ipcLogger';
 import './metadata';
 import './video';
 import './zip';

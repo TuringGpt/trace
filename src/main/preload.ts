@@ -49,6 +49,8 @@ export type ElectronHandler = {
   logFromRenderer: (...args: any[]) => void;
 
   showDialog: (title: string, message: string) => Promise<boolean>;
+
+  reportUnhandledError: (error: any) => void;
 };
 
 const electronHandler: ElectronHandler = {
@@ -86,6 +88,9 @@ const electronHandler: ElectronHandler = {
 
   showDialog: (title, message) =>
     ipcRenderer.invoke('show-dialog', title, message),
+
+  reportUnhandledError: (error) =>
+    ipcRenderer.send('report-renderer-unhandled-error', error),
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);

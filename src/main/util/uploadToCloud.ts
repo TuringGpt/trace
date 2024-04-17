@@ -3,7 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { BlobServiceClient } from '@azure/storage-blob';
 
 import { UploadResult } from '../../types/customTypes';
-import logToFile from './log';
+import logger from './logger';
+
+const log = logger.child({ module: 'util.uploadToCloud' });
 
 const isDemo = process.env.MODE === 'demo';
 // TODO: Revisit this, this is copied over logic, we should be relying on the NODE_ENV variable instead
@@ -25,7 +27,7 @@ const uploadZipFile: (content: Buffer) => Promise<UploadResult> = async (
       );
     });
   try {
-    logToFile('INFO', 'UPLOAD', 'Uploading zip file...');
+    log.info('Uploading zip file...');
     if (!blobUrl) {
       throw new Error('Blob URL not found');
     }
@@ -39,7 +41,7 @@ const uploadZipFile: (content: Buffer) => Promise<UploadResult> = async (
     await blockBlobClient.uploadData(content);
     return { status: 'Uploaded', uploadedZipFileName: blobName };
   } catch (err) {
-    logToFile('ERROR', 'UPLOAD', 'Failed to upload the zip file.', err);
+    log.error('Failed to upload the zip file.', err);
     return { status: 'Failed', uploadedZipFileName: '' };
   }
 };

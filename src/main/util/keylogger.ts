@@ -2,6 +2,9 @@ import { uIOhook } from 'uiohook-napi';
 
 import throttle from '../../renderer/util/throttle';
 import keycodesMapping from './keycodes';
+import logger from './logger';
+
+const log = logger.child({ module: 'util.keylogger' });
 
 class KeyLogger {
   isLogging: boolean;
@@ -28,6 +31,8 @@ class KeyLogger {
     if (this.isLogging) return;
     this.isLogging = true;
     this.startTime = Date.now();
+
+    log.info('Starting keylogging');
 
     uIOhook.on('keydown', (e) => {
       const timestamp = this.getFormattedTime();
@@ -92,6 +97,8 @@ class KeyLogger {
 
   stopLogging(): string | null {
     if (!this.isLogging) return null;
+
+    log.info('Keylogging being stopped');
     this.isLogging = false;
     uIOhook.removeAllListeners();
     uIOhook.stop();

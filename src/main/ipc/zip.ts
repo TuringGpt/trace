@@ -5,7 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import logToFile from '../util/log';
+import logger from '../util/logger';
+
+const log = logger.child({ module: 'ipc.zip' });
 
 ipcMain.handle(
   'create-zip-file',
@@ -29,7 +31,7 @@ ipcMain.handle(
       await archive.finalize();
 
       await once(output, 'close');
-      logToFile('SUCCESS', 'ZIP_CREATION', 'Zip file created successfully.');
+      log.info('Zip file created successfully.');
 
       fs.unlinkSync(videoFilePath);
       if (keyLogFilePath) {
@@ -41,7 +43,7 @@ ipcMain.handle(
 
       return { zipFilePath, zipFileName };
     } catch (error) {
-      logToFile('ERROR', 'ZIP_CREATION', 'Failed to create zip file.', error);
+      log.error('Failed to create zip file.', error);
       return `ERROR: check logs at ${path.join(
         app.getPath('userData'),
         'app.log',
@@ -52,11 +54,7 @@ ipcMain.handle(
 
 ipcMain.handle('save-zip-file', async (e, zipFileName, zipFilePath) => {
   try {
-    logToFile(
-      'INFO',
-      'ZIP_FILE_SAVE',
-      `zipFileName: ${zipFileName}, zipFilePath: ${zipFilePath}`,
-    );
+    log.info(`saving zipFileName: ${zipFileName}, zipFilePath: ${zipFilePath}`);
     const desktopPath = app.getPath('desktop'); // Get path to the Desktop
     const defaultDesktopPath = path.join(
       desktopPath,
@@ -70,15 +68,15 @@ ipcMain.handle('save-zip-file', async (e, zipFileName, zipFilePath) => {
 
     if (!filePath.canceled && filePath.filePath) {
       fs.renameSync(zipFilePath, filePath.filePath);
-      logToFile('INFO', 'ZIP_FILE_SAVE', 'Zip file saved successfully.');
+      log.info('Zip file saved successfully.');
       return filePath.filePath;
     }
 
     fs.unlinkSync(zipFilePath);
-    logToFile('WARN', 'ZIP_FILE_SAVE', 'Zip file save operation cancelled.');
+    log.warn('Zip file save operation cancelled.');
     return null;
   } catch (error) {
-    logToFile('ERROR', 'ZIP_FILE_SAVE', 'Failed to save the zip file.', error);
+    log.error('Failed to save the zip file.', error);
     return `ERROR: check logs at ${path.join(
       app.getPath('userData'),
       'app.log',

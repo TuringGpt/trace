@@ -3,7 +3,9 @@ import ffmpegStatic from 'ffmpeg-static-electron';
 import ffmpeg from 'fluent-ffmpeg';
 import path from 'path';
 
-import logToFile from './log';
+import logger from './logger';
+
+const log = logger.child({ module: 'util.remuxVideo' });
 
 const platformMap: { [key: string]: string } = {
   darwin: 'mac',
@@ -35,16 +37,11 @@ export default function remuxVideo(inputPath: string, outputPath: string) {
       .noAudio()
       .format('mp4')
       .on('end', () => {
-        logToFile('INFO', 'VIDEO_REMUXING', 'Video remuxing completed.');
+        log.info('Video remuxing completed.');
         resolve();
       })
       .on('error', (err: any) => {
-        logToFile(
-          'ERROR',
-          'VIDEO_REMUXING',
-          `FFmpeg Error: ${err.message}`,
-          err,
-        );
+        log.error(`FFmpeg Error: ${err.message}`, err);
         reject(err);
       })
       .run();
