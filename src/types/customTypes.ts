@@ -63,6 +63,7 @@ export type IPCHandleEvents = {
     { metadataFilePath: string }
   >;
   'stop-keystrokes-logging': IPCHandler<[], { keyLogFilePath: string }>;
+  'remux-stored-chunks': IPCHandler<[], { videoFilePath: string }>
 };
 
 export type IPCOnEvents = {
@@ -72,4 +73,5 @@ export type IPCOnEvents = {
     event: IpcMainInvokeEvent,
     error: any,
   ) => void;
+  'store-chunk': (event: IpcMainInvokeEvent, uint8Array: Uint8Array) => void;
 };

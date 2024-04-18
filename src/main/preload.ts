@@ -29,6 +29,8 @@ const electronHandler = {
   logFromRenderer: ipcSend('log-from-renderer'),
   showDialog: ipcInvoke('show-dialog'),
   reportUnhandledError: ipcSend('report-renderer-unhandled-error'),
+  storeChunk: ipcSend('store-chunk'),
+  remuxStoredChunks: ipcInvoke('remux-stored-chunks'),
   onSelectVideoSource,
 };
 

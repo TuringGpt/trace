@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {Await, useNavigate} from 'react-router-dom';
 
 import { CapturedSource } from '../../types/customTypes';
 import {
@@ -11,6 +11,7 @@ import {
 import useAppState from '../store/hook';
 import formattedTime from '../util/formattedTime';
 import log from '../util/logger';
+import {ipcInvoke} from "../../main/ipc/typeSafeHandler";
 
 export default function VideoRecorder() {
   const [source, setSource] = useState<CapturedSource | null>(null);
@@ -91,9 +92,12 @@ export default function VideoRecorder() {
     setMediaRecorder(recorder);
 
     const chunks: Blob[] = [];
-    recorder.ondataavailable = (event) => {
+    recorder.ondataavailable = async (event) => {
       if (event.data.size > 0) {
         chunks.push(event.data);
+        const chunkBlob = new Blob([event.data], { type: 'video/webm; codecs=H264' });
+        const chunkArrayBuffer =  await chunkBlob.arrayBuffer()
+        window.electron.storeChunk(new Uint8Array(chunkArrayBuffer))
       }
     };
 
@@ -117,6 +121,8 @@ export default function VideoRecorder() {
       const res = await window.electron.remuxVideoFile(
         new Uint8Array(arrayBuffer),
       );
+      const res1 = await window.electron.remuxStoredChunks()
+      console.log(res1)
 
       setIsRecording(false);
       if (
@@ -150,7 +156,7 @@ export default function VideoRecorder() {
 
       navigate('/save-zip');
     };
-    recorder.start();
+    recorder.start(100);
     window.electron.startKeystrokesLogging();
   };
 
