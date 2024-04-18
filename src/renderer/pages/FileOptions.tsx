@@ -13,7 +13,13 @@ export default function FileOptions() {
     navigate('/');
   };
   const onDiscard = async () => {
-    // TODO: Implement discard functionality, we might have to delete the zip file
+    const res = await window.electron.discardZipFile(state.zip.zipFilePath);
+    if (res) {
+      navigate('/');
+      return;
+    }
+    await window.electron.showDialog('Error', 'Failed to discard the file');
+    // we don't want user to be stuck here if we can't discard the file
     navigate('/');
   };
   return (

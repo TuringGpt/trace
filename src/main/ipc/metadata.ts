@@ -1,12 +1,16 @@
-import { app, ipcMain, screen } from 'electron';
+import { app, screen } from 'electron';
 import fs from 'fs';
 import os from 'os';
 
-import logToFile from '../util/log';
+import { ipc } from '../../types/customTypes';
+import logger from '../util/logger';
+import { ipcHandle } from './typeSafeHandler';
 
-ipcMain.handle('get-device-metadata', async (e, screenId, startTime) => {
+const log = logger.child({ module: 'ipc.metadata' });
+
+ipcHandle('get-device-metadata', async (e, screenId, startTime) => {
   try {
-    logToFile('INFO', 'GET_DEVICE_METADATA', `screenId: ${screenId}`);
+    log.info('screenId: %s', screenId);
     const display = screen
       .getAllDisplays()
       .find((d) => d.id === Number(screenId));
@@ -27,15 +31,11 @@ ipcMain.handle('get-device-metadata', async (e, screenId, startTime) => {
     const downloadsPath = app.getPath('downloads');
     const defaultPath = `${downloadsPath}/${startTime}-metadata.json`;
     fs.writeFileSync(defaultPath, JSON.stringify(metadata));
-    logToFile('SUCCESS', 'GET_DEVICE_METADATA', JSON.stringify(metadata));
-    return { metadataFilePath: defaultPath };
+    log.info(JSON.stringify(metadata));
+
+    return ipc.success({ metadataFilePath: defaultPath });
   } catch (error) {
-    logToFile(
-      'ERROR',
-      'GET_DEVICE_METADATA',
-      'Failed to get device metadata.',
-      error,
-    );
+    log.error('Failed to get device metadata.', error);
+    return ipc.error('Failed to get device metadata.', error);
   }
-  return null;
 });

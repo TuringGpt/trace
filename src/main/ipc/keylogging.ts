@@ -1,32 +1,28 @@
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 import fs from 'fs';
 
+import { ipc } from '../../types/customTypes';
 import keyLogger from '../util/keylogger';
-import logToFile from '../util/log';
+import logger from '../util/logger';
+import { ipcHandle, ipcMainOn } from './typeSafeHandler';
 
-ipcMain.on('start-keystrokes-logging', () => {
+const log = logger.child({ module: 'ipc.keylogging' });
+
+ipcMainOn('start-keystrokes-logging', () => {
   keyLogger.startLogging();
-  logToFile('INFO', 'KEYSTROKES_LOGGING', 'Keystrokes logging started');
+  log.info('Keystrokes logging started');
 });
 
-ipcMain.handle('stop-keystrokes-logging', async () => {
+ipcHandle('stop-keystrokes-logging', async () => {
   const logContent = keyLogger.stopLogging();
   if (!logContent) {
-    logToFile(
-      'INFO',
-      'KEYSTROKES_LOGGING',
-      'Keystrokes logging stopped. No logs found.',
-    );
-    return null;
+    log.info('Keystrokes logging stopped. No logs found.');
+    return ipc.error('Keystrokes logging stopped. No logs found.');
   }
   const downloadsPath = app.getPath('downloads');
 
   const defaultPath = `${downloadsPath}/${keyLogger.startTime}-keystrokes.txt`;
   fs.writeFileSync(defaultPath, logContent);
-  logToFile(
-    'INFO',
-    'KEYSTROKES_LOGGING',
-    'Keystrokes logging stopped. Log saved.',
-  );
-  return { keyLogFilePath: defaultPath };
+  log.info('Keystrokes logging stopped. Log saved.');
+  return ipc.success({ keyLogFilePath: defaultPath });
 });

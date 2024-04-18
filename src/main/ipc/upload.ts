@@ -1,25 +1,22 @@
-import { app, ipcMain } from 'electron';
 import fs from 'fs';
-import path from 'path';
 
-import logToFile from '../util/log';
+import { ipc } from '../../types/customTypes';
+import logger from '../util/logger';
 import uploadZipFile from '../util/uploadToCloud';
+import { ipcHandle } from './typeSafeHandler';
 
-ipcMain.handle('upload-zip-file', async (e, zipFilePath: string) => {
+const log = logger.child({ module: 'ipc.upload' });
+
+ipcHandle('upload-zip-file', async (e, zipFilePath: string) => {
   try {
     const content = fs.readFileSync(zipFilePath);
     const uploadResponse = await uploadZipFile(content);
-    logToFile(
-      'SUCCESS',
-      'UPLOAD',
+    log.info(
       `Zip file uploaded successfully. File name - ${uploadResponse.uploadedZipFileName}`,
     );
-    return uploadResponse;
+    return ipc.success(uploadResponse);
   } catch (error) {
-    logToFile('ERROR', 'UPLOAD', 'Failed to upload the zip file.', error);
-    return `ERROR: check logs at ${path.join(
-      app.getPath('userData'),
-      'app.log',
-    )}`;
+    log.error('Failed to upload the zip file.', error);
+    return ipc.error('Failed to upload the zip file.', error);
   }
 });
