@@ -7,13 +7,7 @@ export type CapturedSource = {
 };
 
 export type UploadResult = {
-  status: 'success';
   uploadedZipFileName: string;
-};
-
-export type UploadFailure = {
-  status: 'error';
-  error: Error;
 };
 
 type IPCSuccess<Payload> = {
@@ -61,7 +55,7 @@ export type IPCHandleEvents = {
     [uint8Array: Uint8Array],
     { videoFilePath: string }
   >;
-  'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult | UploadFailure>;
+  'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult>;
   'show-dialog': IPCHandler<[title: string, message: string], boolean>;
   'get-device-metadata': IPCHandler<
     [screenId: string, startTime: string],

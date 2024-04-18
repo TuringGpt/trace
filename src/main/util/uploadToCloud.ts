@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 
-import { UploadFailure, UploadResult } from '../../types/customTypes';
+import { UploadResult } from '../../types/customTypes';
 import logger from './logger';
 
 const log = logger.child({ module: 'util.uploadToCloud' });
@@ -12,7 +12,7 @@ const isDemo = process.env.MODE === 'demo';
 const isDev = !isDemo && process.env.MODE !== 'production';
 
 const blobUrl: string | undefined = process.env.BLOB_STORAGE_URL;
-const uploadZipFile: (content: Buffer) => Promise<UploadResult | UploadFailure> = async (
+const uploadZipFile: (content: Buffer) => Promise<UploadResult> = async (
   content: Buffer,
 ) => {
 if (isDemo)
@@ -20,7 +20,6 @@ if (isDemo)
       setTimeout(
         () =>
           resolve({
-            status: 'success',
             uploadedZipFileName: 'sample-file.zip',
           }),
         3000,
@@ -39,10 +38,10 @@ if (isDemo)
     const blobName = `${uuidv4()}.zip`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     await blockBlobClient.uploadData(content);
-    return { status: 'success', uploadedZipFileName: blobName };
+    return { uploadedZipFileName: blobName };
   } catch (err) {
     log.error('Failed to upload the zip file.', err);
-    return { status: 'error', error: err as Error };
+    throw err;
   }
 };
 export default uploadZipFile;
