@@ -7,30 +7,16 @@ import logger from './logger';
 
 const log = logger.child({ module: 'util.uploadToCloud' });
 
-const isDemo = process.env.MODE === 'demo';
-// TODO: Revisit this, this is copied over logic, we should be relying on the NODE_ENV variable instead
-const isDev = !isDemo && process.env.MODE !== 'production';
-
 const blobUrl: string | undefined = process.env.BLOB_STORAGE_URL;
 const uploadZipFile: (content: Buffer) => Promise<UploadResult> = async (
   content: Buffer,
 ) => {
-  if (isDemo)
-    return new Promise((resolve) => {
-      setTimeout(
-        () =>
-          resolve({
-            uploadedZipFileName: 'sample-file.zip',
-          }),
-        3000,
-      );
-    });
   try {
     log.info('Uploading zip file...');
     if (!blobUrl) {
       throw new Error('Blob URL not found');
     }
-    const blobServiceClient = isDev
+    const blobServiceClient = process.env.NODE_ENV === 'development'
       ? BlobServiceClient.fromConnectionString(blobUrl)
       : new BlobServiceClient(blobUrl);
     const containerClient =
