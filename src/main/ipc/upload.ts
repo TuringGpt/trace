@@ -11,6 +11,7 @@ ipcHandle('upload-zip-file', async (e, zipFilePath: string) => {
   try {
     const content = fs.readFileSync(zipFilePath);
     const uploadResponse = await uploadZipFile(content);
+    if (uploadResponse.status === 'error') throw uploadResponse.error;
     log.info(
       `Zip file uploaded successfully. File name - ${uploadResponse.uploadedZipFileName}`,
     );
