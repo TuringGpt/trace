@@ -75,91 +75,95 @@ export default function VideoRecorder() {
   }, [isRecording]);
 
   const onStartRecording = async () => {
+    console.log("videoRef.current:", source);
+    source && window.electron.startFfmpegRecording(source.display_id)
     setIsRecording(true);
-    log.info('Recording started');
-    const videoElement = videoRef.current;
-    const stream = videoElement?.srcObject as MediaStream;
-    if (!stream) {
-      log.error('No stream found');
-      return;
-    }
-    const options = {
-      mimeType: 'video/webm; codecs=H264',
-      bitsPerSecond: 3000000,
-    };
-    const recorder = new MediaRecorder(stream, options);
-    setMediaRecorder(recorder);
+    // log.info('Recording started');
+    // const videoElement = videoRef.current;
+    // const stream = videoElement?.srcObject as MediaStream;
+    // if (!stream) {
+    //   log.error('No stream found');
+    //   return;
+    // }
+    // const options = {
+    //   mimeType: 'video/webm; codecs=H264',
+    //   bitsPerSecond: 3000000,
+    // };
+    // const recorder = new MediaRecorder(stream, options);
+    // setMediaRecorder(recorder);
 
-    const chunks: Blob[] = [];
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        chunks.push(event.data);
-      }
-    };
+    // const chunks: Blob[] = [];
+    // recorder.ondataavailable = (event) => {
+    //   if (event.data.size > 0) {
+    //     chunks.push(event.data);
+    //   }
+    // };
 
-    recorder.onstop = async () => {
-      log.info('Recording stopped', chunks.length);
-      dispatch(
-        showBusyIndicator(
-          'Video conversion in progress... \n This may take several minutes.',
-        ),
-      );
-      const blob = new Blob(chunks, { type: 'video/webm; codecs=H264' });
+    // recorder.onstop = async () => {
+    //   log.info('Recording stopped', chunks.length);
+    //   dispatch(
+    //     showBusyIndicator(
+    //       'Video conversion in progress... \n This may take several minutes.',
+    //     ),
+    //   );
+    //   const blob = new Blob(chunks, { type: 'video/webm; codecs=H264' });
 
-      const arrayBuffer = await blob.arrayBuffer();
-      // do this later
-      const keyLogRes = await window.electron.stopKeystrokesLogging();
-      const metaDataRes = await window.electron.getDeviceMetadata(
-        source?.display_id || '',
-        new Date().toISOString(),
-      );
+    //   const arrayBuffer = await blob.arrayBuffer();
+    //   // do this later
+    //   const keyLogRes = await window.electron.stopKeystrokesLogging();
+    //   const metaDataRes = await window.electron.getDeviceMetadata(
+    //     source?.display_id || '',
+    //     new Date().toISOString(),
+    //   );
 
-      const res = await window.electron.remuxVideoFile(
-        new Uint8Array(arrayBuffer),
-      );
+    //   const res = await window.electron.remuxVideoFile(
+    //     new Uint8Array(arrayBuffer),
+    //   );
 
-      setIsRecording(false);
-      if (
-        res.status === 'error' ||
-        keyLogRes.status === 'error' ||
-        metaDataRes.status === 'error'
-      ) {
-        log.error('Cannot proceed to zip file creation', {
-          remuxRes: res,
-          keyLogRes,
-          metaDataRes,
-        });
-        return;
-      }
+    //   setIsRecording(false);
+    //   if (
+    //     res.status === 'error' ||
+    //     keyLogRes.status === 'error' ||
+    //     metaDataRes.status === 'error'
+    //   ) {
+    //     log.error('Cannot proceed to zip file creation', {
+    //       remuxRes: res,
+    //       keyLogRes,
+    //       metaDataRes,
+    //     });
+    //     return;
+    //   }
 
-      const { videoFilePath } = res.data;
+    //   const { videoFilePath } = res.data;
 
-      const createZipRes = await window.electron.createZipFile(
-        videoFilePath,
-        keyLogRes.data.keyLogFilePath,
-        metaDataRes.data.metadataFilePath,
-      );
-      if (createZipRes.status === 'error') {
-        log.error('Failed to create zip file', createZipRes);
-        return;
-      }
-      const { zipFilePath, zipFileName } = createZipRes.data;
+    //   const createZipRes = await window.electron.createZipFile(
+    //     videoFilePath,
+    //     keyLogRes.data.keyLogFilePath,
+    //     metaDataRes.data.metadataFilePath,
+    //   );
+    //   if (createZipRes.status === 'error') {
+    //     log.error('Failed to create zip file', createZipRes);
+    //     return;
+    //   }
+    //   const { zipFilePath, zipFileName } = createZipRes.data;
 
-      dispatch(hideBusyIndicator());
-      dispatch(setZipData(zipFileName, zipFilePath));
+    //   dispatch(hideBusyIndicator());
+    //   dispatch(setZipData(zipFileName, zipFilePath));
 
-      navigate('/save-zip');
-    };
-    recorder.start();
-    window.electron.startKeystrokesLogging();
+    //   navigate('/save-zip');
+    // };
+    // recorder.start();
+    // window.electron.startKeystrokesLogging();
   };
 
   const onStopRecording = () => {
-    log.info('Recording stopped', mediaRecorder?.state);
-    if (mediaRecorder?.state === 'recording') {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
-    }
+    window.electron.stopFfmpegRecording();
+    setIsRecording(false);
+    // log.info('Recording stopped', mediaRecorder?.state);
+    // if (mediaRecorder?.state === 'recording') {
+    //   mediaRecorder.stop();
+    //   setMediaRecorder(null);
+    // }
   };
 
   return (

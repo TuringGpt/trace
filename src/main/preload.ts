@@ -29,6 +29,8 @@ const electronHandler = {
   logFromRenderer: ipcSend('log-from-renderer'),
   showDialog: ipcInvoke('show-dialog'),
   reportUnhandledError: ipcSend('report-renderer-unhandled-error'),
+  startFfmpegRecording: ipcInvoke('start-ffmpeg-recording'),
+  stopFfmpegRecording: ipcInvoke('stop-ffmpeg-recording'),
   onSelectVideoSource,
 };
 

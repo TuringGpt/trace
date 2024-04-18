@@ -63,6 +63,14 @@ export type IPCHandleEvents = {
     { metadataFilePath: string }
   >;
   'stop-keystrokes-logging': IPCHandler<[], { keyLogFilePath: string }>;
+  'start-ffmpeg-recording': IPCHandler<
+    [screenId: string],
+    string
+  >;
+  'stop-ffmpeg-recording': IPCHandler<
+    [],
+    string
+  >;
 };
 
 export type IPCOnEvents = {
