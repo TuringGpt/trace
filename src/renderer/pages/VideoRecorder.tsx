@@ -18,6 +18,7 @@ export default function VideoRecorder() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const videoPlaceholderRef = useRef<HTMLDivElement>(null);
+  const [showStartWarning, setShowStartWarning] = useState<boolean>(false);
 
   const [recordingTime, setRecordingTime] = useState(0);
 
@@ -73,6 +74,10 @@ export default function VideoRecorder() {
     }
     return () => clearInterval(interval);
   }, [isRecording]);
+
+  const toggleshowWarning = () => {
+    setShowStartWarning(!showStartWarning);
+  };
 
   const onStartRecording = async () => {
     setIsRecording(true);
@@ -154,6 +159,11 @@ export default function VideoRecorder() {
     window.electron.startKeystrokesLogging();
   };
 
+  const preStartRecording = () => {
+    toggleshowWarning();
+    onStartRecording();
+  };
+
   const onStopRecording = () => {
     log.info('Recording stopped', mediaRecorder?.state);
     if (mediaRecorder?.state === 'recording') {
@@ -177,7 +187,7 @@ export default function VideoRecorder() {
         </button>
       </div>
 
-      <div className="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-450px)]">
+      <div className="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-450px)] max-w-2xl mx-auto">
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           id="videoElement"
@@ -200,48 +210,107 @@ export default function VideoRecorder() {
         </div>
       </div>
 
-      <div className="flex justify-center space-x-2">
-        <div
-          className={clsx('recording-dot', {
-            'is-recording': isRecording,
-          })}
-        />
-        <span id="recordingTime" className="text-2xl">
-          {formattedTime(recordingTime)}
-        </span>
-      </div>
+      {!showStartWarning && (
+        <>
+          <div className="flex justify-center space-x-2">
+            <div
+              className={clsx('recording-dot', {
+                'is-recording': isRecording,
+              })}
+            />
+            <span id="recordingTime" className="text-2xl">
+              {formattedTime(recordingTime)}
+            </span>
+          </div>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              id="startButton"
+              className={clsx(
+                `bg-indigo-600 m-6 mb-0 rounded-md px-4 py-4 text-white`,
+                {
+                  'opacity-50': !source || isRecording,
+                },
+              )}
+              disabled={!source || isRecording}
+              ref={startButtonRef}
+              onClick={toggleshowWarning}
+            >
+              Start
+            </button>
+            <button
+              type="button"
+              id="stopButton"
+              className={clsx(
+                'bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white',
+                {
+                  'opacity-50': !isRecording,
+                },
+              )}
+              disabled={!isRecording}
+              onClick={toggleshowWarning}
+            >
+              Stop
+            </button>
+          </div>
+        </>
+      )}
 
-      <div className="flex justify-center">
-        <button
-          type="button"
-          id="startButton"
-          className={clsx(
-            `bg-indigo-600 m-6 mb-0 rounded-md px-4 py-4 text-white`,
-            {
-              'opacity-50': !source || isRecording,
-            },
-          )}
-          disabled={!source || isRecording}
-          ref={startButtonRef}
-          onClick={onStartRecording}
-        >
-          Start
-        </button>
-        <button
-          type="button"
-          id="stopButton"
-          className={clsx(
-            'bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white',
-            {
-              'opacity-50': !isRecording,
-            },
-          )}
-          disabled={!isRecording}
-          onClick={onStopRecording}
-        >
-          Stop
-        </button>
-      </div>
+      {showStartWarning && (
+        <div className="flex justify-center p-2  max-w-2xl mx-auto mt-4 ">
+          <div className="border border-b-gray-400 p-6 rounded-md bg-gray-700">
+            {isRecording ? (
+              <>
+                <p className="text-sm mb-2">
+                  Once you end the call recording, your data will be saved and
+                  sent to server. Do you want to continue
+                </p>
+                <div className="flex justify-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={onStopRecording}
+                    className="bg-indigo-600 mb-0 rounded-md p-1 px-2 text-white text-sm"
+                  >
+                    Continue
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleshowWarning}
+                    className="bg-red-700 rounded-md p-1 px-2 text-white text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm mb-2">
+                  You are initiating a screen record, all your activities will
+                  be recorded and logged. Please refrain from viewing/typing
+                  senstive informations such as password. Click continue to
+                  proceed
+                </p>
+                <div className="flex justify-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={preStartRecording}
+                    className="bg-indigo-600 mb-0 rounded-md p-1 px-2 text-white text-sm"
+                  >
+                    Continue
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleshowWarning}
+                    className="bg-red-700 rounded-md p-1 px-2 text-white text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
