@@ -15,7 +15,7 @@ const blobUrl: string | undefined = process.env.BLOB_STORAGE_URL;
 const uploadZipFile: (content: Buffer) => Promise<UploadResult> = async (
   content: Buffer,
 ) => {
-if (isDemo)
+  if (isDemo)
     return new Promise((resolve) => {
       setTimeout(
         () =>
