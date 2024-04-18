@@ -1,5 +1,9 @@
-import { uIOhook } from 'uiohook-napi';
-
+import {
+  uIOhook,
+  UiohookKeyboardEvent,
+  UiohookMouseEvent,
+  UiohookWheelEvent,
+} from 'uiohook-napi';
 import throttle from '../../renderer/util/throttle';
 import keycodesMapping from './keycodes';
 import logger from './logger';
@@ -11,7 +15,7 @@ class KeyLogger {
 
   logEntries: string[];
 
-  startTime: number | undefined;
+  startTime: number;
 
   lastMouseLogTime: number;
 
@@ -25,6 +29,7 @@ class KeyLogger {
     this.lastMouseLogTime = 0;
     this.mouseLogInterval = 50;
     this.scrollLogInterval = 50;
+    this.startTime = 0;
   }
 
   startLogging() {
@@ -34,54 +39,57 @@ class KeyLogger {
 
     log.info('Starting keylogging');
 
-    uIOhook.on('keydown', (e) => {
-      const timestamp = this.getFormattedTime();
-      this.logEntries.push(
-        `${timestamp}: Keyboard Button Press : ${keycodesMapping[e.keycode]}`,
-      );
-    });
+    log.info('Starting keylogging');
 
-    uIOhook.on('mousedown', (e) => {
-      const timestamp = this.getFormattedTime();
-      this.logEntries.push(`${timestamp}: Mouse Button Press : ${e.button}`);
-    });
-
-    uIOhook.on('mouseup', (e) => {
-      const timestamp = this.getFormattedTime();
-      this.logEntries.push(`${timestamp}: Mouse Button Release : ${e.button}`);
-    });
-
-    const throttledMouseMove = throttle((e) => {
-      const timestamp = this.getFormattedTime();
-      this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
-    }, this.mouseLogInterval);
-
-    uIOhook.on('mousemove', throttledMouseMove);
-
-    const logScroll = throttle((e) => {
-      const timestamp = this.getFormattedTime();
-      const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
-      let direction;
-      if (axis === 'Vertical') {
-        direction = e.rotation > 0 ? 'UP' : 'DOWN';
-      } else {
-        direction = e.rotation > 0 ? 'LEFT' : 'RIGHT';
-      }
-      this.logEntries.push(
-        `${timestamp}: Scrolled ${axis}, Direction: ${direction}, Intensity: ${
-          e.rotation < 0 ? e.rotation * -1 : e.rotation
-        }`,
-      );
-    }, this.scrollLogInterval);
-
-    uIOhook.on('wheel', logScroll);
+    uIOhook.on('keyup', this.logKey);
+    uIOhook.on('mousedown', this.logMouseDown);
+    uIOhook.on('mouseup', this.logMouseUp);
+    uIOhook.on('mousemove', throttle(this.logMouseMove, this.mouseLogInterval));
+    uIOhook.on('wheel', throttle(this.logScroll, this.scrollLogInterval));
 
     uIOhook.start();
   }
 
+  logKey = (e: UiohookKeyboardEvent) => {
+    const timestamp = this.getFormattedTime();
+    this.logEntries.push(
+      `${timestamp}: Keyboard Button Press : ${keycodesMapping[e.keycode]}`,
+    );
+  };
+
+  logMouseDown = (e: UiohookMouseEvent) => {
+    const timestamp = this.getFormattedTime();
+    this.logEntries.push(`${timestamp}: Mouse Button Press : ${e.button}`);
+  };
+
+  logMouseUp = (e: UiohookMouseEvent) => {
+    const timestamp = this.getFormattedTime();
+    this.logEntries.push(`${timestamp}: Mouse Button Release : ${e.button}`);
+  };
+
+  logMouseMove = (e: UiohookMouseEvent) => {
+    const timestamp = this.getFormattedTime();
+    this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
+  };
+
+  logScroll = (e: UiohookWheelEvent) => {
+    const timestamp = this.getFormattedTime();
+    const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
+    let direction;
+    if (axis === 'Vertical') {
+      direction = e.rotation > 0 ? 'UP' : 'DOWN';
+    } else {
+      direction = e.rotation > 0 ? 'LEFT' : 'RIGHT';
+    }
+    this.logEntries.push(
+      `${timestamp}: Scrolled ${axis}, Direction: ${direction}, Intensity: ${
+        e.rotation < 0 ? e.rotation * -1 : e.rotation
+      }`,
+    );
+  };
+
   getFormattedTime() {
-    // this is to satisfy typescript, startTime is always defined when isLogging is true
-    const time = Date.now() - (this.startTime ?? 0);
+    const time = Date.now() - this.startTime;
     const milliseconds = time % 1000;
     const seconds = Math.floor((time / 1000) % 60);
     const minutes = Math.floor((time / (1000 * 60)) % 60);
