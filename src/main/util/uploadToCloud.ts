@@ -20,7 +20,6 @@ const uploadZipFile: (content: Buffer) => Promise<UploadResult> = async (
       setTimeout(
         () =>
           resolve({
-            status: 'Uploaded',
             uploadedZipFileName: 'sample-file.zip',
           }),
         3000,
@@ -39,10 +38,10 @@ const uploadZipFile: (content: Buffer) => Promise<UploadResult> = async (
     const blobName = `${uuidv4()}.zip`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     await blockBlobClient.uploadData(content);
-    return { status: 'Uploaded', uploadedZipFileName: blobName };
+    return { uploadedZipFileName: blobName };
   } catch (err) {
     log.error('Failed to upload the zip file.', err);
-    return { status: 'Failed', uploadedZipFileName: '' };
+    throw err;
   }
 };
 export default uploadZipFile;
