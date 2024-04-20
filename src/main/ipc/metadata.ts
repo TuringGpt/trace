@@ -1,8 +1,9 @@
-import { app, screen } from 'electron';
+import { screen } from 'electron';
 import fs from 'fs';
 import os from 'os';
 
 import { ipc } from '../../types/customTypes';
+import { getVideoStoragePath } from '../storage';
 import logger from '../util/logger';
 import { ipcHandle } from './typeSafeHandler';
 
@@ -28,8 +29,8 @@ ipcHandle('get-device-metadata', async (e, screenId, startTime) => {
       screenRotation: display?.rotation,
       screenScaleFactor: display?.scaleFactor,
     };
-    const downloadsPath = app.getPath('downloads');
-    const defaultPath = `${downloadsPath}/${startTime}-metadata.json`;
+
+    const defaultPath = `${getVideoStoragePath()}/${startTime}-metadata.json`;
     fs.writeFileSync(defaultPath, JSON.stringify(metadata));
     log.info(JSON.stringify(metadata));
 

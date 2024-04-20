@@ -151,7 +151,8 @@ export default function VideoRecorder() {
       navigate('/save-zip');
     };
     recorder.start();
-    window.electron.startKeystrokesLogging();
+    window.electron.startNewRecording();
+    // window.electron.startKeystrokesLogging();
   };
 
   const onStopRecording = () => {

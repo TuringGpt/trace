@@ -6,6 +6,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ipc } from '../../types/customTypes';
+import { getVideoStoragePath } from '../storage';
 import logger from '../util/logger';
 import { ipcHandle } from './typeSafeHandler';
 
@@ -15,9 +16,8 @@ ipcHandle(
   'create-zip-file',
   async (event, videoFilePath, keyLogFilePath, metadataFilePath) => {
     try {
-      const downloadsPath = app.getPath('downloads');
       const zipFileName = `${uuidv4()}.zip`;
-      const zipFilePath = `${downloadsPath}/${zipFileName}`;
+      const zipFilePath = `${getVideoStoragePath()}/${zipFileName}`;
       const output = fs.createWriteStream(zipFilePath);
 
       const archive = archiver('zip', { zlib: { level: 9 } });

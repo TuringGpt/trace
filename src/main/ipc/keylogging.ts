@@ -1,7 +1,7 @@
-import { app } from 'electron';
 import fs from 'fs';
 
 import { ipc } from '../../types/customTypes';
+import { getVideoStoragePath } from '../storage';
 import keyLogger from '../util/keylogger';
 import logger from '../util/logger';
 import { ipcHandle, ipcMainOn } from './typeSafeHandler';
@@ -19,9 +19,8 @@ ipcHandle('stop-keystrokes-logging', async () => {
     log.info('Keystrokes logging stopped. No logs found.');
     return ipc.error('Keystrokes logging stopped. No logs found.');
   }
-  const downloadsPath = app.getPath('downloads');
 
-  const defaultPath = `${downloadsPath}/${keyLogger.startTime}-keystrokes.txt`;
+  const defaultPath = `${getVideoStoragePath()}/${keyLogger.startTime}-keystrokes.txt`;
   fs.writeFileSync(defaultPath, logContent);
   log.info('Keystrokes logging stopped. Log saved.');
   return ipc.success({ keyLogFilePath: defaultPath });

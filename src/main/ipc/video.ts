@@ -1,7 +1,8 @@
-import { app, desktopCapturer, DesktopCapturerSource, Menu } from 'electron';
+import { desktopCapturer, DesktopCapturerSource, Menu } from 'electron';
 import fs from 'fs';
 
 import { ipc } from '../../types/customTypes';
+import { getVideoStoragePath, setStorage } from '../storage';
 import logger from '../util/logger';
 import remuxVideo from '../util/remuxVideo';
 import { ipcHandle } from './typeSafeHandler';
@@ -12,7 +13,10 @@ ipcHandle('get-video-sources', async (event) => {
   try {
     const template = sources.map((item: DesktopCapturerSource) => ({
       label: item.name.length > 30 ? `${item.name.slice(0, 30)}...` : item.name,
-      click: () => event.sender.send('select-source', item),
+      click: () => {
+        setStorage('selectedDisplay', item);
+        return event.sender.send('select-source', item);
+      },
     }));
     Menu.buildFromTemplate(template).popup();
   } catch (e) {
@@ -27,9 +31,9 @@ ipcHandle('remux-video-file', async (event, uint8Array) => {
   let tempOutputPath = '';
   try {
     const buffer = Buffer.from(uint8Array);
-    const downloadsPath = app.getPath('downloads');
-    tempInputPath = `${downloadsPath}/temp-input-${Date.now()}-video.webm`;
-    tempOutputPath = `${downloadsPath}/${Date.now()}-video.mp4`;
+
+    tempInputPath = `${getVideoStoragePath()}/temp-input-${Date.now()}-video.webm`;
+    tempOutputPath = `${getVideoStoragePath()}/${Date.now()}-video.mp4`;
     fs.writeFileSync(tempInputPath, buffer);
 
     const startTime = Date.now();
