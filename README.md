@@ -83,7 +83,12 @@ Before running the application, set up the necessary environment variables:
    ```
    az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
    ```
-9. Start the application in development mode.
+9. Configure git hooks.
+   ```
+   git config --local core.hooksPath githooks
+   chmod +x githooks/precommit
+   ```
+10. Start the application in development mode.
    ```
    npm start
    ```
