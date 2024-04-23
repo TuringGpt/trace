@@ -1,6 +1,7 @@
 import { app, BrowserWindow, screen } from 'electron';
 import fs from 'fs';
 
+import path from 'path';
 import { ipc } from '../../types/customTypes';
 import keyLogger from '../util/keylogger';
 import logger from '../util/logger';
@@ -20,18 +21,23 @@ ipcMainOn('start-keystrokes-logging', () => {
     width: 300,
     height: 100,
     frame: false,
-    x: 0,
-    y: 0,
+    x: 50,
+    y: 50,
     alwaysOnTop: true,
     transparent: true,
     hasShadow: false,
+    webPreferences: {
+      preload: app.isPackaged
+        ? path.join(__dirname, 'preload.js')
+        : path.join(__dirname, '../../../.erb/dll/preload.js'),
+    },
   });
-  overlayWindow.loadFile('overlay.html');
-  overlayWindow.webContents.closeDevTools();
+  overlayWindow.loadFile('src/staticPages/overlay.html');
 
-  const { height } = screen.getPrimaryDisplay().workAreaSize;
+  const { height, width } = screen.getPrimaryDisplay().bounds;
+  console.log('~~~~~~', screen.getPrimaryDisplay());
   blinkWindow = new BrowserWindow({
-    width: 2560,
+    width,
     height,
     frame: false,
     x: 0,
@@ -40,8 +46,7 @@ ipcMainOn('start-keystrokes-logging', () => {
     transparent: true,
     hasShadow: false,
   });
-  blinkWindow.loadFile('outline.html');
-  blinkWindow.webContents.closeDevTools();
+  blinkWindow.loadFile('src/staticPages/outline.html');
   blinkWindow.setIgnoreMouseEvents(true);
 });
 
@@ -61,4 +66,9 @@ ipcHandle('stop-keystrokes-logging', async () => {
   fs.writeFileSync(defaultPath, logContent);
   log.info('Keystrokes logging stopped. Log saved.');
   return ipc.success({ keyLogFilePath: defaultPath });
+});
+
+ipcHandle('close-overlay-window', () => {
+  overlayWindow?.close();
+  overlayWindow = null;
 });

@@ -63,6 +63,7 @@ export type IPCHandleEvents = {
     { metadataFilePath: string }
   >;
   'stop-keystrokes-logging': IPCHandler<[], { keyLogFilePath: string }>;
+  'close-overlay-window': IPCHandler<[], { keyLogFilePath: string }>;
 };
 
 export type IPCOnEvents = {
