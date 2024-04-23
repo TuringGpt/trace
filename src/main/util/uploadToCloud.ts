@@ -16,9 +16,10 @@ const uploadZipFile: (content: Buffer) => Promise<UploadResult> = async (
     if (!blobUrl) {
       throw new Error('Blob URL not found');
     }
-    const blobServiceClient = process.env.NODE_ENV === 'development'
-      ? BlobServiceClient.fromConnectionString(blobUrl)
-      : new BlobServiceClient(blobUrl);
+    const blobServiceClient =
+      process.env.NODE_ENV === 'development'
+        ? BlobServiceClient.fromConnectionString(blobUrl)
+        : new BlobServiceClient(blobUrl);
     const containerClient =
       blobServiceClient.getContainerClient('turing-videos');
     const blobName = `${uuidv4()}.zip`;
