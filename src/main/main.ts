@@ -20,6 +20,7 @@ import path from 'path';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import logger from './util/logger';
+import { writeToFile } from './util/safeFileWriter';
 
 const log = logger.child({ module: 'main' });
 
@@ -59,10 +60,24 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
+const prettyPrintDateAndTimeInAMPM = (date: Date) => {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const seconds = date.getSeconds();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const formattedHours = hours % 12 || 12;
+  return `${formattedHours}:${minutes}:${seconds} ${ampm}`;
+};
+
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
+
+  await writeToFile(
+    path.join(app.getPath('userData'), `app-start.log`),
+    `App started successfully. ${prettyPrintDateAndTimeInAMPM(new Date())}`,
+  );
 
   const RESOURCES_PATH = app.isPackaged
     ? path.join(process.resourcesPath, 'assets')

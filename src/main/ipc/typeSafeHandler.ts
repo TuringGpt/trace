@@ -1,9 +1,6 @@
 import { ipcMain, ipcRenderer } from 'electron';
 
 import { IPCHandleEvents, IPCOnEvents } from '../../types/customTypes';
-import logger from '../util/logger';
-
-const log = logger.child({ module: 'ipc.typeSafeHandler' });
 
 type ParametersExceptFirst<T> = T extends (first: any, ...rest: infer P) => any
   ? P
@@ -37,7 +34,7 @@ export function ipcInvoke<Key extends keyof IPCHandleEvents>(eventName: Key) {
         IPCHandleEvents[Key]
       >;
     } catch (e) {
-      log.error('unhandled error in invoke', e);
+      console.error('unhandled error in invoke', e);
       throw e;
     }
   };

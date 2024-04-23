@@ -1,7 +1,7 @@
 import { app, DesktopCapturerSource } from 'electron';
 import fs from 'fs';
-import { Low } from 'lowdb/lib/core/Low';
-import { JSONFilePreset } from 'lowdb/node';
+// import { Low } from 'lowdb/lib/core/Low';
+// import { JSONFilePreset } from 'lowdb/node';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,14 +27,31 @@ export type StorageApplicationState = {
   selectedDisplay?: DesktopCapturerSource;
   recordingFolders: Array<RecordedFolder>;
 };
-let db: Low<StorageApplicationState>;
-(async () => {
-  db = await JSONFilePreset<StorageApplicationState>(fileName, {
+let db: {
+  data: StorageApplicationState;
+  write: () => Promise<void>;
+  read: () => Promise<void>;
+} = {
+  data: {
     currentRecordingFolder: null,
     isRecording: false,
     recordingFolders: [],
-  });
-})();
+  },
+  write: async () => {
+    log.info('Writing to file');
+  },
+  read: async () => {
+    log.info('Reading from file');
+  },
+};
+
+// (async () => {
+//   db = await JSONFilePreset<StorageApplicationState>(fileName, {
+//     currentRecordingFolder: null,
+//     isRecording: false,
+//     recordingFolders: [],
+//   });
+// })();
 
 export function getVideoStoragePath(): string {
   const appDataPath = app.getPath('appData');
