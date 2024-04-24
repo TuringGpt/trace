@@ -85,7 +85,8 @@
     "react-router-dom": "^6.16.0",
     "uuid": "^9.0.1",
     "winston": "^3.13.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "zod": "^3.23.4"
   },
   "devDependencies": {
     "@electron/notarize": "^2.1.0",

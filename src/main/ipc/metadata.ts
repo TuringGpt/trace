@@ -3,8 +3,8 @@ import fs from 'fs';
 import os from 'os';
 
 import { ipc } from '../../types/customTypes';
-import { getVideoStoragePath } from '../storage';
 import logger from '../util/logger';
+import { getVideoStoragePath } from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.metadata' });

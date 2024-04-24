@@ -2,9 +2,10 @@ import { desktopCapturer, DesktopCapturerSource, Menu } from 'electron';
 import fs from 'fs';
 
 import { ipc } from '../../types/customTypes';
-import { getVideoStoragePath, setStorage } from '../storage';
+import storage from '../storage';
 import logger from '../util/logger';
 import remuxVideo from '../util/remuxVideo';
+import { getVideoStoragePath } from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.video' });
@@ -14,7 +15,11 @@ ipcHandle('get-video-sources', async (event) => {
     const template = sources.map((item: DesktopCapturerSource) => ({
       label: item.name.length > 30 ? `${item.name.slice(0, 30)}...` : item.name,
       click: () => {
-        setStorage('selectedDisplay', item);
+        storage.saveProperty('selectedDisplay', {
+          id: item.id,
+          name: item.name,
+          display_id: item.display_id,
+        });
         return event.sender.send('select-source', item);
       },
     }));

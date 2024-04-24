@@ -1,12 +1,12 @@
 import { ipc } from '../../types/customTypes';
+import keylogger from '../util/keylogger';
+import logger from '../util/logger';
 import {
   getCurrentRecordingFolder,
   getVideoStoragePath,
   markRecordingStarted,
   markRecordingStopped,
-} from '../storage';
-import keylogger from '../util/keylogger';
-import logger from '../util/logger';
+} from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.record' });

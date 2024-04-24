@@ -5,3 +5,4 @@ import './video';
 import './zip';
 import './upload';
 import './showDialog';
+import './record';

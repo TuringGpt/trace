@@ -1,9 +1,9 @@
 import fs from 'fs';
 
 import { ipc } from '../../types/customTypes';
-import { getVideoStoragePath } from '../storage';
 import keyLogger from '../util/keylogger';
 import logger from '../util/logger';
+import { getVideoStoragePath } from '../util/storageHelpers';
 import { ipcHandle, ipcMainOn } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.keylogging' });

@@ -6,8 +6,8 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 import { ipc } from '../../types/customTypes';
-import { getVideoStoragePath } from '../storage';
 import logger from '../util/logger';
+import { getVideoStoragePath } from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.zip' });

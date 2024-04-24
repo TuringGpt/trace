@@ -1,4 +1,32 @@
-import { IpcMainInvokeEvent } from 'electron';
+import { DesktopCapturerSource, IpcMainInvokeEvent } from 'electron';
+import { z } from 'zod';
+
+const RecordedFolderSchema = z.object({
+  folderName: z.string(),
+  isUploaded: z.boolean(),
+  recordingStartedAt: z.number(),
+  recordingStoppedAt: z.number().optional(),
+  uploadingInProgress: z.boolean(),
+  uploadError: z.string().optional(),
+  uploadedAt: z.number().optional(),
+});
+
+const SelectedDisplaySchema = z.object({
+  id: z.string(),
+  display_id: z.string(),
+  name: z.string(),
+});
+
+export const StorageApplicationStateSchema = z.object({
+  currentRecordingFolder: RecordedFolderSchema.optional(),
+  isRecording: z.boolean(),
+  selectedDisplay: SelectedDisplaySchema.optional(),
+  recordingFolders: z.array(RecordedFolderSchema),
+});
+
+export type StorageApplicationState = z.infer<
+  typeof StorageApplicationStateSchema
+>;
 
 export type CapturedSource = {
   id: string;

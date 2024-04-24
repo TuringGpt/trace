@@ -18,9 +18,9 @@ import { autoUpdater } from 'electron-updater';
 import path from 'path';
 
 import MenuBuilder from './menu';
+import db from './storage';
 import { resolveHtmlPath } from './util';
 import logger from './util/logger';
-import { writeToFile } from './util/safeFileWriter';
 
 const log = logger.child({ module: 'main' });
 
@@ -73,11 +73,6 @@ const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
-
-  await writeToFile(
-    path.join(app.getPath('userData'), `app-start.log`),
-    `App started successfully. ${prettyPrintDateAndTimeInAMPM(new Date())}`,
-  );
 
   const RESOURCES_PATH = app.isPackaged
     ? path.join(process.resourcesPath, 'assets')
@@ -146,6 +141,7 @@ app
   .whenReady()
   .then(() => {
     createWindow();
+    db.load();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
