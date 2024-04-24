@@ -45,6 +45,8 @@ export default function Upload() {
     name: '',
     filePath: '',
   });
+  const uploadConsentCopy =
+    'By clicking OK, you confirm your consent to upload recorded activities. Please be aware that uploaded files may contain sensitive information. Proceeding indicates your acknowledgment and acceptance of this disclosure.';
   const [isUploadSuccess, setIsUploadSuccess] = useState(false);
   const navigate = useNavigate();
   const { dispatch } = useAppState();
@@ -66,6 +68,12 @@ export default function Upload() {
   };
 
   const onStartUploadClick = async () => {
+    // First show consent modal and get timestamp
+    const consent = await window.electron.showDialog('info', uploadConsentCopy);
+    if (!consent?.data) return;
+
+    // #todo TR-8, requires backend implementation? Send consent time stamp to backend.
+    // const consentTimeStamp = new Date().toISOString();
     dispatch(showBusyIndicator('Uploading files...'));
     const response = await window.electron.uploadFiles(
       uploadInputFile.filePath,

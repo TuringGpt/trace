@@ -7,7 +7,7 @@ ipcHandle('show-dialog', async (event, title, message) => {
   const { response } = await dialog.showMessageBox({
     title,
     message,
-    buttons: ['Ok'],
+    buttons: ['Ok', 'Cancel'],
   });
   return ipc.success(response === 0);
 });

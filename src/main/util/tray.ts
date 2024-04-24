@@ -48,7 +48,7 @@ export function initializeTray(): void {
     }
 
     tray?.setImage(iconPath);
-    tray?.setToolTip('Trace - Ready');
+    tray?.setToolTip('Trace - Ready to Record');
     const contextMenu = Menu.buildFromTemplate([
       { label: 'Trace - Ready', type: 'normal' },
     ]);
