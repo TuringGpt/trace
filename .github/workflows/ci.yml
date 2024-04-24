@@ -62,11 +62,9 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         pr_id: [ ${ { github.event.number } } ]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -75,16 +73,13 @@ jobs:
         run: |
           docker build -t your-image-name:${{ matrix.pr_id }} .
           echo "::set-output name=image_tag::your-image-name:${{ matrix.pr_id }}"
-
   test:
     name: Run Tests
     needs: build
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         pr_id: [ ${ { github.event.number } } ]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
