@@ -7,9 +7,6 @@ WORKDIR /app
 # Copy the entire project to the working directory
 COPY . .
 
-# Copy the entrypoint script into the container
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-
 # Install application dependencies
 RUN npm ci
 
@@ -24,12 +21,14 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 RUN npm install -g azurite
 RUN azurite-blob -l ./azure-blob-storage &
 
+# Copy the entrypoint script from the app directory into the container
+COPY entrypoint.sh .
+
+# Make the entrypoint script executable
+RUN chmod +x entrypoint.sh
+
 # Expose the port the app runs on
 EXPOSE 3000
 
-# If "start", "test", or "build" argument is passed when running the Docker image,
-# override the default command accordingly
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-# Set the default command to start the application
-CMD ["npm", "start"]
+# Set the default command to start the application using the entrypoint script
+ENTRYPOINT ["./entrypoint.sh"]

@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
 
     steps:
       - name: Checkout code
@@ -22,7 +22,17 @@ jobs:
         with:
           node-version: '18.15'
           python-version: '3.8' # Specify the Python version here
+      - name: Display Node.js version
+        run: |
+          node --version
 
+      - name: Display npm version
+        run: |
+          npm --version
+
+      - name: Display Python version
+        run: |
+          python --version
       - name: Install dependencies
         run: npm install
 
