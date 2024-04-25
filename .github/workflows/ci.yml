@@ -64,7 +64,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pr_id: [${{github.event.number}}]
+        pr_id:
+          - ${{ github.event.number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -79,7 +80,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pr_id: [ ${ { github.event.number } } ]
+        pr_id:
+          - ${{ github.event.number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
