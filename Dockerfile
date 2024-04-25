@@ -10,6 +10,11 @@ COPY . .
 # Switch to root user temporarily to perform operations that require elevated privileges
 USER root
 
+# Install Python 3.8
+RUN apt-get update && \
+    apt-get install -y python3.8 && \
+    ln -s /usr/bin/python3.8 /usr/bin/python
+
 # Install application dependencies
 RUN npm ci
 
