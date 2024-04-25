@@ -89,8 +89,8 @@ jobs:
       - name: Build Docker image
         id: build
         run: |
-          docker build -t ${{ github.repository }}:${{ github.event.number }} .
-          echo "::set-output name=image_tag::${{ github.repository }}:${{ github.event.number }}"
+          docker build -t trace:${{ github.event.number }} .
+          echo "::set-output name=image_tag::trace:${{ github.event.number }}"
 
       - name: Run Tests
         id: test
