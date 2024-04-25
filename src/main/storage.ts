@@ -78,7 +78,7 @@ class DB {
             filePath: this.filePath,
             err,
           });
-          this.handleCorruptedData();
+          await this.handleCorruptedData();
         }
         log.error('Error loading data from file', { err });
         throw err;
