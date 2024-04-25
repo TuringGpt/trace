@@ -12,10 +12,8 @@ USER root
 
 # Install Python 3.11
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && \
-    apt-get install -y python3.11 && \
+    apt-get install -y --no-install-recommends software-properties-common && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3.11 && \
     ln -s /usr/bin/python3.11 /usr/bin/python
 
 # Install application dependencies
