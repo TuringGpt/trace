@@ -32,9 +32,14 @@ export default function remuxVideo(inputPath: string, outputPath: string) {
   return new Promise<void>((resolve, reject) => {
     ffmpeg(inputPath)
       .output(outputPath)
-      // .videoFilters('setpts=N/FRAME_RATE/TB')
-      .videoCodec('copy')
+      .videoFilters('setpts=PTS-STARTPTS')
+      .videoCodec('libx264')
       .noAudio()
+      .outputOptions([
+        '-fflags +genpts', // Force FFmpeg to generate PTS if they are missing or incorrect
+        '-r 30', // Set frame rate to 30fps
+        // '-movflags +faststart' // Facilitate faster start of playback in network environments (eg. streaming) its good to have.
+      ])
       .format('mp4')
       .on('end', () => {
         log.info('Video remuxing completed.');
