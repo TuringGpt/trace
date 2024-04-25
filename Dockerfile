@@ -10,11 +10,8 @@ COPY . .
 # Switch to root user temporarily to perform operations that require elevated privileges
 USER root
 
-# Install prerequisites
+# Install Python 3.8
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends software-properties-common && \
-    DEBIAN_FRONTEND=noninteractive add-apt-repository -y ppa:deadsnakes/ppa && \
-    apt-get update && \
     apt-get install -y --no-install-recommends python3.8 && \
     ln -s /usr/bin/python3.8 /usr/bin/python
 
