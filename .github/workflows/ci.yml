@@ -59,63 +59,23 @@ jobs:
 
       - name: Run build
         run: npm run build
-  build:
-    name: Build Docker Image
+  ci:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        pr_id:
-          - ${{ github.event.number }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Build Docker image
+        id: build
         run: |
-          docker build -t your-image-name:${{ matrix.pr_id }} .
-          echo "::set-output name=image_tag::your-image-name:${{ matrix.pr_id }}"
-  test:
-    name: Run Tests
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        pr_id:
-          - ${{ github.event.number }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+          docker build -t your-image-name:${{ github.event.number }} .
+          echo "::set-output name=image_tag::your-image-name:${{ github.event.number }}"
 
-      - name: Run Docker container with npm test
-        run: docker run your-image-name:${{ needs.build.outputs.image_tag }} npm test
+      - name: Run Tests
+        id: test
+        run: docker run ${{ steps.build.outputs.image_tag }} npm test
 
-  lint:
-    name: Run Linter
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        pr_id:
-          - ${{ github.event.number }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run Docker container with linting
+      - name: Run Linter
+        id: lint
         run: docker run your-image-name:${{ needs.build.outputs.image_tag }} npm run lint
-
-  start:
-    name: Start Application
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        pr_id:
-          - ${{ github.event.number }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run Docker container to start application
-        run: docker run your-image-name:${{ needs.build.outputs.image_tag }} npm start
-
