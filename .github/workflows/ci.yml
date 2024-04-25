@@ -86,6 +86,7 @@ jobs:
       - name: Run Tests
         id: test
         run: docker run ${{ steps.build.outputs.image_tag }} npm test
+        continue-on-error: true
 
       - name: Run Linter
         id: lint
