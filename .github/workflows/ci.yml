@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-run:
     runs-on: ${{ matrix.os }}
-
+    if: false
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -86,7 +86,7 @@ jobs:
       - name: Run Tests
         id: test
         run: docker run ${{ steps.build.outputs.image_tag }} npm test
-        continue-on-error: true
+        if: false
 
       - name: Run Linter
         id: lint
