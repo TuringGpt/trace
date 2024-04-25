@@ -90,4 +90,4 @@ jobs:
 
       - name: Run Linter
         id: lint
-        run: docker run your-image-name:${{ needs.build.outputs.image_tag }} npm run lint
+        run: docker run ${{ steps.build.outputs.image_tag }} npm run lint
