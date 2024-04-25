@@ -1,6 +1,11 @@
+import fs from 'fs';
+
 import { ipc } from '../../types/customTypes';
+import storage from '../storage';
+import getDeviceMetadata from '../util/getMetaData';
 import keylogger from '../util/keylogger';
 import logger from '../util/logger';
+import remuxVideo from '../util/remuxVideo';
 import {
   getCurrentRecordingFolder,
   getVideoStoragePath,
@@ -19,18 +24,121 @@ ipcHandle('start-new-recording', async () => {
   return ipc.success(undefined);
 });
 
-ipcHandle('stop-recording', async () => {
-  const videoStoragePath = getVideoStoragePath();
-  const recordingFolder = await getCurrentRecordingFolder();
-  const logContent = keylogger.stopLogging();
-  await markRecordingStopped();
-  if (!logContent) {
+async function writeKeylogToFile(
+  keylog: string | null,
+  recordingFolder: string,
+) {
+  if (!keylog) {
     log.info('Keystrokes logging stopped. No logs found.');
-    return ipc.error('Keystrokes logging stopped. No logs found.');
+    return;
   }
-  log.info('Recording stopped');
-  return ipc.success({
-    videoStoragePath,
-    recordingFolder,
-  });
+
+  const keylogPath = `${recordingFolder}/keylog.txt`;
+  await fs.promises.writeFile(keylogPath, keylog);
+  log.info('Keystrokes log saved.');
+}
+
+async function writeMetadataToFile(metadata: string, recordingFolder: string) {
+  const metadataPath = `${recordingFolder}/metadata.json`;
+  await fs.promises.writeFile(metadataPath, metadata);
+  log.info('Metadata saved.');
+}
+
+async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
+  let tempInputPath = '';
+  let tempOutputPath = '';
+  try {
+    const buffer = Buffer.from(video);
+
+    tempInputPath = `${recordingFolder}/temp-video.webm`;
+    tempOutputPath = `${recordingFolder}/video.mp4`;
+    await fs.promises.writeFile(tempInputPath, buffer);
+    log.info('Video file written to disk for remuxing.', {
+      tempInputPath,
+      tempOutputPath,
+    });
+
+    const startTime = Date.now();
+    await remuxVideo(tempInputPath, tempOutputPath);
+    const timeTakenToConvert = Date.now() - startTime;
+    log.info(`Video conversion took ${timeTakenToConvert / 1000} seconds.`);
+    fs.unlinkSync(tempInputPath);
+    return true;
+  } catch (error) {
+    log.error('Failed to remux the video file.', error);
+    if (fs.existsSync(tempInputPath)) {
+      fs.unlinkSync(tempInputPath);
+    }
+    if (fs.existsSync(tempOutputPath)) {
+      fs.unlinkSync(tempOutputPath);
+    }
+    throw error;
+  }
+}
+
+ipcHandle('stop-recording', async (event, uint8Array) => {
+  try {
+    const recordingFolder = await getCurrentRecordingFolder();
+    const db = await storage.getData();
+    const logContent = keylogger.stopLogging();
+    const metadata = await getDeviceMetadata();
+    await markRecordingStopped();
+
+    log.info('Recording stopped');
+
+    await writeKeylogToFile(logContent, recordingFolder);
+
+    await writeMetadataToFile(JSON.stringify(metadata), recordingFolder);
+
+    await writeVideoToFile(uint8Array, recordingFolder);
+
+    return ipc.success({
+      recordingFolderName: db.currentRecordingFolder!.folderName,
+    });
+  } catch (err) {
+    log.error('Failed during stop recording', { err });
+    return ipc.error('Error while saving the log', err);
+  }
+});
+
+ipcHandle('rename-recording', async (event, folderId, newName, description) => {
+  try {
+    const db = await storage.getData();
+    const folder = db.recordingFolders.find((folder) => folder.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    folder.folderName = newName;
+    folder.description = description;
+    await storage.save(db);
+
+    // Rename the folder on disk
+    const oldPath = `${getVideoStoragePath()}/${folderId}`;
+    const newPath = `${getVideoStoragePath()}/${newName}`;
+    await fs.promises.rename(oldPath, newPath);
+
+    return ipc.success(undefined);
+  } catch (err) {
+    log.error('Failed to rename recording', { err });
+    return ipc.error('Failed to rename recording', err);
+  }
+});
+
+ipcHandle('discard-recording', async (event, folderId) => {
+  try {
+    const db = await storage.getData();
+    db.recordingFolders = db.recordingFolders.filter(
+      (folder) => folder.id !== folderId,
+    );
+    await storage.save(db);
+
+    // Delete the folder on disk
+    const folderPath = `${getVideoStoragePath()}/${folderId}`;
+    await fs.promises.rmdir(folderPath, { recursive: true });
+
+    return ipc.success(undefined);
+  } catch (err) {
+    log.error('Failed to discard recording', { err });
+    return ipc.error('Failed to discard recording', err);
+  }
 });

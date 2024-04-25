@@ -146,7 +146,10 @@ class DB {
     value: StorageApplicationState[Key],
   ) {
     try {
-      log.info(`Saving property ${key} with value ${value}`);
+      log.info(`Saving property with value`, {
+        key,
+        value,
+      });
       this.data![key] = value;
       await this.#_save();
     } catch (err) {

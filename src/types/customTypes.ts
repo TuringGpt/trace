@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 const RecordedFolderSchema = z.object({
   folderName: z.string(),
+  id: z.string(),
+  description: z.string().optional(),
   isUploaded: z.boolean(),
   recordingStartedAt: z.number(),
   recordingStoppedAt: z.number().optional(),
@@ -70,36 +72,23 @@ type IPCHandler<TArgs extends any[], TRes> = (
 ) => Promise<IPCResult<TRes>>;
 
 export type IPCHandleEvents = {
-  'create-zip-file': IPCHandler<
-    [videoFilePath: string, keyLogFilePath: string, metadataFilePath: string],
-    { zipFilePath: string; zipFileName: string }
-  >;
-  'save-zip-file': IPCHandler<
-    [zipFileName: string, zipFilePath: string],
-    string
-  >;
-  'discard-zip-file': IPCHandler<[zipFilePath: string], boolean>;
   'get-video-sources': IPCHandler<[], void>;
-  'remux-video-file': IPCHandler<
-    [uint8Array: Uint8Array],
-    { videoFilePath: string }
-  >;
+  'remux-video-file': IPCHandler<[uint8Array: Uint8Array], boolean>;
   'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult>;
   'show-dialog': IPCHandler<[title: string, message: string], boolean>;
-  'get-device-metadata': IPCHandler<
-    [screenId: string, startTime: string],
-    { metadataFilePath: string }
-  >;
-  'stop-keystrokes-logging': IPCHandler<[], { keyLogFilePath: string }>;
   'start-new-recording': IPCHandler<[], void>;
   'stop-recording': IPCHandler<
-    [],
-    { videoStoragePath: string; recordingFolder: string }
+    [uint8Array: Uint8Array],
+    { recordingFolderName: string }
   >;
+  'rename-recording': IPCHandler<
+    [folderId: string, newName: string, description: string],
+    void
+  >;
+  'discard-recording': IPCHandler<[folderId: string], void>;
 };
 
 export type IPCOnEvents = {
-  'start-keystrokes-logging': (event: IpcMainInvokeEvent) => void;
   'log-from-renderer': (event: IpcMainInvokeEvent, ...args: any[]) => void;
   'report-renderer-unhandled-error': (
     event: IpcMainInvokeEvent,

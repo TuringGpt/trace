@@ -10,11 +10,9 @@ const log = logger.child({ module: 'util.storageHelpers' });
 export function getVideoStoragePath(): string {
   const appDataPath = app.getPath('userData');
   const storagePath = path.join(appDataPath, 'video-storage');
-  log.info('Storage path', { storagePath });
+
   if (!fs.existsSync(storagePath)) {
-    log.info('Creating storage path', { storagePath });
     fs.mkdirSync(storagePath);
-    log.info('Storage path created', { storagePath });
   }
 
   return storagePath;
@@ -27,6 +25,7 @@ export async function markRecordingStarted() {
     db.isRecording = true;
     db.currentRecordingFolder = {
       folderName: currentRecordingFolder,
+      id: currentRecordingFolder,
       isUploaded: false,
       recordingStartedAt: Date.now(),
       uploadingInProgress: false,
