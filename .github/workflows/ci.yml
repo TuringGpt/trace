@@ -4,12 +4,17 @@ on:
   pull_request:
     branches:
       - master
-  workflow_dispatch:  # This allows manual triggering
+  workflow_dispatch:
+    inputs:
+      parameter_name:
+        description: 'shall we build...'
+        required: true
+        default: 'default_value'  # Optional default value
 
 jobs:
   build-and-run:
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'workflow_dispatch'  # This job will only run when manually triggered
+    if: github.event.inputs.parameter_name == 'specific_value'  # Conditional execution based on parameter value
     strategy:
       matrix:
         os: [ubuntu-latest]
