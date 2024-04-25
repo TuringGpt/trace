@@ -1,4 +1,4 @@
-import { DesktopCapturerSource, IpcMainInvokeEvent } from 'electron';
+import { IpcMainInvokeEvent } from 'electron';
 import { z } from 'zod';
 
 const RecordedFolderSchema = z.object({

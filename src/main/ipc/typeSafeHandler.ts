@@ -34,6 +34,7 @@ export function ipcInvoke<Key extends keyof IPCHandleEvents>(eventName: Key) {
         IPCHandleEvents[Key]
       >;
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error('unhandled error in invoke', e);
       throw e;
     }

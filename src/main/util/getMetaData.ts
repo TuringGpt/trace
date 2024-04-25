@@ -1,4 +1,4 @@
-import { DesktopCapturerSource, screen } from 'electron';
+import { screen } from 'electron';
 import os from 'os';
 
 import storage from '../storage';
@@ -17,7 +17,7 @@ export default async function getDeviceMetadata() {
 
   const display = screen
     .getAllDisplays()
-    .find((display) => `${display.id}` === `${selectedDevice}`);
+    .find((d) => `${d.id}` === `${selectedDevice}`);
 
   const metadata = {
     osType: os.type(),

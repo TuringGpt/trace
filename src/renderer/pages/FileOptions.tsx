@@ -33,7 +33,7 @@ export default function FileOptions() {
     if (res.status === 'success') {
       navigate('/');
     } else {
-      window.electron.showDialog('error', 'Failed to rename recording');
+      window.electron.showDialog('error', 'Failed to rename recording folder');
     }
   };
 
@@ -52,9 +52,13 @@ export default function FileOptions() {
         <h2 className="text-2xl font-semibold text-white mb-4">
           What is the recording about?
         </h2>
-        <label className="block text-lg font-medium text-white w-full">
+        <label
+          className="block text-lg font-medium text-white w-full"
+          htmlFor="folderName"
+        >
           Name
           <input
+            id="folderName"
             className="mt-4 block w-full text-l border-2 border-gray-300 p-2 rounded-md bg-white text-black"
             value={folderName}
             onChange={(e) => {
@@ -66,9 +70,13 @@ export default function FileOptions() {
             <p className="text-red-500">{error.folderName}</p>
           )}
         </label>
-        <label className="block text-lg font-medium text-white w-full mt-4">
+        <label
+          htmlFor="description"
+          className="block text-lg font-medium text-white w-full mt-4"
+        >
           Description
           <input
+            id="description"
             className="mt-4 block w-full text-l border-2 border-gray-300 p-2 rounded-md bg-white text-black"
             value={description}
             onChange={(e) => {

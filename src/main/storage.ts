@@ -1,9 +1,8 @@
-import { app, DesktopCapturerSource, dialog } from 'electron';
+import { app, dialog } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import lockFile, { lock, LockOptions, UnlockOptions } from 'proper-lockfile';
-import { v4 as uuidv4 } from 'uuid';
-import { z, ZodError } from 'zod';
+import lockFile, { lock, LockOptions } from 'proper-lockfile';
+import { ZodError } from 'zod';
 
 import {
   StorageApplicationState,
@@ -33,7 +32,9 @@ const emptyInitialState: StorageApplicationState = {
 
 class DB {
   data: StorageApplicationState | undefined;
+
   filePath: string;
+
   constructor() {
     try {
       this.filePath = path.join(app.getPath('userData'), fileName);
@@ -66,7 +67,7 @@ class DB {
    * so we can safely assume that the data will be loaded post app start
    */
   async load() {
-    return this.withLock(async () => {
+    return this.withLock(async (): Promise<void> => {
       try {
         log.info('Loading data from file');
         const data = fs.readFileSync(this.filePath, 'utf8');
@@ -77,7 +78,7 @@ class DB {
             filePath: this.filePath,
             err,
           });
-          return await this.handleCorruptedData();
+          this.handleCorruptedData();
         }
         log.error('Error loading data from file', { err });
         throw err;
@@ -113,7 +114,7 @@ class DB {
     });
     if (response.response === 0) {
       this.data = emptyInitialState;
-      await this.#_save();
+      await this.#save();
     } else {
       log.error('User does not want to reset the app. Quitting.');
       app.quit();
@@ -122,10 +123,10 @@ class DB {
 
   async save(data: StorageApplicationState) {
     this.data = data;
-    await this.#_save();
+    await this.#save();
   }
 
-  async #_save() {
+  async #save() {
     return this.withLock(async () => {
       try {
         log.info('Saving data to file');
@@ -151,7 +152,7 @@ class DB {
         value,
       });
       this.data![key] = value;
-      await this.#_save();
+      await this.#save();
     } catch (err) {
       log.error('Error saving property', { err });
       throw err;

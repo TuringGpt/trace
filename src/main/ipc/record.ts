@@ -104,7 +104,7 @@ ipcHandle('stop-recording', async (event, uint8Array) => {
 ipcHandle('rename-recording', async (event, folderId, newName, description) => {
   try {
     const db = await storage.getData();
-    const folder = db.recordingFolders.find((folder) => folder.id === folderId);
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
     if (!folder) {
       throw new Error('Folder not found');
     }

@@ -60,15 +60,6 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const prettyPrintDateAndTimeInAMPM = (date: Date) => {
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const seconds = date.getSeconds();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const formattedHours = hours % 12 || 12;
-  return `${formattedHours}:${minutes}:${seconds} ${ampm}`;
-};
-
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
