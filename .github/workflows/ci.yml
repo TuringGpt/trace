@@ -48,7 +48,7 @@ jobs:
           echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" >> .env
 
           # Step 2: Install application dependencies
-          npm install
+          npm ci
 
           # Step 3: Install Azure CLI
           if [ "$(uname)" = "Darwin" ] || [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
@@ -68,7 +68,7 @@ jobs:
           azurite-blob -l ./azure-blob-storage &
 
           # Step 7: Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "${AZURE_CONNECTION_STRING}"
+          az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
 
       - name: Run linting
         run: npm run lint
@@ -94,7 +94,7 @@ jobs:
 
       - name: Run Tests
         id: test
-        run: docker run -e MODE="${MODE}" -e AZURE_CONNECTION_STRING="${AZURE_CONNECTION_STRING}" -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm test
+        run: docker run -e MODE="${MODE}" -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm test
         if: false
 
       - name: Run Linter

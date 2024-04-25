@@ -17,26 +17,26 @@ RUN apt-get update && \
                         libncurses5-dev libncursesw5-dev xz-utils tk-dev \
                         libffi-dev liblzma-dev python3-openssl git
 
-# Download and extract Python 3.8 source code
-RUN mkdir ~/python38 && \
-    cd ~/python38 && \
-    wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz && \
-    tar -xf Python-3.8.16.tgz
+# Download and extract Python 3.11 source code
+RUN mkdir ~/python311 && \
+    cd ~/python311 && \
+    wget https://www.python.org/ftp/python/3.11.2/Python-3.11.2.tgz && \
+    tar -xf Python-3.11.2.tgz
 
 # Configure the build
-RUN cd ~/python38/Python-3.8.16 && \
+RUN cd ~/python311/Python-3.11.2 && \
     ./configure --enable-optimizations
 
 # Compile the source code
-RUN cd ~/python38/Python-3.8.16 && \
+RUN cd ~/python311/Python-3.11.2 && \
     make -j$(nproc)
 
 # Install Python
-RUN cd ~/python38/Python-3.8.16 && \
+RUN cd ~/python311/Python-3.11.2 && \
     make install
 
 # Verify the installation
-RUN python3.8 --version
+RUN python3.11 --version
 
 # Install application dependencies
 RUN npm ci
