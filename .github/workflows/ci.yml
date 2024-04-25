@@ -93,11 +93,10 @@ jobs:
     name: Run Linter
     needs: build
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        pr_id: [ ${ { github.event.number } } ]
-
+        pr_id:
+          - ${{ github.event.number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -109,11 +108,10 @@ jobs:
     name: Start Application
     needs: build
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        pr_id: [ ${ { github.event.number } } ]
-
+        pr_id:
+          - ${{ github.event.number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
