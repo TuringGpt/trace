@@ -4,11 +4,12 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:  # This allows manual triggering
 
 jobs:
   build-and-run:
     runs-on: ${{ matrix.os }}
-    if: false
+    if: github.event_name == 'workflow_dispatch'  # This job will only run when manually triggered
     strategy:
       matrix:
         os: [ubuntu-latest]
