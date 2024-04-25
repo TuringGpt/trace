@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the entire project to the working directory
 COPY . .
 
+# Switch to root user temporarily to perform operations that require elevated privileges
+USER root
+
 # Install application dependencies
 RUN npm ci
 
@@ -26,6 +29,9 @@ COPY entrypoint.sh .
 
 # Make the entrypoint script executable
 RUN chmod +x entrypoint.sh
+
+# Switch back to a non-root user for better security
+USER node
 
 # Expose the port the app runs on
 EXPOSE 3000
