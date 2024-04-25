@@ -37,7 +37,6 @@ export type CapturedSource = {
 };
 
 export type UploadResult = {
-  status: 'Uploaded' | 'Failed';
   uploadedZipFileName: string;
 };
 
@@ -49,7 +48,7 @@ type IPCSuccess<Payload> = {
 type IPCError = {
   status: 'error';
   message: string;
-  error?: any;
+  error?: Error;
 };
 
 export type IPCResult<Payload> = IPCSuccess<Payload> | IPCError;
