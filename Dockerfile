@@ -10,15 +10,10 @@ COPY . .
 # Switch to root user temporarily to perform operations that require elevated privileges
 USER root
 
-# Add the deadsnakes PPA for Python
+# Install Python 3.8
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update
-
-# Install Python 3.11
-RUN apt-get install -y --no-install-recommends python3.11 && \
-    ln -s /usr/bin/python3.11 /usr/bin/python
+    apt-get install -y python3.8 && \
+    ln -s /usr/bin/python3.8 /usr/bin/python \
 
 # Install application dependencies
 RUN npm ci
