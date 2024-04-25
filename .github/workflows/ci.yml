@@ -67,6 +67,9 @@ jobs:
           # Step 6: Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
 
+          # Step 7: Create Blob storage container using Azure CLI
+          az storage container create --name turing-videos --connection-string "${AZURE_CONNECTION_STRING}"
+
       - name: Run linting
         run: npm run lint
 
