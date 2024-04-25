@@ -18,17 +18,15 @@ function onSelectVideoSource(
 
 const electronHandler = {
   getVideoSources: ipcInvoke('get-video-sources'),
-  remuxVideoFile: ipcInvoke('remux-video-file'),
-  createZipFile: ipcInvoke('create-zip-file'),
-  saveZipFile: ipcInvoke('save-zip-file'),
-  discardZipFile: ipcInvoke('discard-zip-file'),
-  getDeviceMetadata: ipcInvoke('get-device-metadata'),
-  startKeystrokesLogging: ipcSend('start-keystrokes-logging'),
-  stopKeystrokesLogging: ipcInvoke('stop-keystrokes-logging'),
+
   uploadFiles: ipcInvoke('upload-zip-file'),
   logFromRenderer: ipcSend('log-from-renderer'),
   showDialog: ipcInvoke('show-dialog'),
   reportUnhandledError: ipcSend('report-renderer-unhandled-error'),
+  startNewRecording: ipcInvoke('start-new-recording'),
+  stopRecording: ipcInvoke('stop-recording'),
+  renameRecording: ipcInvoke('rename-recording'),
+  discardRecording: ipcInvoke('discard-recording'),
   onSelectVideoSource,
 };
 

@@ -1,10 +1,11 @@
-export const setZipData = (zipFileName: string, zipFilePath: string) =>
+export const setRecordingName = (recordingName: string) =>
   ({
-    type: 'setZipData',
-    payload: { zipFileName, zipFilePath },
+    type: 'setRecordingName',
+    payload: { recordingName },
   }) as const;
 
-export const resetZipData = () => ({ type: 'resetZipData' }) as const;
+export const resetRecordingName = () =>
+  ({ type: 'resetRecordingName' }) as const;
 
 export const showBusyIndicator = (message: string) =>
   ({
@@ -19,7 +20,7 @@ export const hideBusyIndicator = () =>
   }) as const;
 
 export type Action =
-  | ReturnType<typeof resetZipData>
-  | ReturnType<typeof setZipData>
+  | ReturnType<typeof resetRecordingName>
+  | ReturnType<typeof setRecordingName>
   | ReturnType<typeof showBusyIndicator>
   | ReturnType<typeof hideBusyIndicator>;

@@ -4,6 +4,7 @@ import {
   UiohookMouseEvent,
   UiohookWheelEvent,
 } from 'uiohook-napi';
+
 import throttle from '../../renderer/util/throttle';
 import keycodesMapping from './keycodes';
 import logger from './logger';
@@ -36,8 +37,6 @@ class KeyLogger {
     if (this.isLogging) return;
     this.isLogging = true;
     this.startTime = Date.now();
-
-    log.info('Starting keylogging');
 
     log.info('Starting keylogging');
 

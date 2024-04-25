@@ -18,6 +18,7 @@ import { autoUpdater } from 'electron-updater';
 import path from 'path';
 
 import MenuBuilder from './menu';
+import db from './storage';
 import { resolveHtmlPath } from './util';
 import logger from './util/logger';
 
@@ -131,6 +132,7 @@ app
   .whenReady()
   .then(() => {
     createWindow();
+    db.load();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
@@ -148,7 +150,7 @@ process.on('uncaughtException', (error) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  log.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  log.error('Unhandled Rejection at:', { promise, reason });
 });
 
 // custom event listener
