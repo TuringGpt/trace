@@ -22,8 +22,6 @@ ipcMain.on('start-keystrokes-logging', () => {
     },
   });
   overlayWindow.loadFile('src/staticPages/overlay.html');
-  overlayWindow.setAlwaysOnTop(true);
-  overlayWindow.setSkipTaskbar(true);
   overlayWindow.setVisibleOnAllWorkspaces(true);
 
   const { height, width } = screen.getPrimaryDisplay().bounds;

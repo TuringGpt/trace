@@ -69,7 +69,11 @@ export default function Upload() {
 
   const onStartUploadClick = async () => {
     // First show consent modal and get timestamp
-    const consent = await window.electron.showDialog('info', uploadConsentCopy);
+    const consent = await window.electron.showDialog(
+      'info',
+      uploadConsentCopy,
+      'with-cancel',
+    );
     if (!consent?.data) return;
 
     // #todo TR-8, requires backend implementation? Send consent time stamp to backend.

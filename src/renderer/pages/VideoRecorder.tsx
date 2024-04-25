@@ -81,6 +81,7 @@ export default function VideoRecorder() {
     const consent = await window.electron.showDialog(
       'info',
       initialConsentText,
+      'with-cancel',
     );
     if (!consent?.data) {
       return;

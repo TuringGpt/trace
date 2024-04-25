@@ -56,7 +56,10 @@ export type IPCHandleEvents = {
     { videoFilePath: string }
   >;
   'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult>;
-  'show-dialog': IPCHandler<[title: string, message: string], boolean>;
+  'show-dialog': IPCHandler<
+    [title: string, message: string, type?: string | null],
+    boolean
+  >;
   'get-device-metadata': IPCHandler<
     [screenId: string, startTime: string],
     { metadataFilePath: string }
