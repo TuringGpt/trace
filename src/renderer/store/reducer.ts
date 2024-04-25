@@ -1,10 +1,7 @@
 import { Action } from './actions';
 
 export interface AppState {
-  zip: {
-    zipFileName: string;
-    zipFilePath: string;
-  };
+  recordingName: string;
   busyIndicator: {
     isShow: boolean;
     message: string;
@@ -13,10 +10,7 @@ export interface AppState {
 
 // Initial state
 export const initialState: AppState = {
-  zip: {
-    zipFileName: '',
-    zipFilePath: '',
-  },
+  recordingName: '',
   busyIndicator: {
     isShow: false,
     message: '',
@@ -26,21 +20,15 @@ export const initialState: AppState = {
 // Reducer function
 export default function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'setZipData':
+    case 'setRecordingName':
       return {
         ...state,
-        zip: {
-          zipFileName: action.payload.zipFileName,
-          zipFilePath: action.payload.zipFilePath,
-        },
+        recordingName: action.payload.recordingName,
       };
-    case 'resetZipData':
+    case 'resetRecordingName':
       return {
         ...state,
-        zip: {
-          zipFileName: '',
-          zipFilePath: '',
-        },
+        recordingName: '',
       };
     case 'setBusyIndicator':
       return {

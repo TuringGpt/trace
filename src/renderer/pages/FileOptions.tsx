@@ -6,7 +6,7 @@ import useAppState from '../store/hook';
 export default function FileOptions() {
   const { state } = useAppState();
   const navigate = useNavigate();
-  const [folderName, setFolderName] = useState(state.zip.zipFileName);
+  const [folderName, setFolderName] = useState(state.recordingName);
   const [description, setDescription] = useState('');
   const [error, setError] = useState({ folderName: '', description: '' });
 
@@ -26,7 +26,7 @@ export default function FileOptions() {
       return;
     }
     const res = await window.electron.renameRecording(
-      state.zip.zipFileName,
+      state.recordingName,
       folderName,
       description,
     );
@@ -38,7 +38,7 @@ export default function FileOptions() {
   };
 
   const onDiscard = async () => {
-    const res = await window.electron.discardRecording(state.zip.zipFileName);
+    const res = await window.electron.discardRecording(state.recordingName);
     if (res.status === 'error') {
       window.electron.showDialog('error', 'Failed to discard recording');
       return;

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { CapturedSource } from '../../types/customTypes';
 import {
   hideBusyIndicator,
-  setZipData,
+  setRecordingName,
   showBusyIndicator,
 } from '../store/actions';
 import useAppState from '../store/hook';
@@ -118,7 +118,7 @@ export default function VideoRecorder() {
       }
 
       dispatch(hideBusyIndicator());
-      dispatch(setZipData(res.data.recordingFolderName, 'zipFilePath'));
+      dispatch(setRecordingName(res.data.recordingFolderName));
 
       navigate('/save-zip');
     };
