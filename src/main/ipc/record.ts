@@ -1,7 +1,9 @@
 import fs from 'fs';
+import path from 'path';
 
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
+import fileExists from '../util/fileExists';
 import getDeviceMetadata from '../util/getMetaData';
 import keylogger from '../util/keylogger';
 import logger from '../util/logger';
@@ -108,13 +110,24 @@ ipcHandle('rename-recording', async (event, folderId, newName, description) => {
     if (!folder) {
       throw new Error('Folder not found');
     }
-    folder.folderName = newName;
     folder.description = description;
+
+    // Check if a folder with the new name already exists in the filesystem
+    let finalName = newName;
+    const videoStoragePath = await getVideoStoragePath();
+    let counter = 1;
+    // eslint-disable-next-line no-await-in-loop
+    while (await fileExists(path.join(videoStoragePath, finalName))) {
+      finalName = `${newName}(${counter})`;
+      counter += 1;
+    }
+
+    folder.folderName = finalName;
     await storage.save(db);
 
     // Rename the folder on disk
-    const oldPath = `${getVideoStoragePath()}/${folderId}`;
-    const newPath = `${getVideoStoragePath()}/${newName}`;
+    const oldPath = path.join(getVideoStoragePath(), folderId);
+    const newPath = path.join(getVideoStoragePath(), finalName);
     await fs.promises.rename(oldPath, newPath);
 
     return ipc.success(undefined);
