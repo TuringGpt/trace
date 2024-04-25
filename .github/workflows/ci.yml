@@ -12,7 +12,7 @@ on:
         default: 'default_value'  # Optional default value
 
 jobs:
-  build-and-run:
+  platform-build:
     runs-on: ${{ matrix.os }}
     if: github.event.inputs.parameter_name == 'specific_value'  # Conditional execution based on parameter value
     strategy:
@@ -76,7 +76,7 @@ jobs:
 
       - name: Run build
         run: npm run build
-  ci:
+  sanity-checks:
     runs-on: ubuntu-latest
 
     steps:
