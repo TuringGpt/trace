@@ -5,19 +5,18 @@ on:
     branches:
       - master
   workflow_dispatch:
-    inputs:
-      parameter_name:
-        description: 'shall we build...'
-        required: true
-        default: 'default_value'  # Optional default value
 
 jobs:
   platform-build:
     runs-on: ${{ matrix.os }}
-    if: github.event.inputs.parameter_name == 'specific_value'  # Conditional execution based on parameter value
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         os: [ubuntu-latest]
+
+    env:
+      MODE: ${{ secrets.MODE }}
+      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
     steps:
       - name: Checkout code
@@ -27,7 +26,7 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '18.15'
-          python-version: '3.8' # Specify the Python version here
+          python-version: '3.11'
       - name: Display Node.js version
         run: |
           node --version
@@ -45,8 +44,8 @@ jobs:
       - name: Set up development environment
         run: |
           # Step 1: Create a .env file
-          echo "MODE='development'" > .env
-          echo "BLOB_STORAGE_URL='DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;'" >> .env
+          echo "MODE='${MODE}'" > .env
+          echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" >> .env
 
           # Step 2: Install application dependencies
           npm install
@@ -66,10 +65,7 @@ jobs:
           npm install -g azurite
 
           # Step 6: Start Azurite Blob service
-          azurite-blob -l ./azure-blob-storage
-
-          # Step 7: Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+          azurite-blob -l ./azure-blob-storage &
 
       - name: Run linting
         run: npm run lint
@@ -78,6 +74,10 @@ jobs:
         run: npm run build
   sanity-checks:
     runs-on: ubuntu-latest
+
+    env:
+      MODE: ${{ secrets.MODE }}
+      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
     steps:
       - name: Checkout code
@@ -91,9 +91,9 @@ jobs:
 
       - name: Run Tests
         id: test
-        run: docker run ${{ steps.build.outputs.image_tag }} npm test
+        run: docker run -e MODE="${MODE}" -e AZURE_CONNECTION_STRING="${AZURE_CONNECTION_STRING}" -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm test
         if: false
 
       - name: Run Linter
         id: lint
-        run: docker run ${{ steps.build.outputs.image_tag }} npm run lint
+        run: docker run -e MODE="${MODE}" -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm run lint
