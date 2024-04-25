@@ -10,10 +10,33 @@ COPY . .
 # Switch to root user temporarily to perform operations that require elevated privileges
 USER root
 
-# Install Python 3.8
+# Install build dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends python3.8 && \
-    ln -s /usr/bin/python3.8 /usr/bin/python
+    apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
+                        libreadline-dev libsqlite3-dev wget curl llvm \
+                        libncurses5-dev libncursesw5-dev xz-utils tk-dev \
+                        libffi-dev liblzma-dev python3-openssl git
+
+# Download and extract Python 3.8 source code
+RUN mkdir ~/python38 && \
+    cd ~/python38 && \
+    wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz && \
+    tar -xf Python-3.8.16.tgz
+
+# Configure the build
+RUN cd ~/python38/Python-3.8.16 && \
+    ./configure --enable-optimizations
+
+# Compile the source code
+RUN cd ~/python38/Python-3.8.16 && \
+    make -j$(nproc)
+
+# Install Python
+RUN cd ~/python38/Python-3.8.16 && \
+    make install
+
+# Verify the installation
+RUN python3.8 --version
 
 # Install application dependencies
 RUN npm ci
