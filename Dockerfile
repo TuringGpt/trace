@@ -1,5 +1,5 @@
 # Use a Node.js base image
-FROM python3.11-nodejs18
+FROM nikolaik/python3.11-nodejs18
 
 # Set the working directory inside the container
 WORKDIR /app
