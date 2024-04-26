@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-
+cd /app
 source ~/.bashrc
 
 # Install application dependencies
