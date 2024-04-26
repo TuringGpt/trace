@@ -8,8 +8,10 @@ RUN apt-get update && apt-get install -y curl bash git \
     && . "$NVM_DIR/nvm.sh" \
     && nvm install 18.15.0 \
     && nvm use v18.15.0 \
-    && nvm alias default v18.15.0 \
-    
+    && nvm alias default v18.15.0
+
+RUN source ~/.bashrc
+
 # Set the working directory inside the container
 WORKDIR /app
 
