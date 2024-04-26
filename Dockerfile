@@ -1,6 +1,7 @@
 FROM python:3.11
 
-WORKDIR /app2
+# Set the working directory inside the container
+WORKDIR /app
 
 # Install NVM (Node Version Manager)
 ENV NVM_DIR="/usr/local/nvm"
@@ -12,17 +13,9 @@ RUN apt-get update && apt-get install -y curl bash git \
     && nvm use v18.15.0 \
     && nvm alias default v18.15.0 \
 
-# Set the working directory inside the container
-# RUN mkdir -p /app
-# RUN cd /app
-
-
-RUN ls -la
-RUN echo "Current directory: $(pwd)"
 # Copy the entire project to the working directory
 COPY . .
-RUN ls -la
-RUN echo "Current directory: $(pwd)"
+
 # Switch to root user temporarily to perform operations that require elevated privileges
 USER root
 
