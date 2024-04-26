@@ -1,5 +1,8 @@
 FROM python:3.11
 
+# Set the working directory inside the container
+WORKDIR /app
+
 # Install NVM (Node Version Manager)
 ENV NVM_DIR="/usr/local/nvm"
 RUN apt-get update && apt-get install -y curl bash git \
@@ -11,14 +14,14 @@ RUN apt-get update && apt-get install -y curl bash git \
     && nvm alias default v18.15.0 \
 
 
-# Set the working directory inside the container
-WORKDIR /app
-
 # Copy the entire project to the working directory
 COPY . .
 
 # Switch to root user temporarily to perform operations that require elevated privileges
-# USER root
+USER root
+
+RUN ls -la
+RUN echo "$(pwd)"
 
 # Run the setup script
 RUN chmod +x setup.sh
@@ -31,7 +34,7 @@ COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
 # Switch back to a non-root user for better security
-# USER node
+USER node
 
 # Set the default command to start the application using the entrypoint script
 ENTRYPOINT ["./entrypoint.sh"]
