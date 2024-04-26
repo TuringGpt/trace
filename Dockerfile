@@ -1,5 +1,5 @@
 # Use a Node.js base image
-FROM node:18.15
+FROM python3.11-nodejs18
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -9,34 +9,6 @@ COPY . .
 
 # Switch to root user temporarily to perform operations that require elevated privileges
 USER root
-
-# Install build dependencies
-RUN apt-get update && \
-    apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
-                        libreadline-dev libsqlite3-dev wget curl llvm \
-                        libncurses5-dev libncursesw5-dev xz-utils tk-dev \
-                        libffi-dev liblzma-dev python3-openssl git
-
-# Download and extract Python 3.11 source code
-RUN mkdir ~/python311 && \
-    cd ~/python311 && \
-    wget https://www.python.org/ftp/python/3.11.2/Python-3.11.2.tgz && \
-    tar -xf Python-3.11.2.tgz
-
-# Configure the build
-RUN cd ~/python311/Python-3.11.2 && \
-    ./configure --enable-optimizations
-
-# Compile the source code
-RUN cd ~/python311/Python-3.11.2 && \
-    make -j$(nproc)
-
-# Install Python
-RUN cd ~/python311/Python-3.11.2 && \
-    make install
-
-# Verify the installation
-RUN python3.11 --version
 
 # Install application dependencies
 RUN npm ci
