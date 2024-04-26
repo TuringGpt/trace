@@ -18,4 +18,3 @@ curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # Install and start Azurite for local development
 npm install -g azurite
-azurite-blob -l ./azure-blob-storage &
