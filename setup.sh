@@ -2,7 +2,7 @@
 set -e
 
 echo "Current directory: $(pwd)"
-
+ls -al
 source ~/.bashrc
 
 # Install application dependencies
