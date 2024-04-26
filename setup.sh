@@ -3,6 +3,7 @@ set -e
 
 echo "Current directory: $(pwd)"
 ls -al
+cd /app2
 source ~/.bashrc
 
 # Install application dependencies

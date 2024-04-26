@@ -11,10 +11,10 @@ RUN apt-get update && apt-get install -y curl bash git \
     && nvm alias default v18.15.0 \
 
 # Set the working directory inside the container
-RUN mkdir -p /app
-RUN cd /app
+# RUN mkdir -p /app
+# RUN cd /app
 
-WORKDIR /app
+WORKDIR /app2
 
 RUN ls -la
 RUN echo "Current directory: $(pwd)"
