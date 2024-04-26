@@ -85,7 +85,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: jpribyl/action-docker-layer-caching@v0.1.1
 
       - name: Build Docker image
         id: build
