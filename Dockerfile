@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y curl bash git \
 COPY . .
 
 # Switch to root user temporarily to perform operations that require elevated privileges
-USER root
+# USER root
 
 # Run the setup script
 RUN chmod +x setup.sh
