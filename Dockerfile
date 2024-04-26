@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y curl bash git \
 
 # Set the working directory inside the container
 WORKDIR /app
+RUN mkdir -p /app
+RUN cd /app
+
 RUN ls -la
 RUN echo "Current directory: $(pwd)"
 # Copy the entire project to the working directory
