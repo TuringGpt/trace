@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+source ~/.bashrc
+
 # Install application dependencies
 npm ci
 
