@@ -1,10 +1,21 @@
 FROM python:3.11
 
+WORKDIR /app2
+
+# Install NVM (Node Version Manager)
+ENV NVM_DIR="/usr/local/nvm"
+RUN apt-get update && apt-get install -y curl bash git \
+    && mkdir -p "$NVM_DIR" \
+    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash \
+    && . "$NVM_DIR/nvm.sh" \
+    && nvm install 18.15.0 \
+    && nvm use v18.15.0 \
+    && nvm alias default v18.15.0 \
+
 # Set the working directory inside the container
 # RUN mkdir -p /app
 # RUN cd /app
 
-WORKDIR /app2
 
 RUN ls -la
 RUN echo "Current directory: $(pwd)"
