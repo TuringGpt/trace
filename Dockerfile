@@ -1,4 +1,4 @@
-FROM python:3.11.6-alpine3.18
+FROM python:3.11
 
 # Install NVM (Node Version Manager)
 ENV NVM_DIR="/usr/local/nvm"
