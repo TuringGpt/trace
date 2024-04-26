@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
-cd /app
+
+echo "Current directory: $(pwd)"
+
 source ~/.bashrc
 
 # Install application dependencies
