@@ -12,10 +12,12 @@ RUN apt-get update && apt-get install -y curl bash git \
 
 # Set the working directory inside the container
 WORKDIR /app
-
+RUN ls -la
+RUN echo "Current directory: $(pwd)"
 # Copy the entire project to the working directory
 COPY . .
-
+RUN ls -la
+RUN echo "Current directory: $(pwd)"
 # Switch to root user temporarily to perform operations that require elevated privileges
 USER root
 
