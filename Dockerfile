@@ -16,6 +16,9 @@ WORKDIR /app
 # Copy the entire project to the working directory
 COPY . .
 
+# Switch to root user temporarily to perform operations that require elevated privileges
+USER root
+
 # Run the setup script
 RUN chmod +x setup.sh
 RUN ./setup.sh
