@@ -1,8 +1,5 @@
 FROM python:3.11
 
-# Set the working directory inside the container
-WORKDIR /app
-
 # Install NVM (Node Version Manager)
 ENV NVM_DIR="/usr/local/nvm"
 RUN apt-get update && apt-get install -y curl bash git \
@@ -12,6 +9,10 @@ RUN apt-get update && apt-get install -y curl bash git \
     && nvm install 18.15.0 \
     && nvm use v18.15.0 \
     && nvm alias default v18.15.0 \
+
+
+# Set the working directory inside the container
+WORKDIR /app
 
 # Copy the entire project to the working directory
 COPY . .
