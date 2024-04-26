@@ -1,9 +1,9 @@
-# Use the official Python image as the base
 FROM python:3.11.6-alpine3.18
 
 # Install NVM (Node Version Manager)
 ENV NVM_DIR="/usr/local/nvm"
 RUN apk add --no-cache curl bash \
+    && mkdir -p "$NVM_DIR" \
     && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash \
     && source "$NVM_DIR/nvm.sh" \
     && nvm install 18.15.0 \
