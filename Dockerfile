@@ -17,7 +17,7 @@ WORKDIR /app
 COPY . .
 
 # Switch to root user temporarily to perform operations that require elevated privileges
-USER root
+# USER root
 
 # Install application dependencies
 RUN npm ci
@@ -40,7 +40,7 @@ COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
 # Switch back to a non-root user for better security
-USER node
+# USER node
 
 # Set the default command to start the application using the entrypoint script
 ENTRYPOINT ["./entrypoint.sh"]
