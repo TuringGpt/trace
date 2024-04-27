@@ -15,7 +15,6 @@ jobs:
         os: [ubuntu-latest]
 
     env:
-      MODE: ${{ secrets.MODE }}
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
     steps:
@@ -44,8 +43,7 @@ jobs:
       - name: Set up development environment
         run: |
           # Step 1: Create a .env file
-          echo "MODE='${MODE}'" > .env
-          echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" >> .env
+          echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" > .env
 
           # Step 2: Install application dependencies
           npm ci
@@ -79,7 +77,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MODE: ${{ secrets.MODE }}
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
     steps:
@@ -89,14 +86,14 @@ jobs:
       - name: Build Docker image
         id: build
         run: |
-          docker build -t trace:${{ github.event.number }} .
+          docker build -t trace:${{ github.event.number }}  --build-arg BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" .
           echo "::set-output name=image_tag::trace:${{ github.event.number }}"
 
       - name: Run Tests
         id: test
-        run: docker run -e MODE="${MODE}" -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm test
+        run: docker run ${{ steps.build.outputs.image_tag }} npm test
         if: false
 
       - name: Run Linter
         id: lint
-        run: docker run -e MODE="${MODE}" -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm run lint
+        run: docker run ${{ steps.build.outputs.image_tag }} npm run lint

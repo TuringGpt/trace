@@ -1,9 +1,6 @@
 #!/bin/bash
 
-source ~/.bashrc
-
-ls -la
-cat .env
+source $NVM_DIR/nvm.sh
 
 # Run emulator
 azurite-blob -l ./azure-blob-storage &
