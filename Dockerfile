@@ -11,30 +11,29 @@ RUN apt-get update && apt-get install -y curl bash git \
     && . "$NVM_DIR/nvm.sh" \
     && nvm install 18.15.0 \
     && nvm use v18.15.0 \
-    && nvm alias default v18.15.0 \
+    && nvm alias default v18.15.0
 
+# Install Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+RUN . "$NVM_DIR/nvm.sh" && npm install -g azurite
+
+ARG BLOB_STORAGE_URL
+
+RUN echo "BLOB_STORAGE_URL='$BLOB_STORAGE_URL'" > .env
+
+RUN cat .env
 
 # Copy the entire project to the working directory
 COPY . .
 
-# Switch to root user temporarily to perform operations that require elevated privileges
-USER root
-
-RUN ls -la
-RUN echo "$(pwd)"
-
-# Run the setup script
-RUN chmod +x setup.sh
-RUN ./setup.sh
+RUN . "$NVM_DIR/nvm.sh" && npm ci
 
 # Copy the entrypoint script from the app directory into the container
 COPY entrypoint.sh .
 
 # Make the entrypoint script executable
 RUN chmod +x entrypoint.sh
-
-# Switch back to a non-root user for better security
-USER node
 
 # Set the default command to start the application using the entrypoint script
 ENTRYPOINT ["./entrypoint.sh"]
