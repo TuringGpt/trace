@@ -62,8 +62,6 @@ jobs:
       - name: Display Python version
         run: |
           python --version
-      - name: Install dependencies
-        run: npm install
 
       - name: Set up development environment
         run: |
