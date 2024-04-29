@@ -101,7 +101,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           # Create Blob storage container using Azure CLI
-          echo $env:BLOB_STORAGE_URL
+          echo "string: ${BLOB_STORAGE_URL}"
           az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
       - name: Run linter
         run: |
