@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BLOB_STORAGE_URL: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
     steps:
       - name: Checkout code
@@ -41,7 +41,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
     env:
-      BLOB_STORAGE_URL: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
     steps:
       - name: Checkout code
