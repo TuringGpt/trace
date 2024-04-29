@@ -37,7 +37,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     env:
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
@@ -71,12 +71,21 @@ jobs:
 
       - name: Install Azure CLI
         run: |
-          sudo apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
-          curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
-          AZ_REPO=$(lsb_release -cs)
-          echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-          sudo apt-get update
-          sudo apt-get install azure-cli
+          if [ "$(uname)" = "Darwin" ]; then
+            # Install Azure CLI on macOS
+            brew update
+            brew install azure-cli
+          elif [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
+            sudo apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
+            curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+            AZ_REPO=$(lsb_release -cs)
+            echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+            sudo apt-get update
+            sudo apt-get install azure-cli
+          elif [ "$(expr substr $(uname -s) 1 10)" = "MINGW32_NT" ] || [ "$(expr substr $(uname -s) 1 10)" = "MINGW64_NT" ]; then
+            # Install Azure CLI on Windows
+            Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile AzureCLI.msi
+            Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
 
       - name: Verify Azure CLI installation
         run: az version
