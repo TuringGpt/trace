@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Source NVM (Node Version Manager)
 source $NVM_DIR/nvm.sh
 
 # Run emulator
