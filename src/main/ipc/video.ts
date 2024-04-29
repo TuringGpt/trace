@@ -44,10 +44,6 @@ ipcHandle('start-ffmpeg-recording', async (event, screenId) => {
     outputPath                     // Path for the output file
   ]);
 
-  ffmpegProcess.stderr.on('data', data => {
-    log.error(`FFmpeg stderr: ${data.toString()}`);
-  });
-
   ffmpegProcess.on('close', code => {
     log.info(`FFmpeg process exited with code ${code}`);
     event.sender.send('ffmpeg-recording-stopped', code);
