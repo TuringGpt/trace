@@ -26,11 +26,11 @@ jobs:
 
       - name: Run Linter
         id: lint
-        run: docker run ${{ steps.build.outputs.image_tag }} npm run lint
+        run: docker run -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm run lint
 
       - name: Run Tests
         id: test
-        run: docker run ${{ steps.build.outputs.image_tag }} npm test
+        run: docker run -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm test
         if: false
 
   platform-build:
