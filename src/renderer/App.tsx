@@ -4,14 +4,15 @@ import './App.css';
 import clsx from 'clsx';
 import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 
-import AppHeader from './AppHeader';
-import BusyOverlay from './BusyOverlay';
+import AppHeader from './components/AppHeader';
+import BusyOverlay from './components/BusyOverlay';
+import UploadButton from './components/UploadButton';
 import FileOptions from './pages/FileOptions';
 import Upload from './pages/Upload';
+import UploadDashboard from './pages/UploadDashboard';
 import VideoRecorder from './pages/VideoRecorder';
 import useAppState from './store/hook';
 import AppStateProvider from './store/provider';
-import UploadButton from './UploadButton';
 
 function AppRoutes() {
   const { state } = useAppState();
@@ -26,6 +27,7 @@ function AppRoutes() {
         <Route path="/" element={<VideoRecorder />} />
         <Route path="/save-zip" element={<FileOptions />} />
         <Route path="/upload" element={<Upload />} />
+        <Route path="/upload-dashboard" element={<UploadDashboard />} />
       </Routes>
     </div>
   );

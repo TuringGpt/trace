@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 
-import icon from '../../assets/upload.svg';
+import icon from '../../../assets/upload.svg';
 
 export default function UploadButton() {
   const navigate = useNavigate();
   const onUploadClick = () => {
-    navigate('/upload');
+    navigate('/upload-dashboard');
   };
   return (
     <button
