@@ -96,7 +96,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           # Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "%BLOB_STORAGE_URL%"
+          az storage container create --name turing-videos --connection-string $env:BLOB_STORAGE_URL
       - name: Initialize storage on Linux/mac
         if: runner.os != 'Windows'
         run: |
