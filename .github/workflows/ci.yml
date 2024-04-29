@@ -7,9 +7,34 @@ on:
   workflow_dispatch:
 
 jobs:
+
+  sanity-checks:
+    runs-on: ubuntu-latest
+
+    env:
+      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        id: build
+        run: |
+          docker build -t trace:${{ github.event.number }}  --build-arg BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" .
+          echo "::set-output name=image_tag::trace:${{ github.event.number }}"
+
+      - name: Run Linter
+        id: lint
+        run: docker run ${{ steps.build.outputs.image_tag }} npm run lint
+
+      - name: Run Tests
+        id: test
+        run: docker run ${{ steps.build.outputs.image_tag }} npm test
+        if: false
+
   platform-build:
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -73,27 +98,3 @@ jobs:
 
       - name: Run build
         run: npm run build
-  sanity-checks:
-    runs-on: ubuntu-latest
-
-    env:
-      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Build Docker image
-        id: build
-        run: |
-          docker build -t trace:${{ github.event.number }}  --build-arg BLOB_STORAGE_URL="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;" .
-          echo "::set-output name=image_tag::trace:${{ github.event.number }}"
-
-      - name: Run Tests
-        id: test
-        run: docker run ${{ steps.build.outputs.image_tag }} npm test
-        if: false
-
-      - name: Run Linter
-        id: lint
-        run: docker run ${{ steps.build.outputs.image_tag }} npm run lint
