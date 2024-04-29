@@ -67,7 +67,7 @@ jobs:
         run: echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" > .env
 
       - name: Install application dependencies
-        run: npm install
+        run: npm ci
 
       - name: Install Azure CLI
         run: |
@@ -86,6 +86,7 @@ jobs:
             # Install Azure CLI on Windows
             Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile AzureCLI.msi
             Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
+          fi
 
       - name: Verify Azure CLI installation
         run: az version
