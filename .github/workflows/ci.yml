@@ -92,9 +92,20 @@ jobs:
         run: |
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
+      - name: Initialize storage on windows
+        if: runner.os == 'Windows'
+        run: |
+          # Create Blob storage container using Azure CLI
+          az storage container create --name turing-videos --connection-string "%BLOB_STORAGE_URL%"
+      - name: Initialize storage on Linux/mac
+        if: runner.os != 'Windows'
+        run: |
           # Create Blob storage container using Azure CLI
           az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
-          # Run linting
+      - name: Run linter
+        run: |
           npm run lint
-          # Run build
+      - name: Run linter
+        run: |
           npm run build
+
