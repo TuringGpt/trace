@@ -71,12 +71,7 @@ jobs:
 
       - name: Install Azure CLI
         run: |
-          if [ "$(uname)" = "Darwin" ] || [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
-            sudo curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-          elif [ "$(expr substr $(uname -s) 1 10)" = "MINGW32_NT" ] || [ "$(expr substr $(uname -s) 1 10)" = "MINGW64_NT" ]; then
-            Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile AzureCLI.msi
-            Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
-          fi
+          sudo curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
       - name: Verify Azure CLI installation
         run: az version
