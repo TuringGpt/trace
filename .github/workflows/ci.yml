@@ -63,15 +63,14 @@ jobs:
         run: |
           python --version
 
-      - name: Set up development environment
+      - name: Set up .env file
+        run: echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" > .env
+
+      - name: Install application dependencies
+        run: npm install
+
+      - name: Install Azure CLI
         run: |
-          # Step 1: Create a .env file
-          echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" > .env
-
-          # Step 2: Install application dependencies
-          npm install
-
-          # Step 3: Install Azure CLI
           if [ "$(uname)" = "Darwin" ] || [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
             sudo curl -sL https://aka.ms/InstallAzureCLIDeb | bash
           elif [ "$(expr substr $(uname -s) 1 10)" = "MINGW32_NT" ] || [ "$(expr substr $(uname -s) 1 10)" = "MINGW64_NT" ]; then
@@ -79,17 +78,17 @@ jobs:
             Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
           fi
 
-          # Step 4: Verify Azure CLI installation
-          az version
+      - name: Verify Azure CLI installation
+        run: az version
 
-          # Step 5: Install Azurite for local development
-          npm install -g azurite
+      - name: Install Azurite for local development
+        run: npm install -g azurite
 
-          # Step 6: Start Azurite Blob service
-          azurite-blob -l ./azure-blob-storage &
+      - name: Start Azurite Blob service
+        run: azurite-blob -l ./azure-blob-storage &
 
-          # Step 7: Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
+      - name: Create Blob storage container using Azure CLI
+        run: az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
 
       - name: Run linting
         run: npm run lint
