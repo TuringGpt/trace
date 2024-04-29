@@ -1,10 +1,10 @@
-import { app, BrowserWindow, screen, ipcMain } from 'electron';
+import { app, BrowserWindow, screen } from 'electron';
 import path from 'path';
 
 let overlayWindow: BrowserWindow | null = null;
 let blinkWindow: BrowserWindow | null = null;
 
-ipcMain.on('start-keystrokes-logging', () => {
+function showHintWindows() {
   overlayWindow = new BrowserWindow({
     width: 300,
     height: 100,
@@ -41,16 +41,18 @@ ipcMain.on('start-keystrokes-logging', () => {
   blinkWindow.setVisibleOnAllWorkspaces(true);
   blinkWindow.setAlwaysOnTop(true, 'screen-saver');
   blinkWindow.setSkipTaskbar(true);
-});
+}
 
-ipcMain.on('stop-keystrokes-logging', () => {
+function closeAllHintWindows() {
   overlayWindow?.close();
   overlayWindow = null;
   blinkWindow?.close();
   blinkWindow = null;
-});
+}
 
-ipcMain.handle('close-overlay-window', () => {
+function closeOverLayWindow() {
   overlayWindow?.close();
   overlayWindow = null;
-});
+}
+
+export { showHintWindows, closeAllHintWindows, closeOverLayWindow };

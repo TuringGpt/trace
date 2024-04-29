@@ -15,6 +15,7 @@ import {
   markRecordingStopped,
 } from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
+import { closeAllHintWindows, showHintWindows } from './staticWindows';
 
 const log = logger.child({ module: 'ipc.record' });
 
@@ -23,6 +24,7 @@ ipcHandle('start-new-recording', async () => {
   await markRecordingStarted();
   keylogger.startLogging();
   log.info('Keystrokes logging started');
+  showHintWindows();
   return ipc.success(undefined);
 });
 
@@ -93,6 +95,7 @@ ipcHandle('stop-recording', async (event, uint8Array) => {
     await writeMetadataToFile(JSON.stringify(metadata), recordingFolder);
 
     await writeVideoToFile(uint8Array, recordingFolder);
+    closeAllHintWindows();
 
     return ipc.success({
       recordingFolderName: db.currentRecordingFolder!.folderName,
