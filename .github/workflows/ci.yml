@@ -71,7 +71,7 @@ jobs:
           echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" > .env
 
           # Step 2: Install application dependencies
-          npm ci
+          sudo npm ci
 
           # Step 3: Install Azure CLI
           if [ "$(uname)" = "Darwin" ] || [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
