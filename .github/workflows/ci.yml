@@ -66,6 +66,7 @@ jobs:
         run: |
           brew update
           brew install azure-cli
+          sudo apt-get install python3-distutils
       - name: Install Azure CLI on Linux
         if: runner.os == 'Linux'
         run: |
