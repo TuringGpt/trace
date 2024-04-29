@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
+      BLOB_STORAGE_URL: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
 
     steps:
       - name: Checkout code
@@ -94,7 +94,7 @@ jobs:
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
           # Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;"
+          az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
           # Run linting
           npm run lint
           # Run build
