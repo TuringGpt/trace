@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { CapturedSource } from '../../types/customTypes';
 import {
   hideBusyIndicator,
-  setZipData,
+  setRecordingName,
   showBusyIndicator,
 } from '../store/actions';
 import useAppState from '../store/hook';
@@ -116,53 +116,25 @@ export default function VideoRecorder() {
         ),
       );
       const blob = new Blob(chunks, { type: 'video/webm; codecs=H264' });
-
       const arrayBuffer = await blob.arrayBuffer();
-      // do this later
-      const keyLogRes = await window.electron.stopKeystrokesLogging();
-      const metaDataRes = await window.electron.getDeviceMetadata(
-        source?.display_id || '',
-        new Date().toISOString(),
-      );
-
-      const res = await window.electron.remuxVideoFile(
+      const res = await window.electron.stopRecording(
         new Uint8Array(arrayBuffer),
       );
-
       setIsRecording(false);
-      if (
-        res.status === 'error' ||
-        keyLogRes.status === 'error' ||
-        metaDataRes.status === 'error'
-      ) {
-        log.error('Cannot proceed to zip file creation', {
+      if (res.status === 'error') {
+        log.error('Error during video saving', {
           remuxRes: res,
-          keyLogRes,
-          metaDataRes,
         });
         return;
       }
 
-      const { videoFilePath } = res.data;
-
-      const createZipRes = await window.electron.createZipFile(
-        videoFilePath,
-        keyLogRes.data.keyLogFilePath,
-        metaDataRes.data.metadataFilePath,
-      );
-      if (createZipRes.status === 'error') {
-        log.error('Failed to create zip file', createZipRes);
-        return;
-      }
-      const { zipFilePath, zipFileName } = createZipRes.data;
-
       dispatch(hideBusyIndicator());
-      dispatch(setZipData(zipFileName, zipFilePath));
+      dispatch(setRecordingName(res.data.recordingFolderName));
 
       navigate('/save-zip');
     };
     recorder.start();
-    window.electron.startKeystrokesLogging();
+    window.electron.startNewRecording();
   };
 
   const onStopRecording = () => {

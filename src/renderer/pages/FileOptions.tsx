@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import useAppState from '../store/hook';
@@ -5,28 +6,89 @@ import useAppState from '../store/hook';
 export default function FileOptions() {
   const { state } = useAppState();
   const navigate = useNavigate();
+  const [folderName, setFolderName] = useState(state.recordingName);
+  const [description, setDescription] = useState('');
+  const [error, setError] = useState({ folderName: '', description: '' });
+
   const onSave = async () => {
-    await window.electron.saveZipFile(
-      state.zip.zipFileName,
-      state.zip.zipFilePath,
-    );
-    navigate('/');
-  };
-  const onDiscard = async () => {
-    const res = await window.electron.discardZipFile(state.zip.zipFilePath);
-    if (res) {
-      navigate('/');
+    if (!folderName.trim() || !description.trim()) {
+      setError({
+        folderName: !folderName.trim() ? 'This field is required' : '',
+        description: !description.trim() ? 'This field is required' : '',
+      });
       return;
     }
-    await window.electron.showDialog('Error', 'Failed to discard the file');
-    // we don't want user to be stuck here if we can't discard the file
+    if (description.length < 15) {
+      setError({
+        description: 'Description should be at least 15 characters long',
+        folderName: '',
+      });
+      return;
+    }
+    const res = await window.electron.renameRecording(
+      state.recordingName,
+      folderName,
+      description,
+    );
+    if (res.status === 'success') {
+      navigate('/');
+    } else {
+      window.electron.showDialog('error', 'Failed to rename recording folder');
+    }
+  };
+
+  const onDiscard = async () => {
+    const res = await window.electron.discardRecording(state.recordingName);
+    if (res.status === 'error') {
+      window.electron.showDialog('error', 'Failed to discard recording');
+      return;
+    }
     navigate('/');
   };
+
   return (
     <div className="flex flex-col justify-center items-center">
-      <div className="flex items-center justify-between w-full max-w-2xl rounded-lg border-[1px] border-indigo-600 m-4 mt-12 p-4">
-        <span className="text-l ml-3">{state.zip.zipFileName}</span>
-        <div className="flex items-center">
+      <div className="flex items-center flex-col w-full max-w-2xl rounded-lg m-4 mt-12 p-4">
+        <h2 className="text-2xl font-semibold text-white mb-4">
+          What is the recording about?
+        </h2>
+        <label
+          className="block text-lg font-medium text-white w-full"
+          htmlFor="folderName"
+        >
+          Name
+          <input
+            id="folderName"
+            className="mt-4 block w-full text-l border-2 border-gray-300 p-2 rounded-md bg-white text-black"
+            value={folderName}
+            onChange={(e) => {
+              setFolderName(e.target.value);
+              setError({ ...error, folderName: '' });
+            }}
+          />
+          {error.folderName && (
+            <p className="text-red-500">{error.folderName}</p>
+          )}
+        </label>
+        <label
+          htmlFor="description"
+          className="block text-lg font-medium text-white w-full mt-4"
+        >
+          Description
+          <input
+            id="description"
+            className="mt-4 block w-full text-l border-2 border-gray-300 p-2 rounded-md bg-white text-black"
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              setError({ ...error, description: '' });
+            }}
+          />
+          {error.description && (
+            <p className="text-red-500">{error.description}</p>
+          )}
+        </label>
+        <div className="flex items-center mt-16">
           <button
             type="button"
             id="saveVideoBtn"
