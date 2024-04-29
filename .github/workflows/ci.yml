@@ -90,13 +90,12 @@ jobs:
         run: npm install -g azurite
 
       - name: Start Azurite Blob service
-        run: azurite-blob -l ./azure-blob-storage &
-
-      - name: Create Blob storage container using Azure CLI
-        run: az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;"
-
-      - name: Run linting
-        run: npm run lint
-
-      - name: Run build
-        run: npm run build
+        run: |
+          # Start Azurite Blob service
+          azurite-blob -l ./azure-blob-storage &
+          # Create Blob storage container using Azure CLI
+          az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;"
+          # Run linting
+          npm run lint
+          # Run build
+          npm run build
