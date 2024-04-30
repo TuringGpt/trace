@@ -56,7 +56,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           # Create Blob storage container using Azure CLI
-          echo "string: ${BLOB_STORAGE_URL}"
+          echo "string: ${BLOB_STORAGE_URL} - $BLOB_STORAGE_URL - %BLOB_STORAGE_URL%"
       - name: explicit exit
         run: |
           exit 1
