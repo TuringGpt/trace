@@ -92,6 +92,11 @@ jobs:
         run: |
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
+      - name: echo env
+        if: runner.os == 'Windows'
+        run: |
+          # Create Blob storage container using Azure CLI
+          echo "string: ${BLOB_STORAGE_URL}"
       - name: Initialize storage on windows
         if: runner.os == 'Windows'
         run: |
