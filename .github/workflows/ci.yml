@@ -57,11 +57,9 @@ jobs:
         run: |
           # Create Blob storage container using Azure CLI
           echo "string: ${BLOB_STORAGE_URL}"
-      - name: echo env  1
-        if: false
+      - name: explicit exit
         run: |
-          # Create Blob storage container using Azure CLI
-          echo "string: ${BLOB_STORAGE_URL}"
+          exit 1
       - name: Install Azure CLI on macOS
         if: runner.os == 'macOS'
         run: |
