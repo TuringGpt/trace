@@ -52,7 +52,16 @@ jobs:
         with:
           node-version: '18.15'
           python-version: '3.11'
-
+      - name: echo env  1
+        if: runner.os == 'Windows'
+        run: |
+          # Create Blob storage container using Azure CLI
+          echo "string: ${BLOB_STORAGE_URL}"
+      - name: echo env  1
+        if: false
+        run: |
+          # Create Blob storage container using Azure CLI
+          echo "string: ${BLOB_STORAGE_URL}"
       - name: Install Azure CLI on macOS
         if: runner.os == 'macOS'
         run: |
@@ -92,7 +101,7 @@ jobs:
         run: |
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
-      - name: echo env
+      - name: echo env  1
         if: runner.os == 'Windows'
         run: |
           # Create Blob storage container using Azure CLI
