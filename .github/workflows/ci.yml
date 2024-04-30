@@ -38,6 +38,7 @@ jobs:
     strategy:
       matrix:
         os:
+          - ubuntu-latest
           - windows-latest
     env:
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
@@ -51,14 +52,7 @@ jobs:
         with:
           node-version: '18.15'
           python-version: '3.11'
-      - name: echo env  1
-        if: runner.os == 'Windows'
-        run: |
-          # Create Blob storage container using Azure CLI
-          echo "string: ${BLOB_STORAGE_URL} - $BLOB_STORAGE_URL - %BLOB_STORAGE_URL% - $env:BLOB_STORAGE_URL"
-      - name: explicit exit
-        run: |
-          exit 1
+
       - name: Install Azure CLI on macOS
         if: runner.os == 'macOS'
         run: |
@@ -98,17 +92,11 @@ jobs:
         run: |
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
-      - name: echo env  1
-        if: runner.os == 'Windows'
-        run: |
-          # Create Blob storage container using Azure CLI
-          echo "string: ${BLOB_STORAGE_URL}"
       - name: Initialize storage on windows
         if: runner.os == 'Windows'
         run: |
           # Create Blob storage container using Azure CLI
-          echo "string: ${BLOB_STORAGE_URL}"
-          az storage container create --name turing-videos --connection-string $env:BLOB_STORAGE_URL
+          az storage container create --name turing-videos --connection-string "$env:BLOB_STORAGE_URL"
       - name: Initialize storage on Linux/mac
         if: runner.os != 'Windows'
         run: |
@@ -117,7 +105,7 @@ jobs:
       - name: Run linter
         run: |
           npm run lint
-      - name: Run linter
+      - name: Run build
         run: |
           npm run build
 
