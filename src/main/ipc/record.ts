@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+import { BrowserWindow } from 'electron';
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
 import fileExists from '../util/fileExists';
@@ -15,7 +16,11 @@ import {
   markRecordingStopped,
 } from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
-import { closeAllHintWindows, showHintWindows } from './staticWindows';
+import {
+  closeAllHintWindows,
+  closeOverLayWindow,
+  showHintWindows,
+} from './staticWindows';
 
 const log = logger.child({ module: 'ipc.record' });
 
@@ -24,7 +29,13 @@ ipcHandle('start-new-recording', async () => {
   await markRecordingStarted();
   keylogger.startLogging();
   log.info('Keystrokes logging started');
+
+  const currentWindow = BrowserWindow.getFocusedWindow();
+  if (currentWindow) {
+    currentWindow.minimize();
+  }
   showHintWindows();
+
   return ipc.success(undefined);
 });
 
@@ -157,4 +168,9 @@ ipcHandle('discard-recording', async (event, folderId) => {
     log.error('Failed to discard recording', { err });
     return ipc.error('Failed to discard recording', err);
   }
+});
+
+ipcHandle('close-overlay-window', async () => {
+  closeOverLayWindow();
+  return ipc.success(undefined);
 });

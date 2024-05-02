@@ -70,12 +70,14 @@ type IPCHandler<TArgs extends any[], TRes> = (
   ...args: TArgs
 ) => Promise<IPCResult<TRes>>;
 
+type DialogType = 'with-cancel' | null;
+
 export type IPCHandleEvents = {
   'get-video-sources': IPCHandler<[], void>;
   'remux-video-file': IPCHandler<[uint8Array: Uint8Array], boolean>;
   'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult>;
   'show-dialog': IPCHandler<
-    [title: string, message: string, type?: string | null],
+    [title: string, message: string, type?: DialogType],
     boolean
   >;
   'stop-keystrokes-logging': IPCHandler<[], { keyLogFilePath: string }>;

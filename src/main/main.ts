@@ -17,7 +17,6 @@ import { autoUpdater } from 'electron-updater';
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { initializeTray, destroyTrayIcon } from './util/tray';
 import MenuBuilder from './menu';
 import db from './storage';
 import { resolveHtmlPath } from './util';
@@ -133,7 +132,6 @@ app
   .whenReady()
   .then(() => {
     createWindow();
-    initializeTray();
     db.load();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
@@ -144,7 +142,6 @@ app
   .catch(log.error);
 
 app.on('before-quit', () => {
-  destroyTrayIcon();
   log.info('App about to quit.');
 });
 
