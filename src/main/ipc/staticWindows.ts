@@ -1,58 +1,50 @@
-import { app, BrowserWindow, screen } from 'electron';
-import path from 'path';
+import { BrowserWindow } from 'electron';
 
 let overlayWindow: BrowserWindow | null = null;
 let blinkWindow: BrowserWindow | null = null;
 
-function showHintWindows() {
-  overlayWindow = new BrowserWindow({
-    width: 300,
-    height: 100,
-    frame: false,
-    x: 50,
-    y: 50,
-    skipTaskbar: true,
-    alwaysOnTop: true,
-    transparent: true,
-    hasShadow: false,
-    webPreferences: {
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../../.erb/dll/preload.js'),
-    },
-  });
-  overlayWindow.loadFile('src/staticPages/overlay.html');
-  overlayWindow.setVisibleOnAllWorkspaces(true);
+const width = 300;
+const height = 100;
 
-  const { height, width } = screen.getPrimaryDisplay().bounds;
-  blinkWindow = new BrowserWindow({
-    width,
-    height,
-    frame: false,
-    x: 0,
-    y: 0,
-    alwaysOnTop: true,
-    transparent: true,
-    hasShadow: false,
-    skipTaskbar: true,
-  });
-  blinkWindow.loadFile('src/staticPages/outline.html');
-  blinkWindow.setIgnoreMouseEvents(true);
-  blinkWindow.setVisibleOnAllWorkspaces(true);
-  blinkWindow.setAlwaysOnTop(true, 'screen-saver');
-  blinkWindow.setSkipTaskbar(true);
+const windowSettings = {
+  width,
+  height,
+  frame: false,
+  x: 0,
+  y: 0,
+  alwaysOnTop: true,
+  transparent: true,
+  hasShadow: false,
+  skipTaskbar: true,
+};
+
+function configureWindow(window: BrowserWindow, file: string) {
+  window.loadFile(file);
+  window.setIgnoreMouseEvents(true);
+  window.setVisibleOnAllWorkspaces(true);
+  window.setAlwaysOnTop(true, 'screen-saver');
+  window.setSkipTaskbar(true);
+}
+
+function closeWindow(window: BrowserWindow | null) {
+  window?.close();
+  return null;
+}
+
+function showHintWindows() {
+  overlayWindow = new BrowserWindow(windowSettings);
+  blinkWindow = new BrowserWindow(windowSettings);
+  configureWindow(overlayWindow, 'src/staticPages/overlay.html');
+  configureWindow(blinkWindow, 'src/staticPages/outline.html');
 }
 
 function closeAllHintWindows() {
-  overlayWindow?.close();
-  overlayWindow = null;
-  blinkWindow?.close();
-  blinkWindow = null;
+  overlayWindow = closeWindow(overlayWindow);
+  blinkWindow = closeWindow(blinkWindow);
 }
 
 function closeOverLayWindow() {
-  overlayWindow?.close();
-  overlayWindow = null;
+  overlayWindow = closeWindow(overlayWindow);
 }
 
 export { showHintWindows, closeAllHintWindows, closeOverLayWindow };
