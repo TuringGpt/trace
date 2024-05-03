@@ -2,6 +2,7 @@ import archiver from 'archiver';
 import { ipcMain } from 'electron';
 import { once } from 'events';
 import { createWriteStream } from 'fs';
+import { stat } from 'fs/promises';
 import { join } from 'path';
 
 import { BlobServiceClient } from '@azure/storage-blob';
@@ -16,6 +17,23 @@ import {
 
 const log = logger.child({ module: 'util.UploadManager' });
 
+export enum StatusTypes {
+  Pending,
+  Zipping,
+  Uploading,
+  Completed,
+  Failed,
+}
+
+export type UploadItemStatus =
+  | {
+      status: Exclude<StatusTypes, StatusTypes.Uploading>;
+    }
+  | {
+      status: StatusTypes.Uploading;
+      progress: number;
+    };
+
 class UploadManager {
   // eslint-disable-next-line no-use-before-define
   private static instance: UploadManager;
@@ -25,6 +43,8 @@ class UploadManager {
   private isUploading = false;
 
   private blobUrl: string;
+
+  private uploadStatusReport: Record<string, UploadItemStatus> = {};
 
   private constructor() {
     log.info('Creating Upload Manager instance');
@@ -47,8 +67,13 @@ class UploadManager {
     return UploadManager.instance;
   }
 
+  public getStatusReport(): Record<string, UploadItemStatus> {
+    return this.uploadStatusReport;
+  }
+
   public addToQueue(folder: string): void {
     this.queue.push(folder);
+    this.uploadStatusReport[folder] = { status: StatusTypes.Pending };
   }
 
   public async start(): Promise<void> {
@@ -81,6 +106,7 @@ class UploadManager {
       const videoStoragePath = getVideoStoragePath();
 
       log.info('Zipping folder', { folder });
+      this.uploadStatusReport[folder] = { status: StatusTypes.Zipping };
       // TODO: Verify if the zip file already exists, handle it
       const blobName = `zipped.zip`;
       const zipPath = join(videoStoragePath, folder, blobName);
@@ -103,6 +129,12 @@ class UploadManager {
       await once(output, 'close');
       log.info('Writing zip successful. Wrote %d bytes', output.bytesWritten);
 
+      this.uploadStatusReport[folder] = {
+        status: StatusTypes.Uploading,
+        progress: 0,
+      };
+      const totalBytes = (await stat(zipPath)).size;
+
       const blobServiceClient = BlobServiceClient.fromConnectionString(
         this.blobUrl,
       );
@@ -114,14 +146,26 @@ class UploadManager {
       await markFolderUploadStart(folder);
       await blockBlobClient.uploadFile(zipPath, {
         onProgress: (progress) => {
-          log.info('Upload progress', { progress });
-          ipcMain.emit('upload-progress', progress);
+          const percentComplete = Math.round(
+            (progress.loadedBytes / totalBytes) * 100,
+          );
+          log.info('Upload progress', { progress, percentComplete });
+          this.uploadStatusReport[folder] = {
+            status: StatusTypes.Uploading,
+            progress: percentComplete,
+          };
+          ipcMain.emit('upload-progress', {
+            folder,
+            progress: percentComplete,
+          });
         },
       });
       log.info('Uploaded zip file', { zipPath });
       await markFolderUploadComplete(folder, true);
+      this.uploadStatusReport[folder] = { status: StatusTypes.Completed };
     } catch (err) {
       log.error('Failed to upload the zip file.', { err, folder });
+      this.uploadStatusReport[folder] = { status: StatusTypes.Failed };
       await markFolderUploadComplete(folder, false, ensureError(err));
       throw err;
     }

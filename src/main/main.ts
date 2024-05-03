@@ -74,9 +74,6 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
-  console.error('start with x', process.env.START_WIN_X);
-  console.error('start with y', process.env.START_WIN_X);
-
   mainWindow = new BrowserWindow({
     show: false,
     width: 1300,

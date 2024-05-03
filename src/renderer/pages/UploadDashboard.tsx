@@ -18,6 +18,7 @@ export default function UploadDashboard() {
     (async () => {
       const res = await window.electron.getVideoRecordingFolders();
       if (res.status === 'success') {
+        log.debug('Got the video recordings', res.data);
         setVideos(
           res.data.sort(
             (v1, v2) => v2.recordingStartedAt - v1.recordingStartedAt,

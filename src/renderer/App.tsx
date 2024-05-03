@@ -6,7 +6,7 @@ import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 
 import AppHeader from './components/AppHeader';
 import BusyOverlay from './components/BusyOverlay';
-import UploadButton from './components/UploadButton';
+import NavigationButton from './components/NavigationButton';
 import FileOptions from './pages/FileOptions';
 import Upload from './pages/Upload';
 import UploadDashboard from './pages/UploadDashboard';
@@ -40,7 +40,7 @@ export default function App() {
         <div className="bg-slate-900 text-white h-screen">
           <AppHeader />
           <BusyOverlay />
-          <UploadButton />
+          <NavigationButton />
           <AppRoutes />
         </div>
       </Router>

@@ -9,6 +9,15 @@ module.exports = {
         sky: colors.sky,
         cyan: colors.cyan,
       },
+      animation: {
+        'spin-slow-reverse': 'spin-slow-reverse 8s linear infinite',
+      },
+      keyframes: {
+        'spin-slow-reverse': {
+          '0%': { transform: 'rotate(360deg)' },
+          '100%': { transform: 'rotate(0deg)' },
+        },
+      },
     },
   },
   variants: {
