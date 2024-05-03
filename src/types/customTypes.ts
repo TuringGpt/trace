@@ -94,3 +94,9 @@ export type IPCOnEvents = {
     error: any,
   ) => void;
 };
+
+export interface DisplaySource {
+  id: string;
+  name: string;
+  display_id?: string;
+}
