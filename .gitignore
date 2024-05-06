@@ -35,3 +35,4 @@ npm-debug.log.*
 *.sass.d.ts
 *.scss.d.ts
 out
+trace-tests-results/
