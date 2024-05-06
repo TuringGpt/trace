@@ -1,13 +1,33 @@
-import { dialog } from 'electron';
+import { dialog, MessageBoxOptions } from 'electron';
 
-import { ipc } from '../../types/customTypes';
+import { DialogType, ipc } from '../../types/customTypes';
 import { ipcHandle } from './typeSafeHandler';
 
-ipcHandle('show-dialog', async (event, title, message) => {
-  const { response } = await dialog.showMessageBox({
+const DialogTypeToElectronTypeMap: Record<
+  DialogType,
+  MessageBoxOptions['type']
+> = {
+  [DialogType.Error]: 'error',
+  [DialogType.Confirmation]: 'info',
+};
+
+ipcHandle(
+  'show-dialog',
+  async (
+    event,
     title,
     message,
-    buttons: ['Ok'],
-  });
-  return ipc.success(response === 0);
-});
+    options = {
+      type: DialogType.Error,
+      buttons: ['Ok'],
+    },
+  ) => {
+    const { response } = await dialog.showMessageBox({
+      title,
+      message,
+      buttons: options.buttons,
+      type: DialogTypeToElectronTypeMap[options.type],
+    });
+    return ipc.success(response === 0);
+  },
+);

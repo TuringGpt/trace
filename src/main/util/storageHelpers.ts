@@ -37,7 +37,54 @@ export async function markRecordingStarted() {
     });
     return currentRecordingFolder;
   } catch (err) {
-    logger.error('Failed to mark recording started.', err);
+    logger.error('Failed to mark recording started.', { err });
+    throw err;
+  }
+}
+
+export async function markFolderUploadStart(folderId: string) {
+  try {
+    const db = await storage.getData();
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    folder.uploadingInProgress = true;
+    await storage.save(db);
+  } catch (err) {
+    log.error('Failed to mark folder upload started.', {
+      err,
+      folderId,
+    });
+    throw err;
+  }
+}
+
+export async function markFolderUploadComplete(
+  folderId: string,
+  isSuccess: boolean,
+  error?: Error,
+) {
+  try {
+    const db = await storage.getData();
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    folder.uploadingInProgress = false;
+    folder.isUploaded = isSuccess;
+    if (error) {
+      folder.uploadError = error.message;
+    } else {
+      folder.uploadError = undefined;
+      folder.uploadedAt = Date.now();
+    }
+    await storage.save(db);
+  } catch (err) {
+    log.error('Failed to mark folder upload complete.', {
+      err,
+      folderId,
+    });
     throw err;
   }
 }

@@ -3,6 +3,7 @@ logs
 *.log
 
 .env
+.env.local
 
 
 # Azure local storage
