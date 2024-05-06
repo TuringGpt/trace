@@ -25,6 +25,9 @@ function configureWindow(
   window.setVisibleOnAllWorkspaces(true);
   window.setAlwaysOnTop(true, 'screen-saver');
   window.setSkipTaskbar(true);
+  window.once('ready-to-show', () => {
+    window?.webContents.closeDevTools();
+  });
 }
 
 function closeWindow(window: BrowserWindow | null) {
@@ -38,13 +41,6 @@ function showHintWindows() {
   blinkWindow = new BrowserWindow(windowSettings(width, height));
   configureWindow(overlayWindow, 'src/staticPages/overlay.html', false);
   configureWindow(blinkWindow, 'src/staticPages/outline.html');
-  // close dev tools for both windows
-  overlayWindow.once('ready-to-show', () => {
-    overlayWindow?.webContents.closeDevTools();
-  });
-  blinkWindow.once('ready-to-show', () => {
-    blinkWindow?.webContents.closeDevTools();
-  });
 }
 
 function closeAllHintWindows() {
