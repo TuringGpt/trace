@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 
-import useAppState from './store/hook';
+import useAppState from '../store/hook';
 
 export default function BusyOverlay() {
   const { state } = useAppState();
