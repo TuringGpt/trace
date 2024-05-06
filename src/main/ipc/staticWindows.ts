@@ -1,12 +1,9 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 
 let overlayWindow: BrowserWindow | null = null;
 let blinkWindow: BrowserWindow | null = null;
 
-const width = 300;
-const height = 100;
-
-const windowSettings = {
+const windowSettings = (width: number, height: number) => ({
   width,
   height,
   frame: false,
@@ -16,11 +13,15 @@ const windowSettings = {
   transparent: true,
   hasShadow: false,
   skipTaskbar: true,
-};
+});
 
-function configureWindow(window: BrowserWindow, file: string) {
+function configureWindow(
+  window: BrowserWindow,
+  file: string,
+  disableClick = true,
+) {
   window.loadFile(file);
-  window.setIgnoreMouseEvents(true);
+  window.setIgnoreMouseEvents(disableClick);
   window.setVisibleOnAllWorkspaces(true);
   window.setAlwaysOnTop(true, 'screen-saver');
   window.setSkipTaskbar(true);
@@ -32,10 +33,18 @@ function closeWindow(window: BrowserWindow | null) {
 }
 
 function showHintWindows() {
-  overlayWindow = new BrowserWindow(windowSettings);
-  blinkWindow = new BrowserWindow(windowSettings);
-  configureWindow(overlayWindow, 'src/staticPages/overlay.html');
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  overlayWindow = new BrowserWindow(windowSettings(300, 100));
+  blinkWindow = new BrowserWindow(windowSettings(width, height));
+  configureWindow(overlayWindow, 'src/staticPages/overlay.html', false);
   configureWindow(blinkWindow, 'src/staticPages/outline.html');
+  // close dev tools for both windows
+  overlayWindow.once('ready-to-show', () => {
+    overlayWindow?.webContents.closeDevTools();
+  });
+  blinkWindow.once('ready-to-show', () => {
+    blinkWindow?.webContents.closeDevTools();
+  });
 }
 
 function closeAllHintWindows() {
