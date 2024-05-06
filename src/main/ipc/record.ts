@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-import { BrowserWindow } from 'electron';
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
 import fileExists from '../util/fileExists';
@@ -29,13 +28,7 @@ ipcHandle('start-new-recording', async () => {
   await markRecordingStarted();
   keylogger.startLogging();
   log.info('Keystrokes logging started');
-
-  const currentWindow = BrowserWindow.getFocusedWindow();
-  if (currentWindow) {
-    currentWindow.minimize();
-  }
   showHintWindows();
-
   return ipc.success(undefined);
 });
 
