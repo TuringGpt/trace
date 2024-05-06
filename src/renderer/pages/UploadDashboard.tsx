@@ -97,8 +97,10 @@ export default function UploadDashboard() {
         </div>
       </div>
       <div
-        className="grid grid-cols-3 gap-4 overflow-auto"
-        style={{ height: 'calc(100vh - 400px)' }}
+        className="grid grid-cols-fit-400 gap-4 overflow-auto"
+        style={{
+          height: 'calc(100vh - 400px)',
+        }}
       >
         {videos.map((video) => (
           <VideoCard

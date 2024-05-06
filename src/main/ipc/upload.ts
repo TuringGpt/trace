@@ -27,7 +27,9 @@ ipcHandle('upload-zip-file', async (e, zipFilePath: string) => {
 
 ipcHandle('get-video-recording-folders', async () => {
   try {
-    const data = await storage.getData();
+    const data = await storage.getData({
+      forceReload: true,
+    });
     return ipc.success(data.recordingFolders);
   } catch (error) {
     log.error('Failed to get video recording folders', error);

@@ -4,10 +4,11 @@ import { ImCheckboxChecked, ImCheckboxUnchecked } from 'react-icons/im';
 import { IoVideocam } from 'react-icons/io5';
 import { MdEdit, MdOutlineCloudSync, MdSyncProblem } from 'react-icons/md';
 import { RiDeleteBin2Fill } from 'react-icons/ri';
+import { SiCcleaner } from 'react-icons/si';
+import { Tooltip } from 'react-tooltip';
 
 import { RecordedFolder } from '../../types/customTypes';
 import prettyDate from '../util/prettyDate';
-import Tooltip from './Tooltip';
 
 type VideoCardProps = {
   video: RecordedFolder;
@@ -22,7 +23,8 @@ export default function VideoCard({
 }: VideoCardProps) {
   const needsToBeUploaded = !video.isUploaded && !video.uploadingInProgress;
   return (
-    <div className="relative border border-gray-500 rounded-lg">
+    <div className="relative border border-gray-500 rounded-lg max-w-[400px]">
+      <Tooltip id="video-tooltip" />
       {needsToBeUploaded && (
         <div className="absolute top-2 left-2 z-10">
           <div className="cursor-pointer">
@@ -67,39 +69,58 @@ export default function VideoCard({
           </p>
           <div className="absolute right-2 top-2">
             {video.isUploaded && (
-              <Tooltip text="Uploaded">
-                <MdOutlineCloudSync className="mr-2 text-3xl text-indigo-600" />
-              </Tooltip>
+              <MdOutlineCloudSync
+                data-tooltip-id="video-tooltip"
+                data-tooltip-content="Uploaded"
+                className="mr-2 text-3xl text-indigo-600"
+              />
             )}
             {video.uploadingInProgress && (
-              <Tooltip text="Uploading">
-                <GoSync className="mr-2 text-3xl text-indigo-600 animate-spin-slow-reverse" />
-              </Tooltip>
+              <GoSync
+                data-tooltip-id="video-tooltip"
+                data-tooltip-content="Uploading"
+                className="mr-2 text-3xl text-indigo-600 animate-spin-slow-reverse"
+              />
             )}
             {!video.isUploaded && video.uploadError && (
-              <Tooltip text="Upload Failed">
-                <MdSyncProblem className="mr-2 text-3xl text-red-900" />
-              </Tooltip>
+              <MdSyncProblem
+                data-tooltip-id="video-tooltip"
+                data-tooltip-content="Upload Failed"
+                className="mr-2 text-3xl text-red-900"
+              />
             )}
           </div>
 
-          {needsToBeUploaded && (
-            <div className="flex space-x-4">
+          <div className="flex space-x-4">
+            {needsToBeUploaded && (
+              <>
+                <button
+                  type="button"
+                  className="interactive-button bg-indigo-600 w-24"
+                >
+                  <FaCloudUploadAlt className="mr-2" /> Upload
+                </button>
+                <button
+                  type="button"
+                  className="w-10 interactive-button bg-red-500 "
+                >
+                  <span className="sr-only">Delete </span>
+                  <RiDeleteBin2Fill />
+                </button>
+              </>
+            )}
+            {!needsToBeUploaded && (
               <button
                 type="button"
-                className="interactive-button bg-indigo-600 w-24"
+                data-tooltip-id="video-tooltip"
+                data-tooltip-content="Remove from local"
+                className="w-14 text-2xl interactive-button bg-green-500"
               >
-                <FaCloudUploadAlt className="mr-2" /> Upload
+                <span className="sr-only">Clean up </span>
+                <SiCcleaner />
               </button>
-              <button
-                type="button"
-                className="w-10 interactive-button bg-red-500 "
-              >
-                <span className="sr-only">Delete </span>
-                <RiDeleteBin2Fill />
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import 'tailwindcss/tailwind.css';
+import 'react-tooltip/dist/react-tooltip.css';
 import './App.css';
 
 import clsx from 'clsx';
