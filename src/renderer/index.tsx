@@ -9,7 +9,8 @@ root.render(<App />);
 window.addEventListener('error', (event) => {
   window.electron.reportUnhandledError({
     type: 'UnhandledError',
-    error: event.error,
+    message: event.message,
+    stack: event.error?.stack,
   });
 });
 

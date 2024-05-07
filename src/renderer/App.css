@@ -35,3 +35,7 @@
   display: inline-block;
   animation: pulse-animation 1s ease-in-out infinite;
 }
+
+.interactive-button {
+  @apply flex items-center justify-center text-white p-2 rounded  transform active:scale-95 transition duration-200;
+}

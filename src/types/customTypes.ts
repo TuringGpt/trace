@@ -13,6 +13,8 @@ const RecordedFolderSchema = z.object({
   uploadedAt: z.number().optional(),
 });
 
+export type RecordedFolder = z.infer<typeof RecordedFolderSchema>;
+
 const SelectedDisplaySchema = z.object({
   id: z.string(),
   display_id: z.string(),
@@ -40,6 +42,22 @@ export type UploadResult = {
   uploadedZipFileName: string;
 };
 
+export enum DialogType {
+  /**
+   * Only has an ok button
+   */
+  Error = 'Error',
+  /**
+   * Has ok and cancel buttons
+   */
+  Confirmation = 'Confirmation',
+}
+
+export type DialogOptions = {
+  type: DialogType;
+  buttons: [okButton: string, cancelButton: string] | [okButton: string];
+};
+
 type IPCSuccess<Payload> = {
   status: 'success';
   data: Payload;
@@ -51,7 +69,7 @@ type IPCError = {
   error?: Error;
 };
 
-export type IPCResult<Payload> = IPCSuccess<Payload> | IPCError;
+export type IPCResult<Payload> = IPCSuccess<Payload | void> | IPCError;
 
 export const ipc = {
   success: <Payload>(data: Payload): IPCResult<Payload> => ({
@@ -68,13 +86,16 @@ export const ipc = {
 type IPCHandler<TArgs extends any[], TRes> = (
   event: IpcMainInvokeEvent,
   ...args: TArgs
-) => Promise<IPCResult<TRes>>;
+) => Promise<TRes | IPCResult<TRes>>;
 
 export type IPCHandleEvents = {
   'get-video-sources': IPCHandler<[], void>;
   'remux-video-file': IPCHandler<[uint8Array: Uint8Array], boolean>;
   'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult>;
-  'show-dialog': IPCHandler<[title: string, message: string], boolean>;
+  'show-dialog': IPCHandler<
+    [title: string, message: string, options?: DialogOptions],
+    boolean
+  >;
   'start-new-recording': IPCHandler<[], void>;
   'stop-recording': IPCHandler<
     [uint8Array: Uint8Array],
@@ -85,6 +106,8 @@ export type IPCHandleEvents = {
     void
   >;
   'discard-recording': IPCHandler<[folderId: string], void>;
+  'get-video-recording-folders': IPCHandler<[], RecordedFolder[]>;
+  'start-uploading-recording': IPCHandler<[folderIds: string[]], boolean>;
 };
 
 export type IPCOnEvents = {

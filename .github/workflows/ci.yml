@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+
+  sanity-checks:
+    runs-on: ubuntu-latest
+
+    env:
+      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        id: build
+        run: |
+          docker build -t trace:${{ github.event.number }}  --build-arg BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" .
+          echo "::set-output name=image_tag::trace:${{ github.event.number }}"
+
+      - name: Run Linter
+        id: lint
+        run: docker run -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm run lint
+
+      - name: Run Tests
+        id: test
+        run: docker run -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm test
+        if: false
+
+  platform-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    env:
+      BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18.15'
+          python-version: '3.11'
+
+      - name: Install Azure CLI on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install azure-cli
+          python3 -m pip install --break-system-packages distutils
+
+      - name: Install Azure CLI on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
+          curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+          AZ_REPO=$(lsb_release -cs)
+          echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+          sudo apt-get update
+          sudo apt-get install azure-cli
+
+      - name: Install Azure CLI on Windows
+        if: runner.os == 'Windows'
+        run: |
+          Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile AzureCLI.msi
+          Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
+
+      - name: Set up .env file
+        run: echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" > .env
+
+      - name: Install application dependencies
+        run: npm ci
+
+      - name: Verify Azure CLI installation
+        run: az version
+
+      - name: Install Azurite for local development
+        run: npm install -g azurite
+
+      - name: Start Azurite Blob service
+        run: |
+          # Start Azurite Blob service
+          azurite-blob -l ./azure-blob-storage &
+      - name: Initialize storage on windows
+        if: runner.os == 'Windows'
+        run: |
+          # Create Blob storage container using Azure CLI
+          az storage container create --name turing-videos --connection-string "$env:BLOB_STORAGE_URL"
+      - name: Initialize storage on Linux/mac
+        if: runner.os != 'Windows'
+        run: |
+          # Create Blob storage container using Azure CLI
+          az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
+      - name: Run linter
+        run: |
+          npm run lint
+      - name: Run build
+        run: |
+          npm run build
+

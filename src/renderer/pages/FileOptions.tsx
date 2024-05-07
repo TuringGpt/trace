@@ -67,7 +67,7 @@ export default function FileOptions() {
             }}
           />
           {error.folderName && (
-            <p className="text-red-500">{error.folderName}</p>
+            <p className="folder-name-error text-red-500">{error.folderName}</p>
           )}
         </label>
         <label
@@ -85,7 +85,9 @@ export default function FileOptions() {
             }}
           />
           {error.description && (
-            <p className="text-red-500">{error.description}</p>
+            <p className="description-error text-red-500">
+              {error.description}
+            </p>
           )}
         </label>
         <div className="flex items-center mt-16">

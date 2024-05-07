@@ -12,6 +12,10 @@ const log = {
     console.warn('[R]', ...args);
     window.electron.logFromRenderer('warn', ...args);
   },
+  debug: (...args: any[]) => {
+    console.debug('[R]', ...args);
+    window.electron.logFromRenderer('debug', ...args);
+  },
 };
 
 export default log;
