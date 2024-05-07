@@ -70,6 +70,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install azure-cli
       - name: Print each character of BLOB_STORAGE_URL
+        if: runner.os == 'Windows'
         run: |
           $blobStorageUrl = $env:BLOB_STORAGE_URL
           Write-Host $env:BLOB_STORAGE_URL
