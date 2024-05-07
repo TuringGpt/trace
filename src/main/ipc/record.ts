@@ -99,7 +99,6 @@ ipcHandle('stop-recording', async (event, uint8Array) => {
     await writeMetadataToFile(JSON.stringify(metadata), recordingFolder);
 
     await writeVideoToFile(uint8Array, recordingFolder);
-    closeAllHintWindows();
 
     return ipc.success({
       recordingFolderName: db.currentRecordingFolder!.folderName,
@@ -165,5 +164,11 @@ ipcHandle('discard-recording', async (event, folderId) => {
 
 ipcHandle('close-overlay-window', async () => {
   closeOverLayWindow();
+  return ipc.success(undefined);
+});
+
+ipcHandle('media-recording-stopped', async () => {
+  log.info('Media recording stopped');
+  closeAllHintWindows();
   return ipc.success(undefined);
 });

@@ -92,6 +92,7 @@ export type IPCHandleEvents = {
     void
   >;
   'discard-recording': IPCHandler<[folderId: string], void>;
+  'media-recording-stopped': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {

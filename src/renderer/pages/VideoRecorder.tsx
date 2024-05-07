@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { electron } from 'process';
 import { CapturedSource } from '../../types/customTypes';
 import {
   hideBusyIndicator,
@@ -142,6 +143,7 @@ export default function VideoRecorder() {
     if (mediaRecorder?.state === 'recording') {
       mediaRecorder.stop();
       setMediaRecorder(null);
+      window.electron.mediaRecordingStopped();
     }
   };
 

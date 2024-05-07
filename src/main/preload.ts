@@ -28,6 +28,7 @@ const electronHandler = {
   stopRecording: ipcInvoke('stop-recording'),
   renameRecording: ipcInvoke('rename-recording'),
   discardRecording: ipcInvoke('discard-recording'),
+  mediaRecordingStopped: ipcInvoke('media-recording-stopped'),
   onSelectVideoSource,
 };
 
