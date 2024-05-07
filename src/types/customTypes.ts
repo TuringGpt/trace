@@ -69,7 +69,7 @@ type IPCError = {
   error?: Error;
 };
 
-export type IPCResult<Payload> = IPCSuccess<Payload | void> | IPCError;
+export type IPCResult<Payload> = IPCSuccess<Payload> | IPCError;
 
 export const ipc = {
   success: <Payload>(data: Payload): IPCResult<Payload> => ({
@@ -86,7 +86,7 @@ export const ipc = {
 type IPCHandler<TArgs extends any[], TRes> = (
   event: IpcMainInvokeEvent,
   ...args: TArgs
-) => Promise<TRes | IPCResult<TRes>>;
+) => Promise<IPCResult<TRes>>;
 
 export type IPCHandleEvents = {
   'get-video-sources': IPCHandler<[], void>;
