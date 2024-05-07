@@ -92,11 +92,17 @@ jobs:
         run: |
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
+      - name: Print each character of BLOB_STORAGE_URL
+        if: runner.os == 'Windows'
+        run: |
+          $blobStorageUrl = $env:BLOB_STORAGE_URL
+          foreach ($char in $blobStorageUrl.ToCharArray()) {
+            Write-Host $char
+          }
       - name: Initialize storage on windows
         if: runner.os == 'Windows'
         run: |
           # Create Blob storage container using Azure CLI
-          Write-Host $env:BLOB_STORAGE_URL
           az storage container create --name turing-videos --connection-string $env:BLOB_STORAGE_URL
       - name: Initialize storage on Linux/mac
         if: runner.os != 'Windows'
