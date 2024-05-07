@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-latest
+          - macOS-latest
     env:
       BLOB_STORAGE_URL: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;"
 
@@ -81,8 +81,12 @@ jobs:
           Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
 
       - name: Set up .env file
+        if: runner.os != 'Windows'
         run: echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" > .env
 
+      - name: Set up .env file
+        if: runner.os == 'Windows'
+        run: echo "BLOB_STORAGE_URL='$env:BLOB_STORAGE_URL'" > .env
       - name: Install application dependencies
         run: npm ci
 
