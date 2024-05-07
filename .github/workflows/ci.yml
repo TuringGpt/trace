@@ -96,7 +96,7 @@ jobs:
       - name: Initialize storage on Linux/mac
         run: |
           # Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
+          az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
       - name: Run linter
         run: |
           npm run lint
