@@ -92,13 +92,11 @@ jobs:
       - name: Install Azurite for local development
         run: npm install -g azurite
 
-      - name: Start Azurite Blob service
-        run: |
-          # Start Azurite Blob service
-          azurite-blob -l ./azure-blob-storage
       - name: Initialize storage on windows
         if: runner.os == 'Windows'
         run: |
+          # Start Azurite Blob service
+          azurite-blob -l ./azure-blob-storage &
           # Create Blob storage container using Azure CLI
           $blobStorageUrl = $env:BLOB_STORAGE_URL
           Write-Host $env:BLOB_STORAGE_URL
@@ -107,6 +105,8 @@ jobs:
       - name: Initialize storage on Linux/mac
         if: runner.os != 'Windows'
         run: |
+          # Start Azurite Blob service
+          azurite-blob -l ./azure-blob-storage &
           # Create Blob storage container using Azure CLI
           az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
       - name: Run linter
