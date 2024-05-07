@@ -58,6 +58,7 @@ jobs:
           brew update
           brew install azure-cli
           node --version
+          python3 --version
           pip install setuptools
           # python3 -m pip install --break-system-packages distutils
 
@@ -90,7 +91,9 @@ jobs:
         if: runner.os == 'Windows'
         run: echo "BLOB_STORAGE_URL='$env:BLOB_STORAGE_URL'" > .env
       - name: Install application dependencies
-        run: npm ci
+        run: |
+          pip install setuptools
+          npm ci
 
       - name: Verify Azure CLI installation
         run: az version
