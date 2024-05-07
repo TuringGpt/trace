@@ -20,7 +20,7 @@ ipcHandle('get-video-sources', async (event) => {
         display_id: autoSelectedSource.display_id,
       });
       event.sender.send('select-source', autoSelectedSource);
-      return;
+      return ipc.success(undefined);
     }
 
     // Normal operation, build menu from sources
@@ -38,6 +38,7 @@ ipcHandle('get-video-sources', async (event) => {
     Menu.buildFromTemplate(template).popup();
   } catch (e) {
     log.error('Failed to get video sources', e);
-    ipc.error('Failed to get video sources', e);
+    return ipc.error('Failed to get video sources', e);
   }
+  return ipc.success(undefined);
 });
