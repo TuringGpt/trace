@@ -2,7 +2,6 @@ import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { electron } from 'process';
 import { CapturedSource } from '../../types/customTypes';
 import {
   hideBusyIndicator,
