@@ -89,53 +89,9 @@ jobs:
         run: npm install -g azurite
 
       - name: Start Azurite Blob service
-        if: runner.os != 'Windows'
         run: |
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
-
-      - name: Check if Azurite Blob service is running
-        if: runner.os == 'Windows'
-        run: |
-          Start-Process -NoNewWindow azurite-blob -ArgumentList "-l ./azure-blob-storage"
-          $processName = "azurite-blob"
-          $isRunning = Get-Process -Name $processName -ErrorAction SilentlyContinue
-          if ($isRunning) {
-            Write-Host "$processName is running."
-          } else {
-            Write-Host "$processName is not running."
-          }
-
-      - name: Check if port 10000 is accessible
-        if: runner.os == 'Windows'
-        run: |
-          $port = 10000
-          $address = "127.0.0.1"
-          $timeout = 1000
-          $tcpClient = New-Object System.Net.Sockets.TcpClient
-          $result = $tcpClient.BeginConnect($address, $port, $null, $null)
-          $wait = $result.AsyncWaitHandle.WaitOne($timeout, $false)
-          if (!$wait -or !$tcpClient.Connected) {
-            Write-Host "Port $port is not accessible."
-          } else {
-            Write-Host "Port $port is accessible."
-          }
-          $tcpClient.Close()
-      - name: Check if port 10000 is accessible
-        if: runner.os == 'Windows'
-        run: |
-          $port = 10000
-          $address = "localhost"
-          $timeout = 1000
-          $tcpClient = New-Object System.Net.Sockets.TcpClient
-          $result = $tcpClient.BeginConnect($address, $port, $null, $null)
-          $wait = $result.AsyncWaitHandle.WaitOne($timeout, $false)
-          if (!$wait -or !$tcpClient.Connected) {
-            Write-Host "Port $port is not accessible."
-          } else {
-            Write-Host "Port $port is accessible."
-          }
-          $tcpClient.Close()
 
       - name: Initialize storage on windows
         if: runner.os == 'Windows'
