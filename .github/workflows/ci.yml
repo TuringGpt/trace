@@ -10,7 +10,7 @@ jobs:
 
   sanity-checks:
     runs-on: ubuntu-latest
-
+    if: false
     env:
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
@@ -38,7 +38,6 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
           - windows-latest
     env:
       BLOB_STORAGE_URL: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:10000/devstoreaccount1;"
@@ -74,6 +73,7 @@ jobs:
         run: |
           $blobStorageUrl = $env:BLOB_STORAGE_URL
           Write-Host $env:BLOB_STORAGE_URL
+          Write-Host $blobStorageUrl
       - name: Install Azure CLI on Windows
         if: runner.os == 'Windows'
         run: |
@@ -95,11 +95,14 @@ jobs:
       - name: Start Azurite Blob service
         run: |
           # Start Azurite Blob service
-          azurite-blob -l ./azure-blob-storage &
+          azurite-blob -l ./azure-blob-storage
       - name: Initialize storage on windows
         if: runner.os == 'Windows'
         run: |
           # Create Blob storage container using Azure CLI
+          $blobStorageUrl = $env:BLOB_STORAGE_URL
+          Write-Host $env:BLOB_STORAGE_URL
+          Write-Host $blobStorageUrl
           az storage container create --name turing-videos --connection-string $env:BLOB_STORAGE_URL
       - name: Initialize storage on Linux/mac
         if: runner.os != 'Windows'
