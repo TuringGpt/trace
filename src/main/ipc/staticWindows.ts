@@ -5,12 +5,17 @@ import storage from '../storage';
 let overlayWindow: BrowserWindow | null = null;
 let blinkWindow: BrowserWindow | null = null;
 
-const windowSettings = (width: number, height: number) => ({
+const windowSettings = (
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+) => ({
   width,
   height,
   frame: false,
-  x: 0,
-  y: 0,
+  x,
+  y,
   alwaysOnTop: true,
   transparent: true,
   hasShadow: false,
@@ -52,11 +57,16 @@ async function showHintWindows() {
     .getAllDisplays()
     .find((d) => `${d.id}` === `${selectedDevice}`);
 
-  const { width, height } = display?.bounds ?? { width: 0, height: 0 };
+  const { width, height, x, y } = display?.bounds ?? {
+    width: 0,
+    height: 0,
+    x: 0,
+    y: 0,
+  };
 
   // Build and configure the windows
-  overlayWindow = new BrowserWindow(windowSettings(300, 100));
-  blinkWindow = new BrowserWindow(windowSettings(width, height));
+  overlayWindow = new BrowserWindow(windowSettings(300, 100, x, y));
+  blinkWindow = new BrowserWindow(windowSettings(width, height, x, y));
   configureWindow(overlayWindow, 'src/staticPages/overlay.html', false);
   configureWindow(blinkWindow, 'src/staticPages/outline.html', true);
 }
