@@ -89,6 +89,7 @@ jobs:
         run: npm install -g azurite
 
       - name: Start Azurite Blob service
+        if: runner.os != 'Windows'
         run: |
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
@@ -96,7 +97,7 @@ jobs:
       - name: Check if Azurite Blob service is running
         if: runner.os == 'Windows'
         run: |
-          cat .env
+          Start-Process -NoNewWindow azurite-blob -ArgumentList "-l ./azure-blob-storage"
           $processName = "azurite-blob"
           $isRunning = Get-Process -Name $processName -ErrorAction SilentlyContinue
           if ($isRunning) {
