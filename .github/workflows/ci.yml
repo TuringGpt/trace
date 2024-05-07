@@ -57,6 +57,8 @@ jobs:
         run: |
           brew update
           brew install azure-cli
+          node --version
+          pip install setuptools
           # python3 -m pip install --break-system-packages distutils
 
       - name: Install Azure CLI on Linux
