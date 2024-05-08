@@ -5,6 +5,15 @@ on:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Choose the platform to build on'
+        required: true
+        default: 'ubuntu'
+        options:
+          - ubuntu
+          - windows
+          - macos
 
 jobs:
 
@@ -35,13 +44,7 @@ jobs:
 
   platform-build:
     if: github.event_name == 'workflow_dispatch'
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macOs-latest
+    runs-on: ${{ github.event.inputs.platform }}-latest
     env:
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
