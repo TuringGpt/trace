@@ -10,7 +10,6 @@ jobs:
 
   sanity-checks:
     runs-on: ubuntu-latest
-
     env:
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
@@ -40,6 +39,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macOs-latest
     env:
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
 
@@ -58,7 +58,7 @@ jobs:
         run: |
           brew update
           brew install azure-cli
-          python3 -m pip install --break-system-packages distutils
+          brew install python-setuptools
 
       - name: Install Azure CLI on Linux
         if: runner.os == 'Linux'
@@ -77,7 +77,9 @@ jobs:
           Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
 
       - name: Set up .env file
-        run: echo "BLOB_STORAGE_URL='${BLOB_STORAGE_URL}'" > .env
+        run: |
+          echo "BLOB_STORAGE_URL='${{ env.BLOB_STORAGE_URL }}'" > .env
+          cat .env
 
       - name: Install application dependencies
         run: npm ci
@@ -87,25 +89,21 @@ jobs:
 
       - name: Install Azurite for local development
         run: npm install -g azurite
-
-      - name: Start Azurite Blob service
-        run: |
-          # Start Azurite Blob service
-          azurite-blob -l ./azure-blob-storage &
       - name: Initialize storage on windows
         if: runner.os == 'Windows'
         run: |
+          # Start Azurite Blob service
+          azurite-blob -l ./azure-blob-storage &
           # Create Blob storage container using Azure CLI
           az storage container create --name turing-videos --connection-string "$env:BLOB_STORAGE_URL"
+          npm run lint
+          npm run build
       - name: Initialize storage on Linux/mac
         if: runner.os != 'Windows'
         run: |
+          # Start Azurite Blob service
+          azurite-blob -l ./azure-blob-storage &
           # Create Blob storage container using Azure CLI
           az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
-      - name: Run linter
-        run: |
           npm run lint
-      - name: Run build
-        run: |
           npm run build
-
