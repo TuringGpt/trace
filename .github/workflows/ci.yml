@@ -92,9 +92,7 @@ jobs:
         run: echo "BLOB_STORAGE_URL='$env:BLOB_STORAGE_URL'" > .env
       - name: Install application dependencies
         run: |
-          python3 -m venv path/to/venv
-          source path/to/venv/bin/activate
-          python3 -m pip install distutils
+          brew install python-setuptools
           npm ci
 
       - name: Verify Azure CLI installation
