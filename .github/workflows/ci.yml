@@ -93,6 +93,7 @@ jobs:
       - name: Install application dependencies
         run: |
           pip install setuptools
+          python3 -m pip install packaging
           npm ci
 
       - name: Verify Azure CLI installation
