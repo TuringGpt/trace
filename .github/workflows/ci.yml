@@ -13,7 +13,7 @@ on:
         options:
           - ubuntu
           - windows
-          - macos
+          - macOs
 
 jobs:
 
@@ -43,7 +43,12 @@ jobs:
         if: false
 
   platform-build:
-    if: github.event_name == 'workflow_dispatch'
+    if: |
+      github.event_name == 'workflow_dispatch' && (
+        github.event.inputs.platform == 'ubuntu' ||
+        github.event.inputs.platform == 'windows' ||
+        github.event.inputs.platform == 'macOs'
+      )
     runs-on: ${{ github.event.inputs.platform }}-latest
     env:
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
