@@ -9,6 +9,7 @@ on:
 jobs:
 
   sanity-checks:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       BLOB_STORAGE_URL: ${{ secrets.BLOB_STORAGE_URL }}
@@ -90,21 +91,14 @@ jobs:
 
       - name: Install Azurite for local development
         run: npm install -g azurite
-      - name: Initialize storage on windows
-        if: runner.os == 'Windows'
+
+      - name: Initialize storage and execute actions
         run: |
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
           # Create Blob storage container using Azure CLI
           az storage container create --name turing-videos --connection-string "${{ env.BLOB_STORAGE_URL }}"
+          # Run lint
           npm run lint
-          npm run build
-      - name: Initialize storage on Linux/mac
-        if: runner.os != 'Windows'
-        run: |
-          # Start Azurite Blob service
-          azurite-blob -l ./azure-blob-storage &
-          # Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "${{ env.BLOB_STORAGE_URL }}"
-          npm run lint
+          # Run build
           npm run build
