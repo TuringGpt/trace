@@ -94,7 +94,7 @@ jobs:
         run: |
           python3 -m venv path/to/venv
           source path/to/venv/bin/activate
-          python3 -m pip install packaging
+          python3 -m pip install distutils
           npm ci
 
       - name: Verify Azure CLI installation
