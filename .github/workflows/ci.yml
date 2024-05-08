@@ -20,16 +20,16 @@ jobs:
       - name: Build Docker image
         id: build
         run: |
-          docker build -t trace:${{ github.event.number }}  --build-arg BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" .
+          docker build -t trace:${{ github.event.number }}  --build-arg BLOB_STORAGE_URL="${{ env.BLOB_STORAGE_URL }}" .
           echo "::set-output name=image_tag::trace:${{ github.event.number }}"
 
       - name: Run Linter
         id: lint
-        run: docker run -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm run lint
+        run: docker run -e BLOB_STORAGE_URL="${{ env.BLOB_STORAGE_URL }}" ${{ steps.build.outputs.image_tag }} npm run lint
 
       - name: Run Tests
         id: test
-        run: docker run -e BLOB_STORAGE_URL="${BLOB_STORAGE_URL}" ${{ steps.build.outputs.image_tag }} npm test
+        run: docker run -e BLOB_STORAGE_URL="${{ env.BLOB_STORAGE_URL }}" ${{ steps.build.outputs.image_tag }} npm test
         if: false
 
   platform-build:
@@ -95,7 +95,7 @@ jobs:
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
           # Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "$env:BLOB_STORAGE_URL"
+          az storage container create --name turing-videos --connection-string "${{ env.BLOB_STORAGE_URL }}"
           npm run lint
           npm run build
       - name: Initialize storage on Linux/mac
@@ -104,6 +104,6 @@ jobs:
           # Start Azurite Blob service
           azurite-blob -l ./azure-blob-storage &
           # Create Blob storage container using Azure CLI
-          az storage container create --name turing-videos --connection-string "${BLOB_STORAGE_URL}"
+          az storage container create --name turing-videos --connection-string "${{ env.BLOB_STORAGE_URL }}"
           npm run lint
           npm run build
