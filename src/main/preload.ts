@@ -29,6 +29,8 @@ const electronHandler = {
   renameRecording: ipcInvoke('rename-recording'),
   discardRecording: ipcInvoke('discard-recording'),
   mediaRecordingStopped: ipcInvoke('media-recording-stopped'),
+  expandOverlayWindow: ipcInvoke('expand-overlay-window'),
+  shrinkOverlayWindow: ipcInvoke('shrink-overlay-window'),
   onSelectVideoSource,
 };
 

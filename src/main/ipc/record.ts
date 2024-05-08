@@ -19,6 +19,8 @@ import {
   closeAllHintWindows,
   closeOverLayWindow,
   showHintWindows,
+  expandOverlayWindow,
+  shrinkOverlayWindow,
 } from './staticWindows';
 
 const log = logger.child({ module: 'ipc.record' });
@@ -168,7 +170,16 @@ ipcHandle('close-overlay-window', async () => {
 });
 
 ipcHandle('media-recording-stopped', async () => {
-  log.info('Media recording stopped');
   closeAllHintWindows();
+  return ipc.success(undefined);
+});
+
+ipcHandle('expand-overlay-window', async () => {
+  expandOverlayWindow();
+  return ipc.success(undefined);
+});
+
+ipcHandle('shrink-overlay-window', async () => {
+  shrinkOverlayWindow();
   return ipc.success(undefined);
 });

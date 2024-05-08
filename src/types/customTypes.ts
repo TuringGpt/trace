@@ -93,6 +93,8 @@ export type IPCHandleEvents = {
   >;
   'discard-recording': IPCHandler<[folderId: string], void>;
   'media-recording-stopped': IPCHandler<[], void>;
+  'expand-overlay-window': IPCHandler<[], void>;
+  'shrink-overlay-window': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {

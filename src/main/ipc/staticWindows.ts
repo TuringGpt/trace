@@ -5,6 +5,12 @@ import storage from '../storage';
 let overlayWindow: BrowserWindow | null = null;
 let blinkWindow: BrowserWindow | null = null;
 
+const overlayWindowSettings = {
+  defaultWidth: 60,
+  expandedWidth: 300,
+  height: 70,
+};
+
 const windowSettings = (
   width: number,
   height: number,
@@ -65,7 +71,14 @@ async function showHintWindows() {
   };
 
   // Build and configure the windows
-  overlayWindow = new BrowserWindow(windowSettings(300, 100, x, y));
+  overlayWindow = new BrowserWindow(
+    windowSettings(
+      overlayWindowSettings.defaultWidth,
+      overlayWindowSettings.height,
+      x,
+      y + height - 150,
+    ),
+  );
   blinkWindow = new BrowserWindow(windowSettings(width, height, x, y));
   configureWindow(overlayWindow, 'src/staticPages/overlay.html', false);
   configureWindow(blinkWindow, 'src/staticPages/outline.html', true);
@@ -80,4 +93,26 @@ function closeOverLayWindow() {
   overlayWindow = closeWindow(overlayWindow);
 }
 
-export { showHintWindows, closeAllHintWindows, closeOverLayWindow };
+function shrinkOverlayWindow() {
+  overlayWindow?.setSize(
+    overlayWindowSettings.defaultWidth,
+    overlayWindowSettings.height,
+    true,
+  );
+}
+
+function expandOverlayWindow() {
+  overlayWindow?.setSize(
+    overlayWindowSettings.expandedWidth,
+    overlayWindowSettings.height,
+    true,
+  );
+}
+
+export {
+  showHintWindows,
+  closeAllHintWindows,
+  closeOverLayWindow,
+  shrinkOverlayWindow,
+  expandOverlayWindow,
+};
