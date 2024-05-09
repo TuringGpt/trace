@@ -1,13 +1,19 @@
 import archiver from 'archiver';
-import { ipcMain } from 'electron';
+import { BrowserWindow } from 'electron';
 import { once } from 'events';
 import { createWriteStream } from 'fs';
-import { stat } from 'fs/promises';
+import { stat, unlink } from 'fs/promises';
 import { join } from 'path';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 
 import ensureError from '../../renderer/util/ensureError';
+import {
+  StatusTypes,
+  UploadItemStatus,
+  UploadStatusReport,
+} from '../../types/customTypes';
+import fileExists from './fileExists';
 import logger from './logger';
 import {
   getVideoStoragePath,
@@ -17,26 +23,11 @@ import {
 
 const log = logger.child({ module: 'util.UploadManager' });
 
-export enum StatusTypes {
-  Pending,
-  Zipping,
-  Uploading,
-  Completed,
-  Failed,
-}
-
-export type UploadItemStatus =
-  | {
-      status: Exclude<StatusTypes, StatusTypes.Uploading>;
-    }
-  | {
-      status: StatusTypes.Uploading;
-      progress: number;
-    };
-
 class UploadManager {
   // eslint-disable-next-line no-use-before-define
   private static instance: UploadManager;
+
+  public static mainWindowInstance: BrowserWindow;
 
   private queue: string[] = [];
 
@@ -44,7 +35,7 @@ class UploadManager {
 
   private blobUrl: string;
 
-  private uploadStatusReport: Record<string, UploadItemStatus> = {};
+  private uploadStatusReport: UploadStatusReport = {};
 
   private constructor() {
     log.info('Creating Upload Manager instance');
@@ -100,6 +91,12 @@ class UploadManager {
     this.isUploading = false;
   }
 
+  private async sendUploadProgress(): Promise<void> {
+    UploadManager.mainWindowInstance?.webContents.send('upload-progress', {
+      status: this.getStatusReport(),
+    });
+  }
+
   private async uploadFolder(folder: string): Promise<void> {
     try {
       log.info('Uploading folder', { folder });
@@ -107,9 +104,14 @@ class UploadManager {
 
       log.info('Zipping folder', { folder });
       this.uploadStatusReport[folder] = { status: StatusTypes.Zipping };
-      // TODO: Verify if the zip file already exists, handle it
+      this.sendUploadProgress();
       const blobName = `zipped.zip`;
       const zipPath = join(videoStoragePath, folder, blobName);
+
+      if (await fileExists(zipPath)) {
+        await unlink(zipPath);
+      }
+
       const archive = archiver('zip', { zlib: { level: 9 } });
       const output = createWriteStream(zipPath);
 
@@ -133,6 +135,7 @@ class UploadManager {
         status: StatusTypes.Uploading,
         progress: 0,
       };
+      this.sendUploadProgress();
       const totalBytes = (await stat(zipPath)).size;
 
       const blobServiceClient = BlobServiceClient.fromConnectionString(
@@ -149,23 +152,22 @@ class UploadManager {
           const percentComplete = Math.round(
             (progress.loadedBytes / totalBytes) * 100,
           );
-          log.info('Upload progress', { progress, percentComplete });
+          log.info('Upload progress', { folder, progress, percentComplete });
           this.uploadStatusReport[folder] = {
             status: StatusTypes.Uploading,
             progress: percentComplete,
           };
-          ipcMain.emit('upload-progress', {
-            folder,
-            progress: percentComplete,
-          });
+          this.sendUploadProgress();
         },
       });
       log.info('Uploaded zip file', { zipPath });
       await markFolderUploadComplete(folder, true);
       this.uploadStatusReport[folder] = { status: StatusTypes.Completed };
+      this.sendUploadProgress();
     } catch (err) {
       log.error('Failed to upload the zip file.', { err, folder });
       this.uploadStatusReport[folder] = { status: StatusTypes.Failed };
+      this.sendUploadProgress();
       await markFolderUploadComplete(folder, false, ensureError(err));
       throw err;
     }

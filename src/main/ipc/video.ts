@@ -3,6 +3,7 @@ import { desktopCapturer, Menu } from 'electron';
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
 import logger from '../util/logger';
+import { getVideoServerPort } from '../videoHttpServer';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.video' });
@@ -41,4 +42,13 @@ ipcHandle('get-video-sources', async (event) => {
     return ipc.error('Failed to get video sources', e);
   }
   return ipc.success(undefined);
+});
+
+ipcHandle('get-video-streaming-port', async () => {
+  const port = getVideoServerPort();
+  if (port === -1) {
+    log.error('Video server not started');
+    return ipc.error('Video server not started');
+  }
+  return ipc.success(port);
 });

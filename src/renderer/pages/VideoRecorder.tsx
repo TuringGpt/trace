@@ -120,7 +120,7 @@ export default function VideoRecorder() {
       dispatch(hideBusyIndicator());
       dispatch(setRecordingName(res.data.recordingFolderName));
 
-      navigate('/save-zip');
+      navigate('/save-video');
     };
     recorder.start();
     window.electron.startNewRecording();

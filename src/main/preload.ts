@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { CapturedSource } from '../types/customTypes';
+import { CapturedSource, UploadStatusReport } from '../types/customTypes';
 import { ipcInvoke, ipcSend } from './ipc/typeSafeHandler';
 
 function onSelectVideoSource(
@@ -16,7 +16,9 @@ function onSelectVideoSource(
   return () => ipcRenderer.off('select-source', callback);
 }
 
-function onUploadProgress(callback: (progress: number) => void): () => void {
+function onUploadProgress(
+  callback: (progress: { status: UploadStatusReport }) => void,
+): () => void {
   ipcRenderer.on('upload-progress', (_event, progress) => {
     callback(progress);
   });
@@ -34,6 +36,9 @@ const electronHandler = {
   stopRecording: ipcInvoke('stop-recording'),
   renameRecording: ipcInvoke('rename-recording'),
   discardRecording: ipcInvoke('discard-recording'),
+  getVideoStreamingPort: ipcInvoke('get-video-streaming-port'),
+  getRecordingResolution: ipcInvoke('get-recording-resolution'),
+  saveThumbnail: ipcInvoke('save-thumbnail'),
   getVideoRecordingFolders: ipcInvoke('get-video-recording-folders'),
   startUploadingRecording: ipcInvoke('start-uploading-recording'),
   onSelectVideoSource,

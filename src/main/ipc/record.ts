@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { readFile, stat, unlink } from 'fs/promises';
 
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
@@ -11,6 +12,7 @@ import {
   getVideoStoragePath,
   markRecordingStarted,
   markRecordingStopped,
+  storeRecordingSize,
 } from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
 
@@ -62,7 +64,21 @@ async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
     await remuxVideo(tempInputPath, tempOutputPath);
     const timeTakenToConvert = Date.now() - startTime;
     log.info(`Video conversion took ${timeTakenToConvert / 1000} seconds.`);
-    fs.unlinkSync(tempInputPath);
+    await unlink(tempInputPath);
+
+    // Store the video file size in the database
+    const folderId = recordingFolder.split('/').pop();
+    const videoStats = await stat(tempOutputPath);
+
+    if (!folderId) {
+      log.error('Failed to get folderId from recordingFolder', {
+        recordingFolder,
+      });
+      throw new Error('Failed to get folderId from recordingFolder');
+    }
+
+    await storeRecordingSize(folderId, videoStats.size);
+
     return true;
   } catch (error) {
     log.error('Failed to remux the video file.', error);
@@ -136,5 +152,29 @@ ipcHandle('discard-recording', async (event, folderId) => {
   } catch (err) {
     log.error('Failed to discard recording', { err });
     return ipc.error('Failed to discard recording', err);
+  }
+});
+
+ipcHandle('get-recording-resolution', async (event, folderId) => {
+  try {
+    const metadata = await readFile(
+      `${getVideoStoragePath()}/${folderId}/metadata.json`,
+      'utf-8',
+    );
+    const metadataJson = JSON.parse(metadata);
+    log.info('Got recording resolution', {
+      width: metadataJson.screenSize.width,
+      height: metadataJson.screenSize.height,
+    });
+    if (!metadataJson.screenSize.width || !metadataJson.screenSize.height) {
+      return ipc.error('Failed to get recording resolution');
+    }
+    return ipc.success({
+      width: metadataJson.screenSize.width as number,
+      height: metadataJson.screenSize.height as number,
+    });
+  } catch (err) {
+    log.error('Failed to get recording resolution', { err });
+    return ipc.error('Failed to get recording resolution', err);
   }
 });

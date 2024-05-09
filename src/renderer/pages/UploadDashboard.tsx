@@ -4,28 +4,54 @@ import { IoCloseSharp } from 'react-icons/io5';
 import { RiDeleteBin2Fill } from 'react-icons/ri';
 
 import { ConsentMessage, ConsentTitle } from '../../constants';
-import { DialogType, RecordedFolder } from '../../types/customTypes';
+import {
+  DialogType,
+  RecordedFolder,
+  StatusTypes,
+  UploadStatusReport,
+} from '../../types/customTypes';
+import ProgressBar from '../components/ProgressBar';
 import VideoCard from '../components/VideoCard';
 import log from '../util/logger';
+import throttle from '../util/throttle';
 
 export default function UploadDashboard() {
   const [filter, setFilter] = useState('all'); // State to track the active filter
   const [videos, setVideos] = useState<RecordedFolder[]>([]); // State to store the video recordings
+  const [uploadProgress, setUploadProgress] = useState<UploadStatusReport>({
+    'c20e96c3-a796-4321-81bd-c9fbeb2b1be0': { status: StatusTypes.Pending },
+    '11b8073d-df68-47d9-9020-9b587f7d45e1': { status: StatusTypes.Zipping },
+    '10ebd368-42f9-47e7-9a64-be40ae1822d8': {
+      status: StatusTypes.Uploading,
+      progress: 50,
+    },
+  }); // State to store the upload progress
 
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    (async () => {
+    const fetchVideoRecordingFolders = throttle(async () => {
+      log.info('Fetching video recording folders');
       const res = await window.electron.getVideoRecordingFolders();
       if (res.status === 'success') {
-        log.debug('Got the video recordings', res.data);
         setVideos(
           res.data.sort(
             (v1, v2) => v2.recordingStartedAt - v1.recordingStartedAt,
           ),
         );
       }
-    })();
+    }, 400);
+
+    fetchVideoRecordingFolders();
+
+    const cleanUp = window.electron.onUploadProgress((pr) => {
+      setUploadProgress(pr.status);
+      fetchVideoRecordingFolders();
+    });
+
+    return () => {
+      cleanUp();
+    };
   }, []);
 
   const startUpload = async () => {
@@ -36,6 +62,7 @@ export default function UploadDashboard() {
       log.info('Started uploading the selected recordings', {
         selectedVideos: Array.from(selectedVideos),
       });
+      setSelectedVideos(new Set());
     } else {
       log.error('Failed to start uploading the selected recordings', res.error);
     }
@@ -67,6 +94,7 @@ export default function UploadDashboard() {
     <div className="text-white p-6 relative">
       <div className="mb-4">
         <h1 className="text-2xl font-bold">Recorded Library</h1>
+        <ProgressBar />
       </div>
       <div className="mb-4 flex justify-between items-center">
         <p className="text-indigo-600 font-semibold">
@@ -106,7 +134,12 @@ export default function UploadDashboard() {
           <VideoCard
             key={video.id}
             video={video}
+            uploadProgress={uploadProgress[video.id] || {}}
             isSelected={selectedVideos.has(video.id) || false}
+            onUploadTrigger={() => {
+              setSelectedVideos(new Set(video.id));
+              onBeforeUpload();
+            }}
             onSelect={() => {
               setSelectedVideos((prevState) => {
                 const newSelectedVideos = new Set(prevState);

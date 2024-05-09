@@ -5,7 +5,7 @@
 import './configLoader';
 import './ipc';
 
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, net, protocol, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 /**
  * This module executes inside of electron's main process. You can start
@@ -15,17 +15,29 @@ import { autoUpdater } from 'electron-updater';
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import path from 'path';
+import path, { join } from 'path';
 
 import MenuBuilder from './menu';
 import db from './storage';
 import { resolveHtmlPath } from './util';
 import logger from './util/logger';
 import UploadManager from './util/UploadManager';
+import videoHttpServer from './videoHttpServer';
 
 const log = logger.child({ module: 'main' });
 
 logger.info('App starting...');
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'videostorage',
+    privileges: {
+      bypassCSP: true,
+      stream: true,
+    },
+  },
+]);
+
+videoHttpServer();
 
 class AppUpdater {
   constructor() {
@@ -94,6 +106,8 @@ const createWindow = async () => {
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 
+  UploadManager.mainWindowInstance = mainWindow;
+
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
       throw new Error('"mainWindow" is not defined');
@@ -138,6 +152,17 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+    protocol.handle('videostorage', (request) => {
+      const userData = app.getPath('userData');
+      const videoPath = request.url.slice('videostorage://'.length);
+      log.info('Fetching video from:', { videoPath });
+      log.info('Final path:', {
+        path: join(userData, 'video-storage', videoPath, 'video.mp4'),
+      });
+      return net.fetch(
+        `file://${join(userData, 'video-storage', videoPath, 'video.mp4')}`,
+      );
+    });
     createWindow();
     db.load();
     UploadManager.getInstance();

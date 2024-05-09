@@ -6,6 +6,8 @@ const RecordedFolderSchema = z.object({
   id: z.string(),
   description: z.string().optional(),
   isUploaded: z.boolean(),
+  recordingSize: z.number().optional(),
+  recordingDuration: z.number().optional(),
   recordingStartedAt: z.number(),
   recordingStoppedAt: z.number().optional(),
   uploadingInProgress: z.boolean(),
@@ -71,6 +73,34 @@ type IPCError = {
 
 export type IPCResult<Payload> = IPCSuccess<Payload> | IPCError;
 
+export enum StatusTypes {
+  Pending = 'Pending',
+  Zipping = 'Zipping',
+  Uploading = 'Uploading',
+  Completed = 'Completed',
+  Failed = 'Failed',
+}
+
+export type UploadItemStatus =
+  | {
+      status: Exclude<StatusTypes, StatusTypes.Uploading>;
+    }
+  | {
+      status: StatusTypes.Uploading;
+      progress: number;
+    };
+
+export type UploadStatusReport = Record<string, UploadItemStatus>;
+
+export function isUploadingStatus(status: UploadItemStatus): status is Extract<
+  UploadItemStatus,
+  {
+    status: StatusTypes.Uploading;
+  }
+> {
+  return status.status === StatusTypes.Uploading;
+}
+
 export const ipc = {
   success: <Payload>(data: Payload): IPCResult<Payload> => ({
     status: 'success' as const,
@@ -106,7 +136,16 @@ export type IPCHandleEvents = {
     void
   >;
   'discard-recording': IPCHandler<[folderId: string], void>;
+  'save-thumbnail': IPCHandler<
+    [folderId: string, thumbnailDataUrl: string],
+    void
+  >;
+  'get-video-streaming-port': IPCHandler<[], number>;
   'get-video-recording-folders': IPCHandler<[], RecordedFolder[]>;
+  'get-recording-resolution': IPCHandler<
+    [folderId: string],
+    { width: number; height: number }
+  >;
   'start-uploading-recording': IPCHandler<[folderIds: string[]], boolean>;
 };
 

@@ -1,14 +1,99 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import useAppState from '../store/hook';
+import log from '../util/logger';
 
 export default function FileOptions() {
   const { state } = useAppState();
   const navigate = useNavigate();
-  const [folderName, setFolderName] = useState(state.recordingName);
+  const { recordingName } = state;
+  const [folderName, setFolderName] = useState(recordingName);
+  const [videoServerPort, setVideoServerPort] = useState(-1);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [description, setDescription] = useState('');
+  const [recordingResolution, setRecordingResolution] = useState({
+    width: 1200,
+    height: 500,
+  });
   const [error, setError] = useState({ folderName: '', description: '' });
+
+  useEffect(() => {
+    const fetchVideoServerPort = async () => {
+      const portRes = await window.electron.getVideoStreamingPort();
+      if (portRes.status === 'error') {
+        window.electron.showDialog(
+          'error',
+          'Failed to retrieve video from storage',
+        );
+        return;
+      }
+
+      setVideoServerPort(portRes.data);
+    };
+    fetchVideoServerPort();
+  }, []);
+  useEffect(() => {
+    const fetchRecordingResolution = async () => {
+      const res = await window.electron.getRecordingResolution(recordingName);
+      if (res.status === 'error') {
+        log.error('Failed to retrieve recording');
+        return;
+      }
+      log.info('Recording resolution', res.data);
+      setRecordingResolution(res.data);
+    };
+    fetchRecordingResolution();
+  }, [recordingName]);
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (videoServerPort === -1) {
+      return;
+    }
+
+    if (!video) {
+      return;
+    }
+
+    const handleLoadedData = () => {
+      const canvas = document.createElement('canvas');
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      log.info('Canvas created with', {
+        width: canvas.width,
+        height: canvas.height,
+      });
+      const context = canvas.getContext('2d');
+      if (!context) return;
+
+      // Seek to the middle of the video
+      video.currentTime = video.duration / 2;
+
+      // Wait for the video to seek to the new time
+      video.onseeked = () => {
+        // Draw the current frame onto the canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        log.debug('Canvas drawn');
+        // // Convert the canvas image to a data URL
+        const thumbnailDataUrl = canvas.toDataURL('image/png');
+
+        video.currentTime = 0;
+        video.onseeked = null;
+
+        // Send the thumbnail data URL to the main process
+        window.electron.saveThumbnail(recordingName, thumbnailDataUrl);
+      };
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedData);
+
+    // eslint-disable-next-line consistent-return
+    return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedData);
+    };
+  }, [videoServerPort, recordingName]);
 
   const onSave = async () => {
     if (!folderName.trim() || !description.trim()) {
@@ -26,7 +111,7 @@ export default function FileOptions() {
       return;
     }
     const res = await window.electron.renameRecording(
-      state.recordingName,
+      recordingName,
       folderName,
       description,
     );
@@ -38,7 +123,7 @@ export default function FileOptions() {
   };
 
   const onDiscard = async () => {
-    const res = await window.electron.discardRecording(state.recordingName);
+    const res = await window.electron.discardRecording(recordingName);
     if (res.status === 'error') {
       window.electron.showDialog('error', 'Failed to discard recording');
       return;
@@ -46,12 +131,58 @@ export default function FileOptions() {
     navigate('/');
   };
 
+  const aspectRatio =
+    (recordingResolution.height / recordingResolution.width) * 100;
+
   return (
     <div className="flex flex-col justify-center items-center">
-      <div className="flex items-center flex-col w-full max-w-2xl rounded-lg m-4 mt-12 p-4">
+      <div className="flex items-center flex-col w-full max-w-2xl rounded-lg m-4 mt-0 p-4">
         <h2 className="text-2xl font-semibold text-white mb-4">
           What is the recording about?
         </h2>
+        {videoServerPort !== -1 && (
+          <div
+            style={{
+              width: '100%',
+              paddingBottom: `${aspectRatio}%`,
+              position: 'relative',
+            }}
+          >
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+            <video
+              src={`http://localhost:${videoServerPort}/${recordingName}`}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+              }}
+              className="w-full h-56 rounded-lg"
+              crossOrigin="anonymous"
+              controls
+            />
+          </div>
+        )}
+
+        {/* Hidden video element for generating high-resolution thumbnails */}
+        {videoServerPort !== -1 &&
+          recordingResolution.width > 0 &&
+          recordingResolution.height > 0 && (
+            /* eslint-disable-next-line jsx-a11y/media-has-caption */
+            <video
+              src={`http://localhost:${videoServerPort}/${recordingName}`}
+              style={{
+                width: `${recordingResolution.width}px`,
+                height: `${recordingResolution.height}px`,
+                position: 'absolute',
+                visibility: 'hidden',
+              }}
+              ref={videoRef}
+              crossOrigin="anonymous"
+            />
+          )}
+
         <label
           className="block text-lg font-medium text-white w-full"
           htmlFor="folderName"

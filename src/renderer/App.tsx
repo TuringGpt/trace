@@ -25,8 +25,12 @@ function AppRoutes() {
       })}
     >
       <Routes>
-        <Route path="/" element={<VideoRecorder />} />
-        <Route path="/save-zip" element={<FileOptions />} />
+        {/** This is temporary start */}
+        <Route path="/" element={<FileOptions />} />
+        <Route path="/video-recorder" element={<VideoRecorder />} />
+        {/** This is temporary end */}
+        {/* <Route path="/" element={<VideoRecorder />} /> */}
+        <Route path="/save-video" element={<FileOptions />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/upload-dashboard" element={<UploadDashboard />} />
       </Routes>

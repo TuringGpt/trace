@@ -9,7 +9,7 @@ export default async function getDeviceMetadata() {
   const db = await storage.getData();
 
   const selectedDevice =
-    db.selectedDisplay?.id ?? screen.getPrimaryDisplay().id;
+    db.selectedDisplay?.display_id ?? screen.getPrimaryDisplay().id;
 
   if (!db.selectedDisplay?.id) {
     log.warn('No display selected, using primary display');
@@ -18,6 +18,13 @@ export default async function getDeviceMetadata() {
   const display = screen
     .getAllDisplays()
     .find((d) => `${d.id}` === `${selectedDevice}`);
+
+  log.debug('Selected display', {
+    selectedDevice,
+    dbSelectedDisplay: db.selectedDisplay,
+    primaryDisplay: screen.getPrimaryDisplay().id,
+    allDisplays: screen.getAllDisplays().map((d) => d.id),
+  });
 
   const metadata = {
     osType: os.type(),

@@ -18,6 +18,16 @@ export function getVideoStoragePath(): string {
   return storagePath;
 }
 
+export function getThumbnailPath(): string {
+  const appDataPath = app.getPath('userData');
+  const thumbnailPath = path.join(appDataPath, 'thumbnails');
+
+  if (!fs.existsSync(thumbnailPath)) {
+    fs.mkdirSync(thumbnailPath);
+  }
+  return thumbnailPath;
+}
+
 export async function markRecordingStarted() {
   try {
     const currentRecordingFolder = uuidv4();
@@ -53,6 +63,26 @@ export async function markFolderUploadStart(folderId: string) {
     await storage.save(db);
   } catch (err) {
     log.error('Failed to mark folder upload started.', {
+      err,
+      folderId,
+    });
+    throw err;
+  }
+}
+
+export async function storeRecordingSize(folderId: string, size: number) {
+  try {
+    const db = await storage.getData({
+      forceReload: true,
+    });
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    folder.recordingSize = size;
+    await storage.save(db);
+  } catch (err) {
+    log.error('Failed to store recording size.', {
       err,
       folderId,
     });
