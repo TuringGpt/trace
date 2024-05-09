@@ -9,6 +9,7 @@ const overlayWindowSettings = {
   defaultWidth: 60,
   expandedWidth: 300,
   height: 70,
+  expandedHeight: 180,
 };
 
 const windowSettings = (
@@ -76,7 +77,7 @@ async function showHintWindows() {
       overlayWindowSettings.defaultWidth,
       overlayWindowSettings.height,
       x,
-      y + height - 150,
+      y + height - 250,
     ),
   );
   blinkWindow = new BrowserWindow(windowSettings(width, height, x, y));
@@ -104,7 +105,7 @@ function shrinkOverlayWindow() {
 function expandOverlayWindow() {
   overlayWindow?.setSize(
     overlayWindowSettings.expandedWidth,
-    overlayWindowSettings.height,
+    overlayWindowSettings.expandedHeight,
     true,
   );
 }

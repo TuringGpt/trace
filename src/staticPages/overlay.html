@@ -5,7 +5,6 @@
   <title>Recording in Progres - Trace</title>
   <style>
     body {
-      -webkit-app-region: drag;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -16,10 +15,14 @@
       padding: 0 !important;
       box-sizing: border-box;
       padding: 8px;
-      background-color: #4f46e5dd;
+      background-color: #4f46e580;
       color: white;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-      font-size: 10px;
+      font-size: 14px;
+    }
+
+    .drag {
+      -webkit-app-region: drag;
     }
 
     .no-drag {
@@ -45,20 +48,23 @@
 </head>
 
 <body>
-  <div class="wrapper" style="display: flex;">
+  <div class="wrapper drag"
+    style="display: flex; align-items: center;background: url('./drag-icon.png') no-repeat 100% 0%">
 
 
     <div class="image-container no-drag"
       style="display: flex;justify-content: center; align-items: center;padding: 0 6px; cursor: pointer;">
-      <img src="./logo.png" class="blink" style="border-radius: 50%; overflow: hidden;">
+      <img draggable="false" src="./logo.png" class="blink" style="border-radius: 50%; overflow: hidden;">
     </div>
-    <div style="margin-left: 5px;">
-      <div style="margin-bottom:3px">
+    <div style="padding: 20px">
+      <div style="margin-bottom:10px; line-height: 1.4;">
 
         Your screen and keystrokes are being recorded. DO NOT enter passwords, display personal information, or conduct
         personal activities
       </div>
-      <button class="no-drag" onclick="electron.closeOverLayWindow()" style="font-size: 10px;">Accept and Close</button>
+      <button class="no-drag" onclick="electron.closeOverLayWindow()"
+        style="font-size: 12px; padding: 5px; width: 100%;">Accept and
+        Close</button>
     </div>
 
   </div>
@@ -85,7 +91,7 @@
 
   html.addEventListener('mouseleave', debounce(() => {
     electron.shrinkOverlayWindow();
-  }, 2000));
+  }, 5000));
 </script>
 
 </html>
