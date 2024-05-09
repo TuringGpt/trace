@@ -88,8 +88,6 @@ type IPCHandler<TArgs extends any[], TRes> = (
   ...args: TArgs
 ) => Promise<IPCResult<TRes>>;
 
-type DialogType = 'with-cancel' | null;
-
 export type IPCHandleEvents = {
   'get-video-sources': IPCHandler<[], void>;
   'remux-video-file': IPCHandler<[uint8Array: Uint8Array], boolean>;
@@ -113,6 +111,7 @@ export type IPCHandleEvents = {
   'shrink-overlay-window': IPCHandler<[], void>;
   'get-video-recording-folders': IPCHandler<[], RecordedFolder[]>;
   'start-uploading-recording': IPCHandler<[folderIds: string[]], boolean>;
+  'close-overlay-window': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {
