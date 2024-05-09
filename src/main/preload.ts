@@ -16,6 +16,13 @@ function onSelectVideoSource(
   return () => ipcRenderer.off('select-source', callback);
 }
 
+function onUploadProgress(callback: (progress: number) => void): () => void {
+  ipcRenderer.on('upload-progress', (_event, progress) => {
+    callback(progress);
+  });
+  return () => ipcRenderer.off('upload-progress', callback);
+}
+
 const electronHandler = {
   getVideoSources: ipcInvoke('get-video-sources'),
 
@@ -28,10 +35,13 @@ const electronHandler = {
   stopRecording: ipcInvoke('stop-recording'),
   renameRecording: ipcInvoke('rename-recording'),
   discardRecording: ipcInvoke('discard-recording'),
+  getVideoRecordingFolders: ipcInvoke('get-video-recording-folders'),
+  startUploadingRecording: ipcInvoke('start-uploading-recording'),
   mediaRecordingStopped: ipcInvoke('media-recording-stopped'),
   expandOverlayWindow: ipcInvoke('expand-overlay-window'),
   shrinkOverlayWindow: ipcInvoke('shrink-overlay-window'),
   onSelectVideoSource,
+  onUploadProgress,
 };
 
 export type ElectronHandler = typeof electronHandler;
