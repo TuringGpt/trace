@@ -7,7 +7,6 @@ import { ConsentMessage, ConsentTitle } from '../../constants';
 import {
   DialogType,
   RecordedFolder,
-  StatusTypes,
   UploadStatusReport,
 } from '../../types/customTypes';
 import ProgressBar from '../components/ProgressBar';
@@ -18,14 +17,7 @@ import throttle from '../util/throttle';
 export default function UploadDashboard() {
   const [filter, setFilter] = useState('all'); // State to track the active filter
   const [videos, setVideos] = useState<RecordedFolder[]>([]); // State to store the video recordings
-  const [uploadProgress, setUploadProgress] = useState<UploadStatusReport>({
-    'c20e96c3-a796-4321-81bd-c9fbeb2b1be0': { status: StatusTypes.Pending },
-    '11b8073d-df68-47d9-9020-9b587f7d45e1': { status: StatusTypes.Zipping },
-    '10ebd368-42f9-47e7-9a64-be40ae1822d8': {
-      status: StatusTypes.Uploading,
-      progress: 50,
-    },
-  }); // State to store the upload progress
+  const [uploadProgress, setUploadProgress] = useState<UploadStatusReport>({}); // State to store the upload progress
 
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
 

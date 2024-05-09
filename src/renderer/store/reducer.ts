@@ -10,7 +10,7 @@ export interface AppState {
 
 // Initial state
 export const initialState: AppState = {
-  recordingName: 'ec9b64be-f055-42e3-b101-339c41acd88e',
+  recordingName: '',
   busyIndicator: {
     isShow: false,
     message: '',
