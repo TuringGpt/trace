@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { CapturedSource } from '../../types/customTypes';
+import { CapturedSource, DialogType } from '../../types/customTypes';
 import {
   hideBusyIndicator,
   setRecordingName,
@@ -81,7 +81,10 @@ export default function VideoRecorder() {
     const consent = await window.electron.showDialog(
       'info',
       initialConsentText,
-      'with-cancel',
+      {
+        type: DialogType.Confirmation,
+        buttons: ['Agree', 'Abort'],
+      },
     );
     if (!consent?.data) {
       return;

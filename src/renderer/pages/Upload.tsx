@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import successIcon from '../../../assets/success.svg';
 import { hideBusyIndicator, showBusyIndicator } from '../store/actions';
 import useAppState from '../store/hook';
+import { DialogType } from '../../types/customTypes';
 
 function FileUploadSuccess() {
   const navigate = useNavigate();
@@ -72,7 +73,10 @@ export default function Upload() {
     const consent = await window.electron.showDialog(
       'info',
       uploadConsentCopy,
-      'with-cancel',
+      {
+        type: DialogType.Confirmation,
+        buttons: ['Agree', 'Abort'],
+      },
     );
     if (!consent?.data) return;
 
