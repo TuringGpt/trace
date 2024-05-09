@@ -19,13 +19,6 @@ export default async function getDeviceMetadata() {
     .getAllDisplays()
     .find((d) => `${d.id}` === `${selectedDevice}`);
 
-  log.debug('Selected display', {
-    selectedDevice,
-    dbSelectedDisplay: db.selectedDisplay,
-    primaryDisplay: screen.getPrimaryDisplay().id,
-    allDisplays: screen.getAllDisplays().map((d) => d.id),
-  });
-
   const metadata = {
     osType: os.type(),
     osRelease: os.release(),
