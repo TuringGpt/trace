@@ -6,6 +6,7 @@ import './configLoader';
 import './ipc';
 
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
+
 import { autoUpdater } from 'electron-updater';
 /**
  * This module executes inside of electron's main process. You can start
@@ -16,11 +17,11 @@ import { autoUpdater } from 'electron-updater';
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-
 import MenuBuilder from './menu';
 import db from './storage';
 import { resolveHtmlPath } from './util';
 import logger from './util/logger';
+import UploadManager from './util/UploadManager';
 
 const log = logger.child({ module: 'main' });
 
@@ -77,6 +78,12 @@ const createWindow = async () => {
     show: false,
     width: 1300,
     height: 1000,
+    x: process.env.START_WIN_X
+      ? Number.parseInt(process.env.START_WIN_X, 10)
+      : undefined,
+    y: process.env.START_WIN_X
+      ? Number.parseInt(process.env.START_WIN_X, 10)
+      : undefined,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: app.isPackaged
@@ -133,6 +140,7 @@ app
   .then(() => {
     createWindow();
     db.load();
+    UploadManager.getInstance();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
@@ -155,5 +163,5 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // custom event listener
 ipcMain.on('report-renderer-unhandled-error', (e, error) => {
-  log.error('Unhandled Error from renderer:', error);
+  log.error('Unhandled Error from renderer:', { error });
 });

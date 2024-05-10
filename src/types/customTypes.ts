@@ -13,6 +13,8 @@ const RecordedFolderSchema = z.object({
   uploadedAt: z.number().optional(),
 });
 
+export type RecordedFolder = z.infer<typeof RecordedFolderSchema>;
+
 const SelectedDisplaySchema = z.object({
   id: z.string(),
   display_id: z.string(),
@@ -38,6 +40,22 @@ export type CapturedSource = {
 
 export type UploadResult = {
   uploadedZipFileName: string;
+};
+
+export enum DialogType {
+  /**
+   * Only has an ok button
+   */
+  Error = 'Error',
+  /**
+   * Has ok and cancel buttons
+   */
+  Confirmation = 'Confirmation',
+}
+
+export type DialogOptions = {
+  type: DialogType;
+  buttons: [okButton: string, cancelButton: string] | [okButton: string];
 };
 
 type IPCSuccess<Payload> = {
@@ -74,7 +92,10 @@ export type IPCHandleEvents = {
   'get-video-sources': IPCHandler<[], void>;
   'remux-video-file': IPCHandler<[uint8Array: Uint8Array], boolean>;
   'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult>;
-  'show-dialog': IPCHandler<[title: string, message: string], boolean>;
+  'show-dialog': IPCHandler<
+    [title: string, message: string, options?: DialogOptions],
+    boolean
+  >;
   'start-new-recording': IPCHandler<[], void>;
   'stop-recording': IPCHandler<
     [uint8Array: Uint8Array],
@@ -85,6 +106,12 @@ export type IPCHandleEvents = {
     void
   >;
   'discard-recording': IPCHandler<[folderId: string], void>;
+  'media-recording-stopped': IPCHandler<[], void>;
+  'expand-overlay-window': IPCHandler<[], void>;
+  'shrink-overlay-window': IPCHandler<[], void>;
+  'get-video-recording-folders': IPCHandler<[], RecordedFolder[]>;
+  'start-uploading-recording': IPCHandler<[folderIds: string[]], boolean>;
+  'close-overlay-window': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {

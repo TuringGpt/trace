@@ -1,9 +1,7 @@
 import fs from 'fs';
-import path from 'path';
 
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
-import fileExists from '../util/fileExists';
 import getDeviceMetadata from '../util/getMetaData';
 import keylogger from '../util/keylogger';
 import logger from '../util/logger';
@@ -15,6 +13,13 @@ import {
   markRecordingStopped,
 } from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
+import {
+  closeAllHintWindows,
+  closeOverLayWindow,
+  showHintWindows,
+  expandOverlayWindow,
+  shrinkOverlayWindow,
+} from './staticWindows';
 
 const log = logger.child({ module: 'ipc.record' });
 
@@ -23,6 +28,7 @@ ipcHandle('start-new-recording', async () => {
   await markRecordingStarted();
   keylogger.startLogging();
   log.info('Keystrokes logging started');
+  showHintWindows();
   return ipc.success(undefined);
 });
 
@@ -112,23 +118,8 @@ ipcHandle('rename-recording', async (event, folderId, newName, description) => {
     }
     folder.description = description;
 
-    // Check if a folder with the new name already exists in the filesystem
-    let finalName = newName;
-    const videoStoragePath = await getVideoStoragePath();
-    let counter = 1;
-    // eslint-disable-next-line no-await-in-loop
-    while (await fileExists(path.join(videoStoragePath, finalName))) {
-      finalName = `${newName}(${counter})`;
-      counter += 1;
-    }
-
-    folder.folderName = finalName;
+    folder.folderName = newName.trim();
     await storage.save(db);
-
-    // Rename the folder on disk
-    const oldPath = path.join(getVideoStoragePath(), folderId);
-    const newPath = path.join(getVideoStoragePath(), finalName);
-    await fs.promises.rename(oldPath, newPath);
 
     return ipc.success(undefined);
   } catch (err) {
@@ -154,4 +145,24 @@ ipcHandle('discard-recording', async (event, folderId) => {
     log.error('Failed to discard recording', { err });
     return ipc.error('Failed to discard recording', err);
   }
+});
+
+ipcHandle('close-overlay-window', async () => {
+  closeOverLayWindow();
+  return ipc.success(undefined);
+});
+
+ipcHandle('media-recording-stopped', async () => {
+  closeAllHintWindows();
+  return ipc.success(undefined);
+});
+
+ipcHandle('expand-overlay-window', async () => {
+  expandOverlayWindow();
+  return ipc.success(undefined);
+});
+
+ipcHandle('shrink-overlay-window', async () => {
+  shrinkOverlayWindow();
+  return ipc.success(undefined);
 });

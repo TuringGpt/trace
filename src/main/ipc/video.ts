@@ -1,4 +1,4 @@
-import { desktopCapturer, DesktopCapturerSource, Menu } from 'electron';
+import { desktopCapturer, Menu } from 'electron';
 
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
@@ -6,10 +6,25 @@ import logger from '../util/logger';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.video' });
+
 ipcHandle('get-video-sources', async (event) => {
   const sources = await desktopCapturer.getSources({ types: ['screen'] });
   try {
-    const template = sources.map((item: DesktopCapturerSource) => ({
+    // Check if we are in a test environment
+    if (process.env.WDIO_TEST) {
+      // Automatically select the first source for testing purposes
+      const autoSelectedSource = sources[0];
+      storage.saveProperty('selectedDisplay', {
+        id: autoSelectedSource.id,
+        name: autoSelectedSource.name,
+        display_id: autoSelectedSource.display_id,
+      });
+      event.sender.send('select-source', autoSelectedSource);
+      return ipc.success(undefined);
+    }
+
+    // Normal operation, build menu from sources
+    const template = sources.map((item) => ({
       label: item.name.length > 30 ? `${item.name.slice(0, 30)}...` : item.name,
       click: () => {
         storage.saveProperty('selectedDisplay', {
