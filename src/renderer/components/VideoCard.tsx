@@ -93,7 +93,7 @@ export default function VideoCard({
     >
       <Tooltip id="video-tooltip" />
       {needsToBeUploaded && (
-        <div className="absolute top-2 left-2 z-10">
+        <div className="absolute top-2 left-2">
           <div className="cursor-pointer">
             {isSelected && (
               <ImCheckboxChecked size={22} onClick={() => onSelect()} />

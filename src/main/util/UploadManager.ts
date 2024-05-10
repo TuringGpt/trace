@@ -106,6 +106,9 @@ class UploadManager {
    *
    * on discard complete, remove the folder from the status report
    * and send the updated status report to the renderer
+   * this also forces the renderer to get the recording folders state again
+   * so we can hack into this to force a refresh of the recording folders
+   * this is debounced in the renderer so fell free to call this multiple times
    */
   public async updateOnDiscardComplete(folder: string): Promise<void> {
     delete this.uploadStatusReport[folder];

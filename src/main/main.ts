@@ -22,13 +22,13 @@ import db from './storage';
 import { resolveHtmlPath } from './util';
 import logger from './util/logger';
 import UploadManager from './util/UploadManager';
-import videoHttpServer from './videoHttpServer';
+import setupVideoAndThumbnailHttpServer from './videoHttpServer';
 
 const log = logger.child({ module: 'main' });
 
 logger.info('App starting...');
 
-videoHttpServer();
+setupVideoAndThumbnailHttpServer();
 
 class AppUpdater {
   constructor() {

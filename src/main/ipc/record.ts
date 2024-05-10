@@ -14,6 +14,7 @@ import {
   markRecordingStopped,
   storeRecordingSize,
 } from '../util/storageHelpers';
+import UploadManager from '../util/UploadManager';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.record' });
@@ -180,6 +181,7 @@ ipcHandle('discard-multiple-recordings', async (event, folderIds) => {
           error: result.reason,
         });
       }
+      UploadManager.getInstance().updateOnDiscardComplete(folderIds[index]);
     });
 
     return ipc.success(undefined);
@@ -233,7 +235,7 @@ ipcHandle('clean-up-from-local', async (event, folderId) => {
     }
 
     await rmdir(folderPath, { recursive: true });
-
+    UploadManager.getInstance().updateOnDiscardComplete(folderId);
     return ipc.success(undefined);
   } catch (err) {
     log.error('Failed to clean up from local', { err });

@@ -10,7 +10,7 @@ const log = logger.child({ module: 'util.videoHttpServer' });
 
 let videoServerPort = -1;
 
-export default function videoHttpServer() {
+export default function setupVideoAndThumbnailHttpServer() {
   const server = createServer(async (req, res) => {
     if (!req.url) {
       res.writeHead(404);

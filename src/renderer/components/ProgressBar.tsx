@@ -58,4 +58,3 @@ export default function ProgressBar() {
     </div>
   );
 }
-// bg-gradient-to-r from-green-300 via-green-600 to-green-800
