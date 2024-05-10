@@ -250,7 +250,7 @@ ipcHandle('get-recording-memory-usage', async () => {
     const folders = await fs.promises.readdir(videoStoragePath);
 
     const allPromises = folders.map(async (folder) => {
-      const folderPath = `${videoStoragePath}/${folder}`;
+      const folderPath = `${videoStoragePath}/${folder}/video.mp4`;
       const stats = await stat(folderPath);
       return stats.size;
     });

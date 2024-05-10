@@ -13,6 +13,7 @@ import {
 import ProgressBar from '../components/ProgressBar';
 import VideoCard from '../components/VideoCard';
 import log from '../util/logger';
+import prettyBytes from '../util/prettyBytes';
 
 export default function UploadDashboard() {
   const [filter, setFilter] = useState('all'); // State to track the active filter
@@ -147,8 +148,8 @@ export default function UploadDashboard() {
           // Display the memory usage if available
           memoryUsage !== -1 && (
             <p className="text-indigo-600 font-semibold">
-              Using {memoryUsage} MB of Local Storage, upload to cloud to free
-              up space.
+              Using {prettyBytes(memoryUsage)} of Local Storage, upload to cloud
+              to free up space.
             </p>
           )
         }
