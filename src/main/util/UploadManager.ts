@@ -16,6 +16,7 @@ import {
 import fileExists from './fileExists';
 import logger from './logger';
 import {
+  getThumbnailPath,
   getVideoStoragePath,
   markFolderUploadComplete,
   markFolderUploadStart,
@@ -125,6 +126,14 @@ class UploadManager {
       archive.file(join(videoStoragePath, folder, 'metadata.json'), {
         name: 'metadata.json',
       });
+
+      // check if there is a thumbnail file and add it if it exists
+      const thumbnailPath = join(getThumbnailPath(), `${folder}.png`);
+      if (await fileExists(thumbnailPath)) {
+        archive.file(thumbnailPath, { name: 'thumbnail.png' });
+      } else {
+        log.error('Could not find thumbnail to upload', { thumbnailPath });
+      }
 
       await archive.finalize();
 
