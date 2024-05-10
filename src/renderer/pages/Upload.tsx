@@ -1,11 +1,14 @@
 import clsx from 'clsx';
 import { ChangeEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import successIcon from '../../../assets/success.svg';
 import { hideBusyIndicator, showBusyIndicator } from '../store/actions';
 import useAppState from '../store/hook';
 import { DialogType } from '../../types/customTypes';
+import {
+  UPLOAD_CONSENT_MESSAGE, UPLOAD_SUCCESS_MESSAGE, SELECT_FILE_ERROR,
+  INVALID_FILE_TYPE_ERROR, UPLOAD_FAILURE_ERROR
+} from '../../constants';
 
 function FileUploadSuccess() {
   const navigate = useNavigate();
@@ -16,12 +19,12 @@ function FileUploadSuccess() {
     <div className="flex flex-col items-center space-y-4">
       <div
         id="uploadSuccessOverlay"
-        className=" p-4 rounded-lg   w-1/2 h-1/2 max-w-2xl max-h-md flex flex-col justify-evenly"
+        className="p-4 rounded-lg w-1/2 h-1/2 max-w-2xl max-h-md flex flex-col justify-evenly"
       >
         <img src={successIcon} alt="Upload Successful" className="h-40" />
         <div>
           <h1 className="text-xl flex justify-center font-sans text-center mt-8">
-            Files uploaded successfully!
+            {UPLOAD_SUCCESS_MESSAGE}
           </h1>
           <span
             id="uploadedZipFileName"
@@ -46,19 +49,17 @@ export default function Upload() {
     name: '',
     filePath: '',
   });
-  const uploadConsentCopy =
-    'By clicking OK, you confirm your consent to upload recorded activities. Please be aware that uploaded files may contain sensitive information. Proceeding indicates your acknowledgment and acceptance of this disclosure.';
   const [isUploadSuccess, setIsUploadSuccess] = useState(false);
   const navigate = useNavigate();
   const { dispatch } = useAppState();
   const onInputFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) {
-      window.electron.showDialog('error', 'Please select a file');
+      window.electron.showDialog('error', SELECT_FILE_ERROR);
       return;
     }
     if (selectedFile.type !== 'application/zip') {
-      window.electron.showDialog('error', 'Please select a zip file');
+      window.electron.showDialog('error', INVALID_FILE_TYPE_ERROR);
       return;
     }
 
@@ -69,10 +70,9 @@ export default function Upload() {
   };
 
   const onStartUploadClick = async () => {
-    // First show consent modal and get timestamp
     const consent = await window.electron.showDialog(
       'info',
-      uploadConsentCopy,
+      UPLOAD_CONSENT_MESSAGE,
       {
         type: DialogType.Confirmation,
         buttons: ['Agree', 'Abort'],
@@ -80,21 +80,16 @@ export default function Upload() {
     );
     if (!consent?.data) return;
 
-    // #todo TR-8, requires backend implementation? Send consent time stamp to backend.
-    // const consentTimeStamp = new Date().toISOString();
     dispatch(showBusyIndicator('Uploading files...'));
     const response = await window.electron.uploadFiles(
       uploadInputFile.filePath,
     );
-    setUploadInputFile({
-      name: '',
-      filePath: '',
-    });
+    setUploadInputFile({ name: '', filePath: '' });
     if (response.status === 'success') {
       dispatch(hideBusyIndicator());
       setIsUploadSuccess(true);
     } else {
-      window.electron.showDialog('error', 'Failed to upload the file');
+      window.electron.showDialog('error', UPLOAD_FAILURE_ERROR);
       dispatch(hideBusyIndicator());
     }
   };
@@ -133,7 +128,7 @@ export default function Upload() {
           <button
             type="button"
             id="startUploadBtn"
-            disabled={!uploadInputFile}
+            disabled={!uploadInputFile.name}
             onClick={onStartUploadClick}
             className={clsx('bg-green-600 rounded-md px-4 py-3 text-white', {
               'opacity-50': !uploadInputFile.name,
@@ -142,16 +137,11 @@ export default function Upload() {
             Start Upload
           </button>
         </div>
-        {/**
-         * Add a close button in the top right corner of the modal
-         */}
         <div className="flex absolute justify-end top-10 right-10">
           <button
             type="button"
             id="closeUploadModalBtn"
-            onClick={() => {
-              navigate('/');
-            }}
+            onClick={() => navigate('/')}
             className="text-white"
           >
             &#10005;

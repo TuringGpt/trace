@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FIELD_REQUIRED_ERROR, MIN_DESCRIPTION_LENGTH_ERROR, RENAME_FOLDER_ERROR, DISCARD_RECORDING_ERROR } from '../../constants';
 
 import useAppState from '../store/hook';
 
@@ -13,14 +14,14 @@ export default function FileOptions() {
   const onSave = async () => {
     if (!folderName.trim() || !description.trim()) {
       setError({
-        folderName: !folderName.trim() ? 'This field is required' : '',
-        description: !description.trim() ? 'This field is required' : '',
+        folderName: !folderName.trim() ? FIELD_REQUIRED_ERROR : '',
+        description: !description.trim() ? FIELD_REQUIRED_ERROR : '',
       });
       return;
     }
     if (description.length < 15) {
       setError({
-        description: 'Description should be at least 15 characters long',
+        description: MIN_DESCRIPTION_LENGTH_ERROR,
         folderName: '',
       });
       return;
@@ -33,14 +34,14 @@ export default function FileOptions() {
     if (res.status === 'success') {
       navigate('/');
     } else {
-      window.electron.showDialog('error', 'Failed to rename recording folder');
+      window.electron.showDialog('error', RENAME_FOLDER_ERROR);
     }
   };
 
   const onDiscard = async () => {
     const res = await window.electron.discardRecording(state.recordingName);
     if (res.status === 'error') {
-      window.electron.showDialog('error', 'Failed to discard recording');
+      window.electron.showDialog('error', DISCARD_RECORDING_ERROR);
       return;
     }
     navigate('/');
