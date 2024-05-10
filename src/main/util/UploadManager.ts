@@ -64,6 +64,10 @@ class UploadManager {
   }
 
   public addToQueue(folder: string): void {
+    if (this.queue.length === 0) {
+      // Start of a new upload batch, clear the status report
+      this.uploadStatusReport = {};
+    }
     this.queue.push(folder);
     this.uploadStatusReport[folder] = { status: StatusTypes.Pending };
   }
@@ -96,6 +100,16 @@ class UploadManager {
     UploadManager.mainWindowInstance?.webContents.send('upload-progress', {
       status: this.getStatusReport(),
     });
+  }
+
+  /**
+   *
+   * on discard complete, remove the folder from the status report
+   * and send the updated status report to the renderer
+   */
+  public async updateOnDiscardComplete(folder: string): Promise<void> {
+    delete this.uploadStatusReport[folder];
+    this.sendUploadProgress();
   }
 
   private async uploadFolder(folder: string): Promise<void> {
@@ -158,10 +172,19 @@ class UploadManager {
       await markFolderUploadStart(folder);
       await blockBlobClient.uploadFile(zipPath, {
         onProgress: (progress) => {
+          if (
+            this.uploadStatusReport[folder].status === StatusTypes.Completed ||
+            this.uploadStatusReport[folder].status === StatusTypes.Failed
+          ) {
+            log.info(
+              'Upload already completed or failed. Stopping upload progress',
+            );
+            return;
+          }
           const percentComplete = Math.round(
             (progress.loadedBytes / totalBytes) * 100,
           );
-          log.info('Upload progress', { folder, progress, percentComplete });
+          log.debug('Upload progress', { folder, progress, percentComplete });
           this.uploadStatusReport[folder] = {
             status: StatusTypes.Uploading,
             progress: percentComplete,

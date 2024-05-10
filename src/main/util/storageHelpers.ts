@@ -142,3 +142,25 @@ export async function getCurrentRecordingFolder(): Promise<string> {
   const data = await storage.getData();
   return `${getVideoStoragePath()}/${data.currentRecordingFolder?.folderName}`;
 }
+
+export async function saveVideoDuration(folderId: string, duration: number) {
+  try {
+    const db = await storage.getData();
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    folder.recordingDuration = duration;
+    log.debug('Saved video duration.', {
+      folderId,
+      duration,
+    });
+    await storage.save(db);
+  } catch (err) {
+    log.error('Failed to save video duration.', {
+      err,
+      folderId,
+    });
+    throw err;
+  }
+}

@@ -10,6 +10,7 @@ const RecordedFolderSchema = z.object({
   recordingDuration: z.number().optional(),
   recordingStartedAt: z.number(),
   recordingStoppedAt: z.number().optional(),
+  isDeletedFromLocal: z.boolean().optional(),
   uploadingInProgress: z.boolean(),
   uploadError: z.string().optional(),
   uploadedAt: z.number().optional(),
@@ -136,10 +137,13 @@ export type IPCHandleEvents = {
     void
   >;
   'discard-recording': IPCHandler<[folderId: string], void>;
-  'save-thumbnail': IPCHandler<
-    [folderId: string, thumbnailDataUrl: string],
+  'clean-up-from-local': IPCHandler<[folderId: string], void>;
+  'discard-multiple-recordings': IPCHandler<[folderIds: string[]], void>;
+  'save-thumbnail-and-duration': IPCHandler<
+    [folderId: string, thumbnailDataUrl: string, duration: number],
     void
   >;
+  'get-recording-memory-usage': IPCHandler<[], number>;
   'get-video-streaming-port': IPCHandler<[], number>;
   'get-video-recording-folders': IPCHandler<[], RecordedFolder[]>;
   'get-recording-resolution': IPCHandler<

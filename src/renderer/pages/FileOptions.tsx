@@ -83,7 +83,11 @@ export default function FileOptions() {
         video.onseeked = null;
 
         // Send the thumbnail data URL to the main process
-        window.electron.saveThumbnail(recordingName, thumbnailDataUrl);
+        window.electron.saveThumbnailAndDuration(
+          recordingName,
+          thumbnailDataUrl,
+          video.duration,
+        );
       };
     };
 

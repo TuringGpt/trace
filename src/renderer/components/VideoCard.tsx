@@ -8,12 +8,15 @@ import { SiCcleaner } from 'react-icons/si';
 import { Tooltip } from 'react-tooltip';
 
 import {
+  DialogType,
   RecordedFolder,
   StatusTypes,
   UploadItemStatus,
 } from '../../types/customTypes';
+import log from '../util/logger';
 import prettyBytes from '../util/prettyBytes';
 import prettyDate from '../util/prettyDate';
+import prettyDuration from '../util/prettyDuration';
 import Thumbnail from './Thumbnail';
 
 type VideoCardProps = {
@@ -22,6 +25,8 @@ type VideoCardProps = {
   uploadProgress: UploadItemStatus;
   onSelect: () => void;
   onUploadTrigger: () => void;
+  onDiscardTrigger: () => void;
+  multiSelectInProgress: boolean;
 };
 
 const isVideoInQueue = (uploadProgress: UploadItemStatus) =>
@@ -34,12 +39,22 @@ const isVideoUploading = (uploadProgress: UploadItemStatus) =>
 const isVideoUploaded = (uploadProgress: UploadItemStatus) =>
   uploadProgress.status === StatusTypes.Completed;
 
+const isUploadError = (
+  uploadProgress: UploadItemStatus,
+  video: RecordedFolder,
+) =>
+  !isVideoUploading(uploadProgress) &&
+  !isVideoInQueue(uploadProgress) &&
+  !video.isUploaded &&
+  video.uploadError;
 export default function VideoCard({
   video,
   isSelected,
   uploadProgress,
   onSelect,
   onUploadTrigger,
+  onDiscardTrigger,
+  multiSelectInProgress,
 }: VideoCardProps) {
   const needsToBeUploaded =
     !isVideoUploading(uploadProgress) &&
@@ -47,8 +62,35 @@ export default function VideoCard({
     !isVideoUploaded(uploadProgress) &&
     !video.isUploaded;
 
+  const onCleanUp = async () => {
+    const res = await window.electron.showDialog(
+      'Clean up',
+      'Are you sure you want to delete this from your local?',
+      {
+        type: DialogType.Confirmation,
+        buttons: ['Yes', 'No'],
+      },
+    );
+    if (res.status === 'success' && res.data) {
+      const deleteRes = await window.electron.cleanUpFromLocal(video.id);
+      if (deleteRes.status === 'success') {
+        log.info('Recording deleted successfully', {
+          recordingId: video.id,
+        });
+      } else {
+        log.error('Failed to delete recording', {
+          recordingId: video.id,
+          error: deleteRes.error,
+        });
+      }
+    }
+  };
+
   return (
-    <div className="relative border border-gray-500 rounded-lg max-w-[400px]">
+    <div
+      data-video-id={video.id}
+      className="relative border border-gray-500 rounded-lg max-w-[400px]"
+    >
       <Tooltip id="video-tooltip" />
       {needsToBeUploaded && (
         <div className="absolute top-2 left-2 z-10">
@@ -69,7 +111,9 @@ export default function VideoCard({
           {/**
            * TODO: Remove static recording time.
            */}
-          <p className="text-gray-300 text-sm opacity-50">20:00</p>
+          <p className="text-gray-300 text-sm opacity-50">
+            {prettyDuration(video.recordingDuration)}
+          </p>
 
           <div className="flex items-center">
             <h2 className="font-bold mr-2">
@@ -111,7 +155,7 @@ export default function VideoCard({
                 className="mr-2 text-3xl text-indigo-600 animate-spin-slow-reverse"
               />
             )}
-            {!video.isUploaded && video.uploadError && (
+            {isUploadError(uploadProgress, video) && (
               <MdSyncProblem
                 data-tooltip-id="video-tooltip"
                 data-tooltip-content="Upload Failed"
@@ -122,7 +166,7 @@ export default function VideoCard({
           </div>
 
           <div className="flex space-x-4">
-            {needsToBeUploaded && (
+            {needsToBeUploaded && !multiSelectInProgress && (
               <>
                 <button
                   type="button"
@@ -133,6 +177,7 @@ export default function VideoCard({
                 </button>
                 <button
                   type="button"
+                  onClick={() => onDiscardTrigger()}
                   className="w-10 interactive-button bg-red-500 "
                 >
                   <span className="sr-only">Delete </span>
@@ -140,12 +185,13 @@ export default function VideoCard({
                 </button>
               </>
             )}
-            {video.isUploaded && (
+            {video.isUploaded && !video.isDeletedFromLocal && (
               <button
                 type="button"
                 data-tooltip-id="video-tooltip"
                 data-tooltip-html="Delete from local<br/> Free up space"
                 className="w-14 text-2xl interactive-button bg-green-500"
+                onClick={() => onCleanUp()}
               >
                 <span className="sr-only">Clean up </span>
                 <SiCcleaner />
