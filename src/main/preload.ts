@@ -27,11 +27,11 @@ function onUploadProgress(
 
 const electronHandler = {
   getVideoSources: ipcInvoke('get-video-sources'),
-
   uploadFiles: ipcInvoke('upload-zip-file'),
   logFromRenderer: ipcSend('log-from-renderer'),
   showDialog: ipcInvoke('show-dialog'),
   reportUnhandledError: ipcSend('report-renderer-unhandled-error'),
+  closeOverLayWindow: ipcInvoke('close-overlay-window'),
   startNewRecording: ipcInvoke('start-new-recording'),
   stopRecording: ipcInvoke('stop-recording'),
   renameRecording: ipcInvoke('rename-recording'),
@@ -44,6 +44,9 @@ const electronHandler = {
   saveThumbnailAndDuration: ipcInvoke('save-thumbnail-and-duration'),
   getVideoRecordingFolders: ipcInvoke('get-video-recording-folders'),
   startUploadingRecording: ipcInvoke('start-uploading-recording'),
+  mediaRecordingStopped: ipcInvoke('media-recording-stopped'),
+  expandOverlayWindow: ipcInvoke('expand-overlay-window'),
+  shrinkOverlayWindow: ipcInvoke('shrink-overlay-window'),
   onSelectVideoSource,
   onUploadProgress,
 };

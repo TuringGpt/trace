@@ -6,6 +6,7 @@ import './configLoader';
 import './ipc';
 
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
+
 import { autoUpdater } from 'electron-updater';
 /**
  * This module executes inside of electron's main process. You can start
@@ -16,7 +17,6 @@ import { autoUpdater } from 'electron-updater';
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-
 import MenuBuilder from './menu';
 import db from './storage';
 import { resolveHtmlPath } from './util';

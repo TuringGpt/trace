@@ -15,6 +15,13 @@ import {
   storeRecordingSize,
 } from '../util/storageHelpers';
 import UploadManager from '../util/UploadManager';
+import {
+  closeAllHintWindows,
+  closeOverLayWindow,
+  expandOverlayWindow,
+  showHintWindows,
+  shrinkOverlayWindow,
+} from './staticWindows';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.record' });
@@ -24,6 +31,7 @@ ipcHandle('start-new-recording', async () => {
   await markRecordingStarted();
   keylogger.startLogging();
   log.info('Keystrokes logging started');
+  showHintWindows();
   return ipc.success(undefined);
 });
 
@@ -271,4 +279,24 @@ ipcHandle('get-recording-memory-usage', async () => {
     log.error('Failed to get recording memory usage', { err });
     return ipc.error('Failed to get recording memory usage', err);
   }
+});
+
+ipcHandle('close-overlay-window', async () => {
+  closeOverLayWindow();
+  return ipc.success(undefined);
+});
+
+ipcHandle('media-recording-stopped', async () => {
+  closeAllHintWindows();
+  return ipc.success(undefined);
+});
+
+ipcHandle('expand-overlay-window', async () => {
+  expandOverlayWindow();
+  return ipc.success(undefined);
+});
+
+ipcHandle('shrink-overlay-window', async () => {
+  shrinkOverlayWindow();
+  return ipc.success(undefined);
 });

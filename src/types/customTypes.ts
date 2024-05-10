@@ -145,12 +145,16 @@ export type IPCHandleEvents = {
   >;
   'get-recording-memory-usage': IPCHandler<[], number>;
   'get-video-streaming-port': IPCHandler<[], number>;
+  'media-recording-stopped': IPCHandler<[], void>;
+  'expand-overlay-window': IPCHandler<[], void>;
+  'shrink-overlay-window': IPCHandler<[], void>;
   'get-video-recording-folders': IPCHandler<[], RecordedFolder[]>;
   'get-recording-resolution': IPCHandler<
     [folderId: string],
     { width: number; height: number }
   >;
   'start-uploading-recording': IPCHandler<[folderIds: string[]], boolean>;
+  'close-overlay-window': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {

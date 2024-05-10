@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { CapturedSource } from '../../types/customTypes';
+import { CapturedSource, DialogType } from '../../types/customTypes';
 import {
   hideBusyIndicator,
   setRecordingName,
@@ -18,6 +18,9 @@ export default function VideoRecorder() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const videoPlaceholderRef = useRef<HTMLDivElement>(null);
+
+  const initialConsentText =
+    'By clicking OK, you consent to record all activities on the screen. Please refrain from typing or viewing sensitive/confidential information.';
 
   const [recordingTime, setRecordingTime] = useState(0);
 
@@ -75,6 +78,17 @@ export default function VideoRecorder() {
   }, [isRecording]);
 
   const onStartRecording = async () => {
+    const consent = await window.electron.showDialog(
+      'info',
+      initialConsentText,
+      {
+        type: DialogType.Confirmation,
+        buttons: ['Agree', 'Abort'],
+      },
+    );
+    if (consent.status === 'success' && !consent.data) {
+      return;
+    }
     setIsRecording(true);
     log.info('Recording started');
     const videoElement = videoRef.current;
@@ -131,6 +145,7 @@ export default function VideoRecorder() {
     if (mediaRecorder?.state === 'recording') {
       mediaRecorder.stop();
       setMediaRecorder(null);
+      window.electron.mediaRecordingStopped();
     }
   };
 
