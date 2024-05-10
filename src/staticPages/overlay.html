@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Recording in Progres - Trace</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 300px;
+      overflow: hidden;
+      margin: 0;
+      padding: 0 !important;
+      box-sizing: border-box;
+      padding: 8px;
+      background-color: #4f46e580;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      font-size: 14px;
+    }
+
+    .drag {
+      -webkit-app-region: drag;
+    }
+
+    .no-drag {
+      -webkit-app-region: no-drag;
+    }
+
+    .blink {
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper drag"
+    style="display: flex; align-items: center;background: url('./drag-icon.png') no-repeat 100% 0%">
+
+
+    <div class="image-container no-drag"
+      style="display: flex;justify-content: center; align-items: center;padding: 0 6px; cursor: pointer;">
+      <img draggable="false" src="./logo.png" class="blink" style="border-radius: 50%; overflow: hidden;">
+    </div>
+    <div style="padding: 20px">
+      <div style="margin-bottom:10px; line-height: 1.4;">
+
+        Your screen and keystrokes are being recorded. DO NOT enter passwords, display personal information, or conduct
+        personal activities
+      </div>
+      <button class="no-drag" onclick="electron.closeOverLayWindow()"
+        style="font-size: 12px; padding: 5px; width: 100%;">Accept and
+        Close</button>
+    </div>
+
+  </div>
+
+</body>
+<script>
+
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  const html = document.querySelector('html');
+
+  html.addEventListener('mouseenter', debounce(() => {
+    electron.expandOverlayWindow();
+  }, 200));
+
+  html.addEventListener('mouseleave', debounce(() => {
+    electron.shrinkOverlayWindow();
+  }, 5000));
+</script>
+
+</html>

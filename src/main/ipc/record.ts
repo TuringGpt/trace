@@ -13,6 +13,13 @@ import {
   markRecordingStopped,
 } from '../util/storageHelpers';
 import { ipcHandle } from './typeSafeHandler';
+import {
+  closeAllHintWindows,
+  closeOverLayWindow,
+  showHintWindows,
+  expandOverlayWindow,
+  shrinkOverlayWindow,
+} from './staticWindows';
 
 const log = logger.child({ module: 'ipc.record' });
 
@@ -21,6 +28,7 @@ ipcHandle('start-new-recording', async () => {
   await markRecordingStarted();
   keylogger.startLogging();
   log.info('Keystrokes logging started');
+  showHintWindows();
   return ipc.success(undefined);
 });
 
@@ -137,4 +145,24 @@ ipcHandle('discard-recording', async (event, folderId) => {
     log.error('Failed to discard recording', { err });
     return ipc.error('Failed to discard recording', err);
   }
+});
+
+ipcHandle('close-overlay-window', async () => {
+  closeOverLayWindow();
+  return ipc.success(undefined);
+});
+
+ipcHandle('media-recording-stopped', async () => {
+  closeAllHintWindows();
+  return ipc.success(undefined);
+});
+
+ipcHandle('expand-overlay-window', async () => {
+  expandOverlayWindow();
+  return ipc.success(undefined);
+});
+
+ipcHandle('shrink-overlay-window', async () => {
+  shrinkOverlayWindow();
+  return ipc.success(undefined);
 });
