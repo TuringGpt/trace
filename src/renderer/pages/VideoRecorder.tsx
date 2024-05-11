@@ -1,12 +1,26 @@
+/* eslint-disable jsx-a11y/media-has-caption */
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CapturedSource, DialogType } from '../../types/customTypes';
-import { hideBusyIndicator, setRecordingName, showBusyIndicator } from '../store/actions';
+import {
+  hideBusyIndicator,
+  setRecordingName,
+  showBusyIndicator,
+} from '../store/actions';
 import useAppState from '../store/hook';
 import { formatTimeInHHMMSS } from '../util/timeFormat';
 import log from '../util/logger';
-import { INITIAL_CONSENT_TEXT, RECORDING_STARTED_LOG, RECORDING_STOPPED_LOG, NO_STREAM_FOUND_LOG, ERROR_VIDEO_SAVING_LOG, VIDEO_CONVERSION_INDICATOR, CHOOSE_VIDEO_SOURCE_TEXT, SELECT_SOURCE_TEXT } from '../../constants';
+import {
+  INITIAL_CONSENT_TEXT,
+  RECORDING_STARTED_LOG,
+  RECORDING_STOPPED_LOG,
+  NO_STREAM_FOUND_LOG,
+  ERROR_VIDEO_SAVING_LOG,
+  VIDEO_CONVERSION_INDICATOR,
+  CHOOSE_VIDEO_SOURCE_TEXT,
+  SELECT_SOURCE_TEXT,
+} from '../../constants';
 
 export default function VideoRecorder() {
   const [source, setSource] = useState<CapturedSource | null>(null);
@@ -16,7 +30,9 @@ export default function VideoRecorder() {
   const videoPlaceholderRef = useRef<HTMLDivElement>(null);
 
   const [recordingTime, setRecordingTime] = useState(0);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null,
+  );
   const { dispatch } = useAppState();
   const navigate = useNavigate();
 
@@ -66,10 +82,14 @@ export default function VideoRecorder() {
   }, [isRecording]);
 
   const onStartRecording = async () => {
-    const consent = await window.electron.showDialog('info', INITIAL_CONSENT_TEXT, {
-      type: DialogType.Confirmation,
-      buttons: ['Agree', 'Abort'],
-    });
+    const consent = await window.electron.showDialog(
+      'info',
+      INITIAL_CONSENT_TEXT,
+      {
+        type: DialogType.Confirmation,
+        buttons: ['Agree', 'Abort'],
+      },
+    );
     if (!consent?.data) {
       return;
     }
@@ -100,7 +120,9 @@ export default function VideoRecorder() {
       dispatch(showBusyIndicator(VIDEO_CONVERSION_INDICATOR));
       const blob = new Blob(chunks, { type: 'video/webm; codecs=H264' });
       const arrayBuffer = await blob.arrayBuffer();
-      const res = await window.electron.stopRecording(new Uint8Array(arrayBuffer));
+      const res = await window.electron.stopRecording(
+        new Uint8Array(arrayBuffer),
+      );
       setIsRecording(false);
       if (res.status === 'error') {
         log.error(ERROR_VIDEO_SAVING_LOG, {

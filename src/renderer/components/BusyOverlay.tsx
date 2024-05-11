@@ -1,5 +1,5 @@
-import { LOADING_OVERLAY_ID, BUSY_MESSAGES_SEPARATOR } from '../../constants'; // adjust the path as necessary
 import clsx from 'clsx';
+import { LOADING_OVERLAY_ID, BUSY_MESSAGES_SEPARATOR } from '../../constants';
 import useAppState from '../store/hook';
 
 export default function BusyOverlay() {
@@ -28,10 +28,12 @@ export default function BusyOverlay() {
         </div>
       </div>
       <h1 className="text-xl mt-16 mb-8 flex flex-col justify-center font-sans text-center">
-        {state.busyIndicator.message.split(BUSY_MESSAGES_SEPARATOR).map((line, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <div key={index}>{line}</div>
-        ))}
+        {state.busyIndicator.message
+          .split(BUSY_MESSAGES_SEPARATOR)
+          .map((line, index) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <div key={index}>{line}</div>
+          ))}
       </h1>
     </div>
   );

@@ -3,8 +3,17 @@ import { FaCloudUploadAlt } from 'react-icons/fa';
 import { IoCloseSharp } from 'react-icons/io5';
 import { RiDeleteBin2Fill } from 'react-icons/ri';
 
-import { ConsentMessage, ConsentTitle, LOCAL_STORAGE_INFO, UPLOAD_SUCCESS_LOG,
-  UPLOAD_FAILURE_LOG, UPLOAD_CANCELLATION_LOG, FILTER_ALL, FILTER_LOCAL, FILTER_CLOUD } from '../../constants';
+import {
+  ConsentMessage,
+  ConsentTitle,
+  LOCAL_STORAGE_INFO,
+  UPLOAD_SUCCESS_LOG,
+  UPLOAD_FAILURE_LOG,
+  UPLOAD_CANCELLATION_LOG,
+  FILTER_ALL,
+  FILTER_LOCAL,
+  FILTER_CLOUD,
+} from '../../constants';
 import { DialogType, RecordedFolder } from '../../types/customTypes';
 import VideoCard from '../components/VideoCard';
 import log from '../util/logger';

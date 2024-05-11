@@ -7,9 +7,14 @@ import { RiDeleteBin2Fill } from 'react-icons/ri';
 import { SiCcleaner } from 'react-icons/si';
 import { Tooltip } from 'react-tooltip';
 import {
-  INFO_LABEL, DELETE_LABEL, CLEAN_UP_LABEL, UPLOADED_TOOLTIP,
-  UPLOADING_TOOLTIP, UPLOAD_FAILED_TOOLTIP, REMOVE_LOCAL_TOOLTIP,
-  MAX_FOLDER_NAME_LENGTH
+  INFO_LABEL,
+  DELETE_LABEL,
+  CLEAN_UP_LABEL,
+  UPLOADED_TOOLTIP,
+  UPLOADING_TOOLTIP,
+  REMOVE_LOCAL_TOOLTIP,
+  UPLOAD_FAILED_TOOLTIP,
+  MAX_FOLDER_NAME_LENGTH,
 } from '../../constants';
 
 import { RecordedFolder } from '../../types/customTypes';
@@ -22,10 +27,10 @@ type VideoCardProps = {
 };
 
 export default function VideoCard({
-                                    video,
-                                    isSelected,
-                                    onSelect,
-                                  }: VideoCardProps) {
+  video,
+  isSelected,
+  onSelect,
+}: VideoCardProps) {
   const needsToBeUploaded = !video.isUploaded && !video.uploadingInProgress;
   return (
     <div className="relative border border-gray-500 rounded-lg max-w-[400px]">

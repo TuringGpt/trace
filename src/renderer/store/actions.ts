@@ -1,4 +1,9 @@
-import { SET_RECORDING_NAME, RESET_RECORDING_NAME, SET_BUSY_INDICATOR, HIDE_BUSY_INDICATOR } from '../../constants'; // adjust the path as necessary
+import {
+  SET_RECORDING_NAME,
+  RESET_RECORDING_NAME,
+  SET_BUSY_INDICATOR,
+  HIDE_BUSY_INDICATOR,
+} from '../../constants';
 
 export const setRecordingName = (recordingName: string) =>
   ({

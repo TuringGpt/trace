@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FIELD_REQUIRED_ERROR, MIN_DESCRIPTION_LENGTH_ERROR, RENAME_FOLDER_ERROR, DISCARD_RECORDING_ERROR } from '../../constants';
+import {
+  FIELD_REQUIRED_ERROR,
+  MIN_DESCRIPTION_LENGTH_ERROR,
+  RENAME_FOLDER_ERROR,
+  DISCARD_RECORDING_ERROR,
+} from '../../constants';
 
 import useAppState from '../store/hook';
 

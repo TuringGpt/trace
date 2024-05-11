@@ -1,4 +1,4 @@
-import { APP_TITLE, APP_SUBTITLE } from '../../constants'; // adjust the path as necessary
+import { APP_TITLE, APP_SUBTITLE } from '../../constants';
 import icon from '../../../assets/icon.svg';
 
 export default function AppHeader() {
@@ -14,9 +14,7 @@ export default function AppHeader() {
           {APP_TITLE}
         </h1>
       </div>
-      <p className="text-center text-xl">
-        {APP_SUBTITLE}
-      </p>
+      <p className="text-center text-xl"> {APP_SUBTITLE} </p>
     </>
   );
 }

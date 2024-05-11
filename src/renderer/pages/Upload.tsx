@@ -6,8 +6,11 @@ import { hideBusyIndicator, showBusyIndicator } from '../store/actions';
 import useAppState from '../store/hook';
 import { DialogType } from '../../types/customTypes';
 import {
-  UPLOAD_CONSENT_MESSAGE, UPLOAD_SUCCESS_MESSAGE, SELECT_FILE_ERROR,
-  INVALID_FILE_TYPE_ERROR, UPLOAD_FAILURE_ERROR
+  UPLOAD_CONSENT_MESSAGE,
+  UPLOAD_SUCCESS_MESSAGE,
+  SELECT_FILE_ERROR,
+  INVALID_FILE_TYPE_ERROR,
+  UPLOAD_FAILURE_ERROR,
 } from '../../constants';
 
 function FileUploadSuccess() {

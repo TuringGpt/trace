@@ -1,7 +1,11 @@
 import { FaHome } from 'react-icons/fa';
 import { VscCloudUpload } from 'react-icons/vsc';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { UPLOAD_DASHBOARD_PATH, HOME_LABEL, UPLOAD_LABEL } from '../../constants'; // adjust the path as necessary
+import {
+  UPLOAD_DASHBOARD_PATH,
+  HOME_LABEL,
+  UPLOAD_LABEL,
+} from '../../constants';
 
 export default function NavigationButton() {
   const navigate = useNavigate();

@@ -1,5 +1,10 @@
 import { Action } from './actions';
-import { SET_RECORDING_NAME, RESET_RECORDING_NAME, SET_BUSY_INDICATOR, HIDE_BUSY_INDICATOR } from '../../constants'; // Adjust the import path as necessary
+import {
+  SET_RECORDING_NAME,
+  RESET_RECORDING_NAME,
+  SET_BUSY_INDICATOR,
+  HIDE_BUSY_INDICATOR,
+} from '../../constants';
 
 export interface AppState {
   recordingName: string;

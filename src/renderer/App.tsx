@@ -14,7 +14,11 @@ import UploadDashboard from './pages/UploadDashboard';
 import VideoRecorder from './pages/VideoRecorder';
 import useAppState from './store/hook';
 import AppStateProvider from './store/provider';
-import { ROUTE_SAVE_ZIP, ROUTE_UPLOAD, ROUTE_UPLOAD_DASHBOARD } from '../constants'; // Adjust the import path as necessary
+import {
+  ROUTE_SAVE_ZIP,
+  ROUTE_UPLOAD,
+  ROUTE_UPLOAD_DASHBOARD,
+} from '../constants';
 
 function AppRoutes() {
   const { state } = useAppState();
