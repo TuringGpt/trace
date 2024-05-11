@@ -1,7 +1,7 @@
+/* eslint-disable jsx-a11y/media-has-caption */
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import { CapturedSource, DialogType } from '../../types/customTypes';
 import {
   hideBusyIndicator,
@@ -9,8 +9,18 @@ import {
   showBusyIndicator,
 } from '../store/actions';
 import useAppState from '../store/hook';
-import formattedTime from '../util/formattedTime';
+import { formatTimeInHHMMSS } from '../util/timeFormat';
 import log from '../util/logger';
+import {
+  INITIAL_CONSENT_TEXT,
+  RECORDING_STARTED_LOG,
+  RECORDING_STOPPED_LOG,
+  NO_STREAM_FOUND_LOG,
+  ERROR_VIDEO_SAVING_LOG,
+  VIDEO_CONVERSION_INDICATOR,
+  CHOOSE_VIDEO_SOURCE_TEXT,
+  SELECT_SOURCE_TEXT,
+} from '../../constants';
 
 export default function VideoRecorder() {
   const [source, setSource] = useState<CapturedSource | null>(null);
@@ -19,16 +29,11 @@ export default function VideoRecorder() {
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const videoPlaceholderRef = useRef<HTMLDivElement>(null);
 
-  const initialConsentText =
-    'By clicking OK, you consent to record all activities on the screen. Please refrain from typing or viewing sensitive/confidential information.';
-
   const [recordingTime, setRecordingTime] = useState(0);
-
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
   const { dispatch } = useAppState();
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,7 +61,6 @@ export default function VideoRecorder() {
             } as any,
           });
           videoElement.play();
-
           startButton.disabled = false;
         }
       };
@@ -80,7 +84,7 @@ export default function VideoRecorder() {
   const onStartRecording = async () => {
     const consent = await window.electron.showDialog(
       'info',
-      initialConsentText,
+      INITIAL_CONSENT_TEXT,
       {
         type: DialogType.Confirmation,
         buttons: ['Agree', 'Abort'],
@@ -90,11 +94,11 @@ export default function VideoRecorder() {
       return;
     }
     setIsRecording(true);
-    log.info('Recording started');
+    log.info(RECORDING_STARTED_LOG);
     const videoElement = videoRef.current;
     const stream = videoElement?.srcObject as MediaStream;
     if (!stream) {
-      log.error('No stream found');
+      log.error(NO_STREAM_FOUND_LOG);
       return;
     }
     const options = {
@@ -112,12 +116,8 @@ export default function VideoRecorder() {
     };
 
     recorder.onstop = async () => {
-      log.info('Recording stopped', chunks.length);
-      dispatch(
-        showBusyIndicator(
-          'Video conversion in progress... \n This may take several minutes.',
-        ),
-      );
+      log.info(RECORDING_STOPPED_LOG, chunks.length);
+      dispatch(showBusyIndicator(VIDEO_CONVERSION_INDICATOR));
       const blob = new Blob(chunks, { type: 'video/webm; codecs=H264' });
       const arrayBuffer = await blob.arrayBuffer();
       const res = await window.electron.stopRecording(
@@ -125,7 +125,7 @@ export default function VideoRecorder() {
       );
       setIsRecording(false);
       if (res.status === 'error') {
-        log.error('Error during video saving', {
+        log.error(ERROR_VIDEO_SAVING_LOG, {
           remuxRes: res,
         });
         return;
@@ -133,7 +133,6 @@ export default function VideoRecorder() {
 
       dispatch(hideBusyIndicator());
       dispatch(setRecordingName(res.data.recordingFolderName));
-
       navigate('/save-zip');
     };
     recorder.start();
@@ -141,7 +140,7 @@ export default function VideoRecorder() {
   };
 
   const onStopRecording = () => {
-    log.info('Recording stopped', mediaRecorder?.state);
+    log.info(RECORDING_STOPPED_LOG, mediaRecorder?.state);
     if (mediaRecorder?.state === 'recording') {
       mediaRecorder.stop();
       setMediaRecorder(null);
@@ -160,12 +159,11 @@ export default function VideoRecorder() {
           }}
           className="bg-slate-600 m-6 mb-0 rounded-full px-4 py-2 text-white"
         >
-          {source?.name || 'Choose a Video Source'}
+          {source?.name || CHOOSE_VIDEO_SOURCE_TEXT}
         </button>
       </div>
 
       <div className="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-450px)]">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           id="videoElement"
           ref={videoRef}
@@ -183,7 +181,7 @@ export default function VideoRecorder() {
             },
           )}
         >
-          Please select a source to proceed.
+          {SELECT_SOURCE_TEXT}
         </div>
       </div>
 
@@ -194,7 +192,7 @@ export default function VideoRecorder() {
           })}
         />
         <span id="recordingTime" className="text-2xl">
-          {formattedTime(recordingTime)}
+          {formatTimeInHHMMSS(recordingTime)}
         </span>
       </div>
 

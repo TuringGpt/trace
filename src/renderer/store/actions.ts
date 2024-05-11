@@ -1,21 +1,28 @@
+import {
+  SET_RECORDING_NAME,
+  RESET_RECORDING_NAME,
+  SET_BUSY_INDICATOR,
+  HIDE_BUSY_INDICATOR,
+} from '../../constants';
+
 export const setRecordingName = (recordingName: string) =>
   ({
-    type: 'setRecordingName',
+    type: SET_RECORDING_NAME,
     payload: { recordingName },
   }) as const;
 
 export const resetRecordingName = () =>
-  ({ type: 'resetRecordingName' }) as const;
+  ({ type: RESET_RECORDING_NAME }) as const;
 
 export const showBusyIndicator = (message: string) =>
   ({
-    type: 'setBusyIndicator',
+    type: SET_BUSY_INDICATOR,
     payload: { isShow: true, message },
   }) as const;
 
 export const hideBusyIndicator = () =>
   ({
-    type: 'hideBusyIndicator',
+    type: HIDE_BUSY_INDICATOR,
     payload: { isShow: false, message: '' },
   }) as const;
 
