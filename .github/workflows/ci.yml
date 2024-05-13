@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - master
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       platform:
@@ -110,3 +113,39 @@ jobs:
           npm run lint
           # Run build
           npm run build
+
+  deploy-cloud-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18.15'
+
+      - name: Change to cloud-run directory # can be from configuration/job name/trigger input value
+        run: cd cloud-runs/remux/
+
+      - name: Build Docker image
+        run: |
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_IMAGE_NAME }}:latest .
+      - name: Authenticate to Google Container Registry
+        run: echo "${{ secrets.GCR_JSON_KEY }}" | docker login -u _json_key --password-stdin https://gcr.io
+
+      - name: Push Docker image
+        run: |
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_IMAGE_NAME }}:latest
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Deploy to Google Cloud Run
+        run: npm run deploy
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY_PATH }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ secrets.GCP_REGION }}
+          GCP_SERVICE_NAME: ${{ secrets.GCP_SERVICE_NAME }}
+          GCP_IMAGE_NAME: ${{ secrets.GCP_IMAGE_NAME }}
