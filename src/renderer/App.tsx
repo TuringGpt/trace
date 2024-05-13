@@ -5,6 +5,11 @@ import './App.css';
 import clsx from 'clsx';
 import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 
+import {
+  ROUTE_UPLOAD,
+  ROUTE_UPLOAD_DASHBOARD,
+  ROUTE_VIDEO,
+} from '../constants';
 import AppHeader from './components/AppHeader';
 import BusyOverlay from './components/BusyOverlay';
 import NavigationButton from './components/NavigationButton';
@@ -26,9 +31,9 @@ function AppRoutes() {
     >
       <Routes>
         <Route path="/" element={<VideoRecorder />} />
-        <Route path="/save-video" element={<FileOptions />} />
-        <Route path="/upload" element={<Upload />} />
-        <Route path="/upload-dashboard" element={<UploadDashboard />} />
+        <Route path={ROUTE_VIDEO} element={<FileOptions />} />
+        <Route path={ROUTE_UPLOAD} element={<Upload />} />
+        <Route path={ROUTE_UPLOAD_DASHBOARD} element={<UploadDashboard />} />
       </Routes>
     </div>
   );

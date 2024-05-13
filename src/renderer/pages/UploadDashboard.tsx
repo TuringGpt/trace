@@ -4,7 +4,15 @@ import { FaCloudUploadAlt } from 'react-icons/fa';
 import { IoCloseSharp } from 'react-icons/io5';
 import { RiDeleteBin2Fill } from 'react-icons/ri';
 
-import { ConsentMessage, ConsentTitle } from '../../constants';
+import {
+  ConsentMessage,
+  ConsentTitle,
+  FILTER_ALL,
+  FILTER_CLOUD,
+  FILTER_LOCAL,
+  UPLOAD_CANCELLATION_LOG,
+  UPLOAD_FAILURE_LOG,
+} from '../../constants';
 import {
   DialogType,
   RecordedFolder,
@@ -70,7 +78,7 @@ export default function UploadDashboard() {
       });
       setSelectedVideos(new Set());
     } else {
-      log.error('Failed to start uploading the selected recordings', res.error);
+      log.error(UPLOAD_FAILURE_LOG, res.error);
     }
   };
 
@@ -84,13 +92,12 @@ export default function UploadDashboard() {
       buttons: ['Agree', 'Abort'],
     });
     if (res.status === 'success' && res.data) {
-      // Upload the selected videos
       log.info('got concent to upload', {
         consentedVideos: selectedVideoIds,
       });
       startUpload(overrideSelectVideo);
     } else {
-      log.info('User cancelled the upload');
+      log.info(UPLOAD_CANCELLATION_LOG);
     }
   };
 
@@ -157,22 +164,22 @@ export default function UploadDashboard() {
         <div>
           <button
             type="button"
-            onClick={() => handleFilterChange('all')}
-            className={`px-3 py-1 border-r-2 border-r-slate-400 hover:bg-indigo-500 ${filter === 'all' ? 'bg-indigo-600' : 'bg-gray-600'}`}
+            onClick={() => handleFilterChange(FILTER_ALL)}
+            className={`px-3 py-1 border-r-2 border-r-slate-400 hover:bg-indigo-500 ${filter === FILTER_ALL ? 'bg-indigo-600' : 'bg-gray-600'}`}
           >
             All
           </button>
           <button
             type="button"
-            onClick={() => handleFilterChange('local')}
-            className={`px-3 py-1 border-r-2 border-r-slate-400 hover:bg-indigo-500 ${filter === 'local' ? 'bg-indigo-600' : 'bg-gray-600'}`}
+            onClick={() => handleFilterChange(FILTER_LOCAL)}
+            className={`px-3 py-1 border-r-2 border-r-slate-400 hover:bg-indigo-500 ${filter === FILTER_LOCAL ? 'bg-indigo-600' : 'bg-gray-600'}`}
           >
             Local
           </button>
           <button
             type="button"
-            onClick={() => handleFilterChange('cloud')}
-            className={`px-3 py-1  hover:bg-indigo-500 ${filter === 'cloud' ? 'bg-indigo-600' : 'bg-gray-600'}`}
+            onClick={() => handleFilterChange(FILTER_CLOUD)}
+            className={`px-3 py-1  hover:bg-indigo-500 ${filter === FILTER_CLOUD ? 'bg-indigo-600' : 'bg-gray-600'}`}
           >
             Cloud
           </button>
