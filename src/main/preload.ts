@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { CapturedSource } from '../types/customTypes';
+import { CapturedSource, UploadStatusReport } from '../types/customTypes';
 import { ipcInvoke, ipcSend } from './ipc/typeSafeHandler';
 
 function onSelectVideoSource(
@@ -16,7 +16,9 @@ function onSelectVideoSource(
   return () => ipcRenderer.off('select-source', callback);
 }
 
-function onUploadProgress(callback: (progress: number) => void): () => void {
+function onUploadProgress(
+  callback: (progress: { status: UploadStatusReport }) => void,
+): () => void {
   ipcRenderer.on('upload-progress', (_event, progress) => {
     callback(progress);
   });
@@ -25,7 +27,6 @@ function onUploadProgress(callback: (progress: number) => void): () => void {
 
 const electronHandler = {
   getVideoSources: ipcInvoke('get-video-sources'),
-
   uploadFiles: ipcInvoke('upload-zip-file'),
   logFromRenderer: ipcSend('log-from-renderer'),
   showDialog: ipcInvoke('show-dialog'),
@@ -35,6 +36,12 @@ const electronHandler = {
   stopRecording: ipcInvoke('stop-recording'),
   renameRecording: ipcInvoke('rename-recording'),
   discardRecording: ipcInvoke('discard-recording'),
+  discardMultipleRecordings: ipcInvoke('discard-multiple-recordings'),
+  cleanUpFromLocal: ipcInvoke('clean-up-from-local'),
+  getRecordingMemoryUsage: ipcInvoke('get-recording-memory-usage'),
+  getVideoStreamingPort: ipcInvoke('get-video-streaming-port'),
+  getRecordingResolution: ipcInvoke('get-recording-resolution'),
+  saveThumbnailAndDuration: ipcInvoke('save-thumbnail-and-duration'),
   getVideoRecordingFolders: ipcInvoke('get-video-recording-folders'),
   startUploadingRecording: ipcInvoke('start-uploading-recording'),
   mediaRecordingStopped: ipcInvoke('media-recording-stopped'),

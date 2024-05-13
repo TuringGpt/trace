@@ -2,6 +2,18 @@
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+import {
+  CHOOSE_VIDEO_SOURCE_TEXT,
+  ERROR_VIDEO_SAVING_LOG,
+  INITIAL_CONSENT_TEXT,
+  NO_STREAM_FOUND_LOG,
+  RECORDING_STARTED_LOG,
+  RECORDING_STOPPED_LOG,
+  ROUTE_VIDEO,
+  SELECT_SOURCE_TEXT,
+  VIDEO_CONVERSION_INDICATOR,
+} from '../../constants';
 import { CapturedSource, DialogType } from '../../types/customTypes';
 import {
   hideBusyIndicator,
@@ -9,18 +21,8 @@ import {
   showBusyIndicator,
 } from '../store/actions';
 import useAppState from '../store/hook';
-import { formatTimeInHHMMSS } from '../util/timeFormat';
 import log from '../util/logger';
-import {
-  INITIAL_CONSENT_TEXT,
-  RECORDING_STARTED_LOG,
-  RECORDING_STOPPED_LOG,
-  NO_STREAM_FOUND_LOG,
-  ERROR_VIDEO_SAVING_LOG,
-  VIDEO_CONVERSION_INDICATOR,
-  CHOOSE_VIDEO_SOURCE_TEXT,
-  SELECT_SOURCE_TEXT,
-} from '../../constants';
+import { formatTimeInHHMMSS } from '../util/timeFormat';
 
 export default function VideoRecorder() {
   const [source, setSource] = useState<CapturedSource | null>(null);
@@ -90,7 +92,7 @@ export default function VideoRecorder() {
         buttons: ['Agree', 'Abort'],
       },
     );
-    if (!consent?.data) {
+    if (consent.status === 'success' && !consent.data) {
       return;
     }
     setIsRecording(true);
@@ -133,7 +135,8 @@ export default function VideoRecorder() {
 
       dispatch(hideBusyIndicator());
       dispatch(setRecordingName(res.data.recordingFolderName));
-      navigate('/save-zip');
+
+      navigate(ROUTE_VIDEO);
     };
     recorder.start();
     window.electron.startNewRecording();

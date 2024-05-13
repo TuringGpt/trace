@@ -23,8 +23,9 @@ export const DELETE_LABEL = 'Delete';
 export const CLEAN_UP_LABEL = 'Clean up';
 export const UPLOADED_TOOLTIP = 'Uploaded';
 export const UPLOADING_TOOLTIP = 'Uploading';
+export const IN_QUEUE_TOOLTIP = 'In Queue';
 export const UPLOAD_FAILED_TOOLTIP = 'Upload Failed';
-export const REMOVE_LOCAL_TOOLTIP = 'Remove from local';
+export const REMOVE_LOCAL_TOOLTIP = 'Delete from local<br/> Free up space';
 export const MAX_FOLDER_NAME_LENGTH = 25;
 
 // FileOptions constants
@@ -73,7 +74,7 @@ export const SELECT_SOURCE_TEXT = 'Please select a source to proceed.';
 export const APP_STATE_HOOK_ERROR =
   'useAppState must be used within a AppStateProvider';
 
-export const ROUTE_SAVE_ZIP = '/save-zip';
+export const ROUTE_VIDEO = '/save-video';
 export const ROUTE_UPLOAD = '/upload';
 export const ROUTE_UPLOAD_DASHBOARD = '/upload-dashboard';
 

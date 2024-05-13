@@ -22,10 +22,13 @@ import db from './storage';
 import { resolveHtmlPath } from './util';
 import logger from './util/logger';
 import UploadManager from './util/UploadManager';
+import setupVideoAndThumbnailHttpServer from './videoHttpServer';
 
 const log = logger.child({ module: 'main' });
 
 logger.info('App starting...');
+
+setupVideoAndThumbnailHttpServer();
 
 class AppUpdater {
   constructor() {
@@ -93,6 +96,8 @@ const createWindow = async () => {
   });
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
+
+  UploadManager.mainWindowInstance = mainWindow;
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
