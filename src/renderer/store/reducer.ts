@@ -1,4 +1,10 @@
 import { Action } from './actions';
+import {
+  SET_RECORDING_NAME,
+  RESET_RECORDING_NAME,
+  SET_BUSY_INDICATOR,
+  HIDE_BUSY_INDICATOR,
+} from '../../constants';
 
 export interface AppState {
   recordingName: string;
@@ -20,17 +26,17 @@ export const initialState: AppState = {
 // Reducer function
 export default function appReducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'setRecordingName':
+    case SET_RECORDING_NAME:
       return {
         ...state,
         recordingName: action.payload.recordingName,
       };
-    case 'resetRecordingName':
+    case RESET_RECORDING_NAME:
       return {
         ...state,
         recordingName: '',
       };
-    case 'setBusyIndicator':
+    case SET_BUSY_INDICATOR:
       return {
         ...state,
         busyIndicator: {
@@ -38,12 +44,12 @@ export default function appReducer(state: AppState, action: Action): AppState {
           message: action.payload.message,
         },
       };
-    case 'hideBusyIndicator':
+    case HIDE_BUSY_INDICATOR:
       return {
         ...state,
         busyIndicator: {
           isShow: action.payload.isShow,
-          message: action.payload.message,
+          message: '',
         },
       };
 

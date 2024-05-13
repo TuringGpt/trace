@@ -14,6 +14,11 @@ import UploadDashboard from './pages/UploadDashboard';
 import VideoRecorder from './pages/VideoRecorder';
 import useAppState from './store/hook';
 import AppStateProvider from './store/provider';
+import {
+  ROUTE_SAVE_ZIP,
+  ROUTE_UPLOAD,
+  ROUTE_UPLOAD_DASHBOARD,
+} from '../constants';
 
 function AppRoutes() {
   const { state } = useAppState();
@@ -26,9 +31,9 @@ function AppRoutes() {
     >
       <Routes>
         <Route path="/" element={<VideoRecorder />} />
-        <Route path="/save-zip" element={<FileOptions />} />
-        <Route path="/upload" element={<Upload />} />
-        <Route path="/upload-dashboard" element={<UploadDashboard />} />
+        <Route path={ROUTE_SAVE_ZIP} element={<FileOptions />} />
+        <Route path={ROUTE_UPLOAD} element={<Upload />} />
+        <Route path={ROUTE_UPLOAD_DASHBOARD} element={<UploadDashboard />} />
       </Routes>
     </div>
   );

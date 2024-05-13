@@ -1,4 +1,4 @@
-export default function prettyDate(millis: number) {
+export function formatDateInYYYYMMDDHHMM(millis: number) {
   const date = new Date(millis);
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -13,3 +13,13 @@ export default function prettyDate(millis: number) {
 
   return `${year}-${month}-${day} ${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
 }
+
+export const formatTimeInHHMMSS = (time: number): string => {
+  const hours = Math.floor(time / 3600);
+  const minutes = Math.floor((time % 3600) / 60);
+  const seconds = Math.floor(time % 60);
+
+  return `${hours.toString().padStart(2, '0')}:${minutes
+    .toString()
+    .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};

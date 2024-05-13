@@ -6,9 +6,19 @@ import { MdEdit, MdOutlineCloudSync, MdSyncProblem } from 'react-icons/md';
 import { RiDeleteBin2Fill } from 'react-icons/ri';
 import { SiCcleaner } from 'react-icons/si';
 import { Tooltip } from 'react-tooltip';
+import {
+  INFO_LABEL,
+  DELETE_LABEL,
+  CLEAN_UP_LABEL,
+  UPLOADED_TOOLTIP,
+  UPLOADING_TOOLTIP,
+  REMOVE_LOCAL_TOOLTIP,
+  UPLOAD_FAILED_TOOLTIP,
+  MAX_FOLDER_NAME_LENGTH,
+} from '../../constants';
 
 import { RecordedFolder } from '../../types/customTypes';
-import prettyDate from '../util/prettyDate';
+import { formatDateInYYYYMMDDHHMM } from '../util/timeFormat';
 
 type VideoCardProps = {
   video: RecordedFolder;
@@ -28,18 +38,17 @@ export default function VideoCard({
       {needsToBeUploaded && (
         <div className="absolute top-2 left-2 z-10">
           <div className="cursor-pointer">
-            {isSelected && (
-              <ImCheckboxChecked size={22} onClick={() => onSelect()} />
-            )}
-            {!isSelected && (
-              <ImCheckboxUnchecked size={22} onClick={() => onSelect()} />
+            {isSelected ? (
+              <ImCheckboxChecked size={22} onClick={onSelect} />
+            ) : (
+              <ImCheckboxUnchecked size={22} onClick={onSelect} />
             )}
           </div>
         </div>
       )}
       <div className="absolute top-2 right-2 z-10">
         <button type="button">
-          <span className="sr-only">info </span>
+          <span className="sr-only">{INFO_LABEL}</span>
           <GoInfo size={24} />
         </button>
       </div>
@@ -48,14 +57,11 @@ export default function VideoCard({
       </div>
       <div className="p-4 relative">
         <div className="mb-2">
-          {/**
-           * TODO: Remove static recording time.
-           */}
           <p className="text-gray-300 text-sm opacity-50">20:00</p>
           <div className="flex items-center">
             <h2 className="font-bold mr-2">
-              {video.folderName.length > 25
-                ? `${video.folderName.substring(0, 25)}...`
+              {video.folderName.length > MAX_FOLDER_NAME_LENGTH
+                ? `${video.folderName.substring(0, MAX_FOLDER_NAME_LENGTH)}...`
                 : video.folderName}
             </h2>
             {needsToBeUploaded && (
@@ -65,27 +71,27 @@ export default function VideoCard({
         </div>
         <div className="flex justify-between items-center">
           <p className="text-gray-300 text-xs opacity-70">
-            Recorded: {prettyDate(video.recordingStartedAt)}
+            Recorded: {formatDateInYYYYMMDDHHMM(video.recordingStartedAt)}
           </p>
           <div className="absolute right-2 top-2">
             {video.isUploaded && (
               <MdOutlineCloudSync
                 data-tooltip-id="video-tooltip"
-                data-tooltip-content="Uploaded"
+                data-tooltip-content={UPLOADED_TOOLTIP}
                 className="mr-2 text-3xl text-indigo-600"
               />
             )}
             {video.uploadingInProgress && (
               <GoSync
                 data-tooltip-id="video-tooltip"
-                data-tooltip-content="Uploading"
+                data-tooltip-content={UPLOADING_TOOLTIP}
                 className="mr-2 text-3xl text-indigo-600 animate-spin-slow-reverse"
               />
             )}
             {!video.isUploaded && video.uploadError && (
               <MdSyncProblem
                 data-tooltip-id="video-tooltip"
-                data-tooltip-content="Upload Failed"
+                data-tooltip-content={UPLOAD_FAILED_TOOLTIP}
                 className="mr-2 text-3xl text-red-900"
               />
             )}
@@ -104,7 +110,7 @@ export default function VideoCard({
                   type="button"
                   className="w-10 interactive-button bg-red-500 "
                 >
-                  <span className="sr-only">Delete </span>
+                  <span className="sr-only">{DELETE_LABEL}</span>
                   <RiDeleteBin2Fill />
                 </button>
               </>
@@ -113,10 +119,10 @@ export default function VideoCard({
               <button
                 type="button"
                 data-tooltip-id="video-tooltip"
-                data-tooltip-content="Remove from local"
+                data-tooltip-content={REMOVE_LOCAL_TOOLTIP}
                 className="w-14 text-2xl interactive-button bg-green-500"
               >
-                <span className="sr-only">Clean up </span>
+                <span className="sr-only">{CLEAN_UP_LABEL}</span>
                 <SiCcleaner />
               </button>
             )}

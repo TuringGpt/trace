@@ -1,3 +1,4 @@
+import { APP_TITLE, APP_SUBTITLE } from '../../constants';
 import icon from '../../../assets/icon.svg';
 
 export default function AppHeader() {
@@ -10,12 +11,10 @@ export default function AppHeader() {
           className="inline-block h-12 mt-16 mb-8 mr-2"
         />
         <h1 className="text-5xl mt-16 mb-8 font-sans inline-block font-bold text-center">
-          Trace
+          {APP_TITLE}
         </h1>
       </div>
-      <p className="text-center text-xl">
-        Screen Recorder with clicks and keystrokes
-      </p>
+      <p className="text-center text-xl"> {APP_SUBTITLE} </p>
     </>
   );
 }
