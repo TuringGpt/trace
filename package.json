@@ -73,7 +73,6 @@
   },
   "dependencies": {
     "@azure/storage-blob": "^12.17.0",
-    "@types/lodash": "^4.17.1",
     "archiver": "^7.0.1",
     "clsx": "^2.1.0",
     "dotenv": "^16.4.5",
@@ -95,6 +94,7 @@
     "zod": "^3.23.4"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.1",
     "@electron/notarize": "^2.1.0",
     "@electron/rebuild": "^3.3.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
