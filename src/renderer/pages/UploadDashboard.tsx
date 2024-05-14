@@ -28,6 +28,8 @@ export default function UploadDashboard() {
   const [videos, setVideos] = useState<RecordedFolder[]>([]); // State to store the video recordings
   const [uploadProgress, setUploadProgress] = useState<UploadStatusReport>({}); // State to store the upload progress
 
+  const [filteredVideos, setFilteredVideos] = useState<RecordedFolder[]>([]); // State to store the filtered videos
+
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [memoryUsage, setMemoryUsage] = useState(-1);
 
@@ -66,6 +68,16 @@ export default function UploadDashboard() {
       cleanUp();
     };
   }, []);
+
+  useEffect(() => {
+    if (filter === FILTER_ALL) {
+      setFilteredVideos(videos);
+    } else if (filter === FILTER_LOCAL) {
+      setFilteredVideos(videos.filter((video) => !video.isUploaded));
+    } else if (filter === FILTER_CLOUD) {
+      setFilteredVideos(videos.filter((video) => video.isUploaded));
+    }
+  }, [videos, filter]);
 
   const startUpload = async (overrideSelectVideo?: string) => {
     const itemsForUpload = overrideSelectVideo
@@ -198,7 +210,7 @@ export default function UploadDashboard() {
           height: 'calc(100vh - 400px)',
         }}
       >
-        {videos.map((video) => (
+        {filteredVideos.map((video) => (
           <VideoCard
             key={video.id}
             video={video}
