@@ -18,8 +18,9 @@ import {
   RecordedFolder,
   UploadStatusReport,
 } from '../../types/customTypes';
+import FilterButton from '../components/FilterButton';
 import ProgressBar from '../components/ProgressBar';
-import VideoCard from '../components/VideoCard';
+import VideoCardWrapper from '../components/VideoCardWrapper';
 import log from '../util/logger';
 import prettyBytes from '../util/prettyBytes';
 
@@ -163,77 +164,54 @@ export default function UploadDashboard() {
         <ProgressBar />
       </div>
       <div className="mb-4 flex justify-between items-center">
-        {
-          // Display the memory usage if available
-          memoryUsage !== -1 && (
-            <p className="text-indigo-600 font-semibold">
-              Using {prettyBytes(memoryUsage)} of Local Storage, upload to cloud
-              to free up space.
-            </p>
-          )
-        }
-
+        {memoryUsage !== -1 && (
+          <p className="text-indigo-600 font-semibold">
+            Using {prettyBytes(memoryUsage)} of Local Storage, upload to cloud
+            to free up space.
+          </p>
+        )}
         <div>
-          <button
-            type="button"
-            onClick={() => handleFilterChange(FILTER_ALL)}
-            className={`px-3 py-1 border-r-2 border-r-slate-400 hover:bg-indigo-500 ${filter === FILTER_ALL ? 'bg-indigo-600' : 'bg-gray-600'}`}
+          <FilterButton
+            filter={FILTER_ALL}
+            activeFilter={filter}
+            handleFilterChange={handleFilterChange}
           >
             All
-          </button>
-          <button
-            type="button"
-            onClick={() => handleFilterChange(FILTER_LOCAL)}
-            className={`px-3 py-1 border-r-2 border-r-slate-400 hover:bg-indigo-500 ${filter === FILTER_LOCAL ? 'bg-indigo-600' : 'bg-gray-600'}`}
+          </FilterButton>
+          <FilterButton
+            filter={FILTER_LOCAL}
+            activeFilter={filter}
+            handleFilterChange={handleFilterChange}
           >
             Local
-          </button>
-          <button
-            type="button"
-            onClick={() => handleFilterChange(FILTER_CLOUD)}
-            className={`px-3 py-1  hover:bg-indigo-500 ${filter === FILTER_CLOUD ? 'bg-indigo-600' : 'bg-gray-600'}`}
+          </FilterButton>
+          <FilterButton
+            filter={FILTER_CLOUD}
+            activeFilter={filter}
+            handleFilterChange={handleFilterChange}
           >
             Cloud
-          </button>
+          </FilterButton>
         </div>
       </div>
       <div
         className={`
-        grid grid-cols-fit-400 gap-4
-        overflow-auto
-        scrollbar-thumb-indigo-800/80
-        scrollbar-track-gray-700/25
+        grid grid-cols-fit-400 gap-4 overflow-auto
+        scrollbar-thumb-indigo-800/80 scrollbar-track-gray-700/25
         scrollbar-thumb-rounded-full
-        scrollbar-track-rounded-full
-        scrollbar-thin`}
+        scrollbar-track-rounded-full scrollbar-thin`}
         style={{
           height: 'calc(100vh - 400px)',
         }}
       >
         {filteredVideos.map((video) => (
-          <VideoCard
-            key={video.id}
+          <VideoCardWrapper
             video={video}
-            multiSelectInProgress={selectedVideos.size > 0}
-            uploadProgress={uploadProgress[video.id] || {}}
-            isSelected={selectedVideos.has(video.id) || false}
-            onUploadTrigger={() => {
-              onBeforeUpload(video.id);
-            }}
-            onDiscardTrigger={() => {
-              onBeforeDelete(video.id);
-            }}
-            onSelect={() => {
-              setSelectedVideos((prevState) => {
-                const newSelectedVideos = new Set(prevState);
-                if (newSelectedVideos.has(video.id)) {
-                  newSelectedVideos.delete(video.id);
-                } else {
-                  newSelectedVideos.add(video.id);
-                }
-                return newSelectedVideos;
-              });
-            }}
+            selectedVideos={selectedVideos}
+            uploadProgress={uploadProgress}
+            onBeforeUpload={onBeforeUpload}
+            onBeforeDelete={onBeforeDelete}
+            setSelectedVideos={setSelectedVideos}
           />
         ))}
       </div>
