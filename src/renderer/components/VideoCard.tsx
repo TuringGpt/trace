@@ -106,11 +106,7 @@ export default function VideoCard({
         <div className="absolute top-2 left-2">
           <div className="cursor-pointer">
             {isSelected ? (
-              <ImCheckboxChecked
-                className="text-indigo-600"
-                size={22}
-                onClick={onSelect}
-              />
+              <ImCheckboxChecked size={22} onClick={onSelect} />
             ) : (
               <ImCheckboxUnchecked size={22} onClick={onSelect} />
             )}
