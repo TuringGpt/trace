@@ -186,7 +186,14 @@ export default function UploadDashboard() {
         </div>
       </div>
       <div
-        className="grid grid-cols-fit-400 gap-4 overflow-auto"
+        className={`
+        grid grid-cols-fit-400 gap-4
+        overflow-auto
+        scrollbar-thumb-indigo-800/80
+        scrollbar-track-gray-700/25
+        scrollbar-thumb-rounded-full
+        scrollbar-track-rounded-full
+        scrollbar-thin`}
         style={{
           height: 'calc(100vh - 400px)',
         }}
@@ -219,8 +226,14 @@ export default function UploadDashboard() {
         ))}
       </div>
       {selectedVideos.size > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 bg-slate-300 p-4 flex items-center justify-between">
-          <div className="flex items-center text-black">
+        <div
+          className={`absolute bottom-0 left-1/2
+        transform -translate-x-1/2 w-9/12
+        bg-slate-900 p-4 flex items-center
+        border-2 border-gray-100
+        justify-between rounded-3xl`}
+        >
+          <div className="flex items-center text-white">
             <IoCloseSharp
               onClick={() => {
                 setSelectedVideos(new Set());
