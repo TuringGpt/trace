@@ -1,4 +1,5 @@
 const colors = require('tailwindcss/colors');
+const tailwindScrollbar = require('tailwind-scrollbar');
 
 module.exports = {
   content: ['./src/renderer/**/*.{js,jsx,ts,tsx,ejs}'],
@@ -27,5 +28,5 @@ module.exports = {
   variants: {
     extend: {},
   },
-  plugins: [],
+  plugins: [tailwindScrollbar({ nocompatible: true })],
 };

@@ -29,7 +29,7 @@ export default function Thumbnail({ videoId }: { videoId: string }) {
         <img
           src={`http://localhost:${videoServerPort}/thumbnails/${videoId}`}
           alt="Thumbnail"
-          className="object-cover w-full h-full"
+          className="object-fill w-full h-full"
           onError={() => {
             setError(true);
           }}
