@@ -57,6 +57,11 @@ export const UPLOAD_CANCELLATION_LOG = 'User cancelled the upload';
 export const FILTER_ALL = 'all';
 export const FILTER_LOCAL = 'local';
 export const FILTER_CLOUD = 'cloud';
+export const FREE_UP_ALL_TITLE = 'Free up space';
+export const FREE_UP_ALL_MESSAGE =
+  'Are you sure you want to delete all the recordings that are already uploaded?';
+export const FREE_UP_ALL_TOOLTIP =
+  'Delete all recording from your computer, that are already uploaded';
 
 // VideoRecorder constants
 export const INITIAL_CONSENT_TEXT =

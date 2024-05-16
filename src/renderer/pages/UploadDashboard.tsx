@@ -11,6 +11,9 @@ import {
   FILTER_ALL,
   FILTER_CLOUD,
   FILTER_LOCAL,
+  FREE_UP_ALL_MESSAGE,
+  FREE_UP_ALL_TITLE,
+  FREE_UP_ALL_TOOLTIP,
   FREE_UP_SPACE_LABEL,
   LOCAL_STORAGE_INFO,
   UPLOAD_CANCELLATION_LOG,
@@ -158,8 +161,8 @@ export default function UploadDashboard() {
 
   const handleFreeUpSpace = async () => {
     const res = await window.electron.showDialog(
-      'Free up space',
-      'Are you sure you want to delete all the recordings that are already uploaded?',
+      FREE_UP_ALL_TITLE,
+      FREE_UP_ALL_MESSAGE,
       {
         type: DialogType.Confirmation,
         buttons: ['Yes', 'No'],
@@ -222,7 +225,7 @@ export default function UploadDashboard() {
                   aria-label="freeup space"
                   onClick={handleFreeUpSpace}
                   className="focus:outline-none"
-                  data-tooltip-content="Delete all recording from your computer, that are already uploaded"
+                  data-tooltip-content={FREE_UP_ALL_TOOLTIP}
                   data-tooltip-id="video-dashboard-tooltip"
                 >
                   {FREE_UP_SPACE_LABEL}
