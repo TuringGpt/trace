@@ -140,6 +140,28 @@ app.on('window-all-closed', () => {
   }
 });
 
+app.setAsDefaultProtocolClient('trace');
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  if (url.startsWith('trace://auth')) {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+      const parsedUrl = new URL(url);
+      const token = parsedUrl.searchParams.get('token');
+      if (token) {
+        mainWindow.webContents.executeJavaScript(`localStorage.setItem('authToken', '${token}');`)
+          .then(() => {
+            console.log('OAuth token stored in local storage:', token);
+          })
+          .catch(err => {
+            console.error('Error storing token in local storage:', err);
+          });
+      }
+    }
+  }
+});
+
 app
   .whenReady()
   .then(() => {
