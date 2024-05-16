@@ -150,11 +150,12 @@ app.on('open-url', (event, url) => {
       const parsedUrl = new URL(url);
       const token = parsedUrl.searchParams.get('token');
       if (token) {
-        mainWindow.webContents.executeJavaScript(`localStorage.setItem('authToken', '${token}');`)
+        mainWindow.webContents
+          .executeJavaScript(`localStorage.setItem('authToken', '${token}');`)
           .then(() => {
             console.log('OAuth token stored in local storage:', token);
           })
-          .catch(err => {
+          .catch((err) => {
             console.error('Error storing token in local storage:', err);
           });
       }
