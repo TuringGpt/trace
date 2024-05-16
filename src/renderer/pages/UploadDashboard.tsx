@@ -1,8 +1,9 @@
 import { debounce } from 'lodash/fp';
 import { useEffect, useState } from 'react';
 import { FaCloudUploadAlt } from 'react-icons/fa';
+import { ImCheckboxChecked, ImCheckboxUnchecked } from 'react-icons/im';
 import { IoCloseSharp } from 'react-icons/io5';
-import { RiDeleteBin2Fill } from 'react-icons/ri';
+import { Tooltip } from 'react-tooltip';
 
 import {
   ConsentMessage,
@@ -10,6 +11,8 @@ import {
   FILTER_ALL,
   FILTER_CLOUD,
   FILTER_LOCAL,
+  FREE_UP_SPACE_LABEL,
+  LOCAL_STORAGE_INFO,
   UPLOAD_CANCELLATION_LOG,
   UPLOAD_FAILURE_LOG,
 } from '../../constants';
@@ -153,23 +156,82 @@ export default function UploadDashboard() {
     }
   };
 
+  const handleFreeUpSpace = async () => {
+    const res = await window.electron.showDialog(
+      'Free up space',
+      'Are you sure you want to delete all the recordings that are already uploaded?',
+      {
+        type: DialogType.Confirmation,
+        buttons: ['Yes', 'No'],
+      },
+    );
+    if (res.status === 'success' && res.data) {
+      const deleteRes = await window.electron.cleanUpFromLocal([], true);
+      if (deleteRes.status === 'success') {
+        log.info('Deleted all uploaded recordings');
+        setVideos(videos.filter((video) => !video.isUploaded));
+      } else {
+        log.error('Failed to delete uploaded recordings', deleteRes.error);
+      }
+    } else {
+      log.info('User cancelled the free up space');
+    }
+  };
+
+  const yetToBeUploadedVideos = videos.filter((video) => !video.isUploaded);
+
+  const uploadedFolderStillInLocal = videos.filter(
+    (video) => video.isUploaded && !video.isDeletedFromLocal,
+  );
+
+  const handleSelectAll = () => {
+    if (selectedVideos.size === videos.length) {
+      setSelectedVideos(new Set());
+    } else {
+      const allVideoIds = yetToBeUploadedVideos.map((video) => video.id);
+      setSelectedVideos(new Set(allVideoIds));
+    }
+  };
+
   // Update the filter state based on the selected filter
   const handleFilterChange = (newFilter: string) => {
     setFilter(newFilter);
   };
+
+  const clearSelectedVideos = () => {
+    setSelectedVideos(new Set());
+  };
+
   return (
     <div className="text-white p-6 relative">
+      <Tooltip id="video-dashboard-tooltip" />
       <div className="mb-4">
         <h1 className="text-2xl font-bold">Recorded Library</h1>
         <ProgressBar />
       </div>
       <div className="mb-4 flex justify-between items-center">
         {memoryUsage !== -1 && (
-          <p className="text-indigo-600 font-semibold">
-            Using {prettyBytes(memoryUsage)} of Local Storage, upload to cloud
-            to free up space.
-          </p>
+          <div className="flex flex-col">
+            <p className="text-indigo-600 font-semibold">
+              {prettyBytes(memoryUsage)} {LOCAL_STORAGE_INFO}
+            </p>
+            {uploadedFolderStillInLocal.length > 0 && (
+              <p className="text-gray-400 text-sm">
+                <button
+                  type="button"
+                  aria-label="freeup space"
+                  onClick={handleFreeUpSpace}
+                  className="focus:outline-none"
+                  data-tooltip-content="Delete all recording from your computer, that are already uploaded"
+                  data-tooltip-id="video-dashboard-tooltip"
+                >
+                  {FREE_UP_SPACE_LABEL}
+                </button>
+              </p>
+            )}
+          </div>
         )}
+
         <div>
           <FilterButton
             filter={FILTER_ALL}
@@ -218,21 +280,31 @@ export default function UploadDashboard() {
       {selectedVideos.size > 0 && (
         <div
           className={`absolute bottom-0 left-1/2
-        transform -translate-x-1/2 w-9/12
-        bg-slate-900 p-4 flex items-center
-        border-2 border-gray-100
-        justify-between rounded-3xl`}
+                      transform -translate-x-1/2 w-9/12
+                      bg-slate-900 p-4 flex items-center
+                      border-2 border-gray-100
+                      justify-between rounded-3xl`}
         >
-          <div className="flex items-center text-white">
-            <IoCloseSharp
-              onClick={() => {
-                setSelectedVideos(new Set());
-              }}
-              className="mr-2 cursor-pointer"
-            />
-            <span>{selectedVideos.size} recordings selected</span>
+          <div className="flex items-center gap-1">
+            {selectedVideos.size === yetToBeUploadedVideos.length ? (
+              <ImCheckboxChecked
+                className="cursor-pointer"
+                size={22}
+                onClick={clearSelectedVideos}
+              />
+            ) : (
+              <ImCheckboxUnchecked
+                className="cursor-pointer"
+                size={22}
+                onClick={handleSelectAll}
+              />
+            )}
+            <span className="ml-3">Select All</span>
           </div>
-          <div className="flex space-x-4">
+          <span className="text-white">
+            {selectedVideos.size} recordings selected
+          </span>
+          <div className="flex items-center space-x-4">
             <button
               type="button"
               onClick={() => onBeforeUpload()}
@@ -240,14 +312,11 @@ export default function UploadDashboard() {
             >
               <FaCloudUploadAlt className="mr-2" /> Upload
             </button>
-            <button
-              type="button"
-              onClick={() => onBeforeDelete()}
-              className="w-10 interactive-button bg-red-500"
-            >
-              <span className="sr-only">Delete </span>
-              <RiDeleteBin2Fill />
-            </button>
+
+            <IoCloseSharp
+              onClick={clearSelectedVideos}
+              className="cursor-pointer text-white"
+            />
           </div>
         </div>
       )}

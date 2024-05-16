@@ -137,7 +137,10 @@ export type IPCHandleEvents = {
     void
   >;
   'discard-recording': IPCHandler<[folderId: string], void>;
-  'clean-up-from-local': IPCHandler<[folderId: string], void>;
+  'clean-up-from-local': IPCHandler<
+    [folderId: string[], cleanUpAll?: boolean],
+    void
+  >;
   'discard-multiple-recordings': IPCHandler<[folderIds: string[]], void>;
   'save-thumbnail-and-duration': IPCHandler<
     [folderId: string, thumbnailDataUrl: string, duration: number],
