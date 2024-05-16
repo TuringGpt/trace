@@ -5,13 +5,11 @@ import { IoCloseSharp } from 'react-icons/io5';
 import { RiDeleteBin2Fill } from 'react-icons/ri';
 
 import {
-  ConsentMessage,
-  ConsentTitle,
+  CONSENT_MESSAGE,
+  CONSENT_TITLE,
   FILTER_ALL,
   FILTER_CLOUD,
   FILTER_LOCAL,
-  UPLOAD_CANCELLATION_LOG,
-  UPLOAD_FAILURE_LOG,
 } from '../../constants';
 import {
   DialogType,
@@ -91,7 +89,7 @@ export default function UploadDashboard() {
       });
       setSelectedVideos(new Set());
     } else {
-      log.error(UPLOAD_FAILURE_LOG, res.error);
+      log.error('Failed to start uploading the selected recordings', res.error);
     }
   };
 
@@ -100,17 +98,21 @@ export default function UploadDashboard() {
       ? [overrideSelectVideo]
       : Array.from(selectedVideos);
     log.info('Selected videos to upload', selectedVideoIds);
-    const res = await window.electron.showDialog(ConsentTitle, ConsentMessage, {
-      type: DialogType.Confirmation,
-      buttons: ['Agree', 'Abort'],
-    });
+    const res = await window.electron.showDialog(
+      CONSENT_TITLE,
+      CONSENT_MESSAGE,
+      {
+        type: DialogType.Confirmation,
+        buttons: ['Agree', 'Abort'],
+      },
+    );
     if (res.status === 'success' && res.data) {
       log.info('got concent to upload', {
         consentedVideos: selectedVideoIds,
       });
       startUpload(overrideSelectVideo);
     } else {
-      log.info(UPLOAD_CANCELLATION_LOG);
+      log.info('User cancelled the upload');
     }
   };
 
