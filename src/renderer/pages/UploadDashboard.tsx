@@ -18,8 +18,9 @@ import {
   RecordedFolder,
   UploadStatusReport,
 } from '../../types/customTypes';
+import FilterButton from '../components/FilterButton';
 import ProgressBar from '../components/ProgressBar';
-import VideoCard from '../components/VideoCard';
+import VideoCardWrapper from '../components/VideoCardWrapper';
 import log from '../util/logger';
 import prettyBytes from '../util/prettyBytes';
 
@@ -27,6 +28,8 @@ export default function UploadDashboard() {
   const [filter, setFilter] = useState('all'); // State to track the active filter
   const [videos, setVideos] = useState<RecordedFolder[]>([]); // State to store the video recordings
   const [uploadProgress, setUploadProgress] = useState<UploadStatusReport>({}); // State to store the upload progress
+
+  const [filteredVideos, setFilteredVideos] = useState<RecordedFolder[]>([]); // State to store the filtered videos
 
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [memoryUsage, setMemoryUsage] = useState(-1);
@@ -66,6 +69,16 @@ export default function UploadDashboard() {
       cleanUp();
     };
   }, []);
+
+  useEffect(() => {
+    if (filter === FILTER_ALL) {
+      setFilteredVideos(videos);
+    } else if (filter === FILTER_LOCAL) {
+      setFilteredVideos(videos.filter((video) => !video.isUploaded));
+    } else if (filter === FILTER_CLOUD) {
+      setFilteredVideos(videos.filter((video) => video.isUploaded));
+    }
+  }, [videos, filter]);
 
   const startUpload = async (overrideSelectVideo?: string) => {
     const itemsForUpload = overrideSelectVideo
@@ -151,76 +164,66 @@ export default function UploadDashboard() {
         <ProgressBar />
       </div>
       <div className="mb-4 flex justify-between items-center">
-        {
-          // Display the memory usage if available
-          memoryUsage !== -1 && (
-            <p className="text-indigo-600 font-semibold">
-              Using {prettyBytes(memoryUsage)} of Local Storage, upload to cloud
-              to free up space.
-            </p>
-          )
-        }
-
+        {memoryUsage !== -1 && (
+          <p className="text-indigo-600 font-semibold">
+            Using {prettyBytes(memoryUsage)} of Local Storage, upload to cloud
+            to free up space.
+          </p>
+        )}
         <div>
-          <button
-            type="button"
-            onClick={() => handleFilterChange(FILTER_ALL)}
-            className={`px-3 py-1 border-r-2 border-r-slate-400 hover:bg-indigo-500 ${filter === FILTER_ALL ? 'bg-indigo-600' : 'bg-gray-600'}`}
+          <FilterButton
+            filter={FILTER_ALL}
+            activeFilter={filter}
+            handleFilterChange={handleFilterChange}
           >
             All
-          </button>
-          <button
-            type="button"
-            onClick={() => handleFilterChange(FILTER_LOCAL)}
-            className={`px-3 py-1 border-r-2 border-r-slate-400 hover:bg-indigo-500 ${filter === FILTER_LOCAL ? 'bg-indigo-600' : 'bg-gray-600'}`}
+          </FilterButton>
+          <FilterButton
+            filter={FILTER_LOCAL}
+            activeFilter={filter}
+            handleFilterChange={handleFilterChange}
           >
             Local
-          </button>
-          <button
-            type="button"
-            onClick={() => handleFilterChange(FILTER_CLOUD)}
-            className={`px-3 py-1  hover:bg-indigo-500 ${filter === FILTER_CLOUD ? 'bg-indigo-600' : 'bg-gray-600'}`}
+          </FilterButton>
+          <FilterButton
+            filter={FILTER_CLOUD}
+            activeFilter={filter}
+            handleFilterChange={handleFilterChange}
           >
             Cloud
-          </button>
+          </FilterButton>
         </div>
       </div>
       <div
-        className="grid grid-cols-fit-400 gap-4 overflow-auto"
+        className={`
+        grid grid-cols-fit-400 gap-4 overflow-auto
+        scrollbar-thumb-indigo-800/80 scrollbar-track-gray-700/25
+        scrollbar-thumb-rounded-full
+        scrollbar-track-rounded-full scrollbar-thin`}
         style={{
           height: 'calc(100vh - 400px)',
         }}
       >
-        {videos.map((video) => (
-          <VideoCard
-            key={video.id}
+        {filteredVideos.map((video) => (
+          <VideoCardWrapper
             video={video}
-            multiSelectInProgress={selectedVideos.size > 0}
-            uploadProgress={uploadProgress[video.id] || {}}
-            isSelected={selectedVideos.has(video.id) || false}
-            onUploadTrigger={() => {
-              onBeforeUpload(video.id);
-            }}
-            onDiscardTrigger={() => {
-              onBeforeDelete(video.id);
-            }}
-            onSelect={() => {
-              setSelectedVideos((prevState) => {
-                const newSelectedVideos = new Set(prevState);
-                if (newSelectedVideos.has(video.id)) {
-                  newSelectedVideos.delete(video.id);
-                } else {
-                  newSelectedVideos.add(video.id);
-                }
-                return newSelectedVideos;
-              });
-            }}
+            selectedVideos={selectedVideos}
+            uploadProgress={uploadProgress}
+            onBeforeUpload={onBeforeUpload}
+            onBeforeDelete={onBeforeDelete}
+            setSelectedVideos={setSelectedVideos}
           />
         ))}
       </div>
       {selectedVideos.size > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 bg-slate-300 p-4 flex items-center justify-between">
-          <div className="flex items-center text-black">
+        <div
+          className={`absolute bottom-0 left-1/2
+        transform -translate-x-1/2 w-9/12
+        bg-slate-900 p-4 flex items-center
+        border-2 border-gray-100
+        justify-between rounded-3xl`}
+        >
+          <div className="flex items-center text-white">
             <IoCloseSharp
               onClick={() => {
                 setSelectedVideos(new Set());
