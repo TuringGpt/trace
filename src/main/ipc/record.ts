@@ -3,6 +3,7 @@ import { readFile, rmdir, stat, unlink } from 'fs/promises';
 
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
+import fileExists from '../util/fileExists';
 import getDeviceMetadata from '../util/getMetaData';
 import keylogger from '../util/keylogger';
 import logger from '../util/logger';
@@ -222,28 +223,79 @@ ipcHandle('get-recording-resolution', async (event, folderId) => {
     return ipc.error('Failed to get recording resolution', err);
   }
 });
+const getFoldersForDeletion = async (
+  folderIds: string[],
+  cleanUpAll?: boolean,
+) => {
+  if (cleanUpAll) {
+    const db = await storage.getData({ forceReload: true });
+    return db.recordingFolders
+      .filter((folder) => folder.isUploaded && !folder.isDeletedFromLocal)
+      .map((folder) => folder.id);
+  }
+  return folderIds;
+};
 
-ipcHandle('clean-up-from-local', async (event, folderId) => {
-  try {
-    const db = await storage.getData();
-    const folder = db.recordingFolders.find((f) => f.id === folderId);
-    if (!folder) {
-      log.error('Folder not found', { folderId });
-    } else {
+const updateFoldersInStorage = async (folderIdsForDeletion: string[]) => {
+  const db = await storage.getData();
+  const folders = db.recordingFolders.filter((f) =>
+    folderIdsForDeletion.includes(f.id),
+  );
+
+  if (folders.length === 0) {
+    log.error('Clean Up From local, Folders not found in application storage', {
+      folderIds: folderIdsForDeletion,
+    });
+    log.error('Will continue to delete the folders from the disk');
+  } else {
+    folders.forEach((folder) => {
       folder.isDeletedFromLocal = true;
-      await storage.save(db);
-    }
+    });
+    await storage.save(db);
+  }
+};
 
-    // Delete the folder on disk
-    const folderPath = `${getVideoStoragePath()}/${folderId}`;
-    // Check if the folder is already deleted from local
-    if (!fs.existsSync(folderPath)) {
-      log.info('Folder already deleted from local', { folderId });
-      return ipc.success(undefined);
-    }
+const deleteFoldersOnDisk = async (folderIdsForDeletion: string[]) => {
+  const deletePromises = folderIdsForDeletion.map(async (folderId) => {
+    try {
+      const folderPath = `${getVideoStoragePath()}/${folderId}`;
+      const isAvailableInLocal = await fileExists(folderPath);
+      if (!isAvailableInLocal) {
+        log.info('Folder already deleted from local', { folderId });
+        return;
+      }
 
-    await rmdir(folderPath, { recursive: true });
-    UploadManager.getInstance().updateOnDiscardComplete(folderId);
+      await rmdir(folderPath, { recursive: true });
+      UploadManager.getInstance().updateOnDiscardComplete(folderId);
+    } catch (err) {
+      log.error(`Failed to delete folder ${folderId}`, { err });
+      throw err;
+    }
+  });
+
+  const results = await Promise.allSettled(deletePromises);
+
+  results.forEach((result, index) => {
+    if (result.status !== 'fulfilled') {
+      log.error(`Failed to delete folder ${folderIdsForDeletion[index]}`, {
+        error: result.reason,
+      });
+    }
+  });
+};
+/**
+ * Either send the folderIds to clean up from local or clean up all
+ * clean up all will clean up all the folders that are marked as isUploaded
+ */
+
+ipcHandle('clean-up-from-local', async (event, folderIds, cleanUpAll) => {
+  try {
+    const folderIdsForDeletion = await getFoldersForDeletion(
+      folderIds,
+      cleanUpAll,
+    );
+    await updateFoldersInStorage(folderIdsForDeletion);
+    await deleteFoldersOnDisk(folderIdsForDeletion);
     return ipc.success(undefined);
   } catch (err) {
     log.error('Failed to clean up from local', { err });

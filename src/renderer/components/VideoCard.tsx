@@ -82,7 +82,7 @@ export default function VideoCard({
       },
     );
     if (res.status === 'success' && res.data) {
-      const deleteRes = await window.electron.cleanUpFromLocal(video.id);
+      const deleteRes = await window.electron.cleanUpFromLocal([video.id]);
       if (deleteRes.status === 'success') {
         log.info('Recording deleted successfully', {
           recordingId: video.id,
@@ -117,9 +117,6 @@ export default function VideoCard({
       <Thumbnail videoId={video.id} />
       <div className="p-4 relative">
         <div className="mb-2">
-          {/**
-           * TODO: Remove static recording time.
-           */}
           <p className="text-gray-300 text-sm opacity-50">
             {prettyDuration(video.recordingDuration)}
           </p>
