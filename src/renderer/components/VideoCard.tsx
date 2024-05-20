@@ -99,7 +99,7 @@ export default function VideoCard({
   return (
     <div
       data-video-id={video.id}
-      className="relative border border-gray-500 rounded-lg max-w-[400px]"
+      className="relative border border-gray-500 rounded-lg w-[380px] max-h-[340px]"
     >
       <Tooltip id="video-tooltip" />
       {needsToBeUploaded && (
@@ -171,20 +171,20 @@ export default function VideoCard({
             )}
           </div>
 
-          <div className="flex space-x-4">
+          <div className="flex space-x-2">
             {needsToBeUploaded && !multiSelectInProgress && (
               <>
                 <button
                   type="button"
                   onClick={() => onUploadTrigger()}
-                  className="interactive-button bg-indigo-600 w-24"
+                  className="interactive-button bg-indigo-600 w-22"
                 >
                   <FaCloudUploadAlt className="mr-2" /> Upload
                 </button>
                 <button
                   type="button"
                   onClick={() => onDiscardTrigger()}
-                  className="w-10 interactive-button bg-red-500 "
+                  className="w-8 interactive-button bg-red-500 "
                 >
                   <span className="sr-only">{DELETE_LABEL}</span>
                   <RiDeleteBin2Fill />
