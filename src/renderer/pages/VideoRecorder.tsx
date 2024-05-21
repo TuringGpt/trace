@@ -5,11 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import {
   CHOOSE_VIDEO_SOURCE_TEXT,
-  ERROR_VIDEO_SAVING_LOG,
   INITIAL_CONSENT_TEXT,
-  NO_STREAM_FOUND_LOG,
-  RECORDING_STARTED_LOG,
-  RECORDING_STOPPED_LOG,
   ROUTE_VIDEO,
   SELECT_SOURCE_TEXT,
   VIDEO_CONVERSION_INDICATOR,
@@ -99,11 +95,11 @@ export default function VideoRecorder() {
       return;
     }
     setIsRecording(true);
-    log.info(RECORDING_STARTED_LOG);
+    log.info('Recording started');
     const videoElement = videoRef.current;
     const stream = videoElement?.srcObject as MediaStream;
     if (!stream) {
-      log.error(NO_STREAM_FOUND_LOG);
+      log.error('No stream found');
       return;
     }
     const options = {
@@ -121,7 +117,7 @@ export default function VideoRecorder() {
     };
 
     recorder.onstop = async () => {
-      log.info(RECORDING_STOPPED_LOG, chunks.length);
+      log.info('Recording stopped', chunks.length);
       dispatch(showBusyIndicator(VIDEO_CONVERSION_INDICATOR));
       const blob = new Blob(chunks, { type: 'video/webm; codecs=H264' });
       const arrayBuffer = await blob.arrayBuffer();
@@ -130,7 +126,7 @@ export default function VideoRecorder() {
       );
       setIsRecording(false);
       if (res.status === 'error') {
-        log.error(ERROR_VIDEO_SAVING_LOG, {
+        log.error('Error during video saving', {
           remuxRes: res,
         });
         return;
@@ -146,7 +142,7 @@ export default function VideoRecorder() {
   };
 
   const onStopRecording = () => {
-    log.info(RECORDING_STOPPED_LOG, mediaRecorder?.state);
+    log.info('Recording stopped', mediaRecorder?.state);
     if (mediaRecorder?.state === 'recording') {
       mediaRecorder.stop();
       setMediaRecorder(null);

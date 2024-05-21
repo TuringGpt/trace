@@ -8,10 +8,10 @@ import { Tooltip } from 'react-tooltip';
 import {
   ABORT_POPUP_BUTTON,
   AGREE_POPUP_BUTTON,
-  ConsentMessage,
-  ConsentTitle,
   DELETE_RECORDING_POPUP_TITLE,
   DELETE_RECORDING_POPUT_MESSAGE,
+  CONSENT_MESSAGE,
+  CONSENT_TITLE,
   FILTER_ALL,
   FILTER_CLOUD,
   FILTER_LOCAL,
@@ -21,8 +21,6 @@ import {
   FREE_UP_SPACE_LABEL,
   LOCAL_STORAGE_INFO,
   NO_POPUP_BUTTON,
-  UPLOAD_CANCELLATION_LOG,
-  UPLOAD_FAILURE_LOG,
   YES_POPUP_BUTTON,
 } from '../../constants';
 import {
@@ -106,7 +104,7 @@ export default function UploadDashboard() {
       });
       setSelectedVideos(new Set());
     } else {
-      log.error(UPLOAD_FAILURE_LOG, res.error);
+      log.error('Failed to start uploading the selected recordings', res.error);
     }
   };
 
@@ -115,7 +113,7 @@ export default function UploadDashboard() {
       ? [overrideSelectVideo]
       : Array.from(selectedVideos);
     log.info('Selected videos to upload', selectedVideoIds);
-    const res = await showDialog(ConsentTitle, ConsentMessage, {
+    const res = await showDialog(CONSENT_TITLE, CONSENT_MESSAGE, {
       type: DialogType.Confirmation,
       buttons: [AGREE_POPUP_BUTTON, ABORT_POPUP_BUTTON],
     });
@@ -125,7 +123,7 @@ export default function UploadDashboard() {
       });
       startUpload(overrideSelectVideo);
     } else {
-      log.info(UPLOAD_CANCELLATION_LOG);
+      log.info('User cancelled the upload');
     }
   };
 
