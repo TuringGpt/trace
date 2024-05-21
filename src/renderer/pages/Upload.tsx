@@ -11,7 +11,14 @@ import {
   SELECT_FILE_ERROR,
   INVALID_FILE_TYPE_ERROR,
   UPLOAD_FAILURE_ERROR,
+  OK_POPUP_BUTTON,
+  ERROR_POPUP_TITLE,
+  AGREE_POPUP_BUTTON,
+  ABORT_POPUP_BUTTON,
+  INFO_POPUP_TITLE,
 } from '../../constants';
+
+import { useDialog } from '../hooks/useDialog';
 
 function FileUploadSuccess() {
   const navigate = useNavigate();
@@ -55,14 +62,23 @@ export default function Upload() {
   const [isUploadSuccess, setIsUploadSuccess] = useState(false);
   const navigate = useNavigate();
   const { dispatch } = useAppState();
-  const onInputFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+
+  const { showDialog } = useDialog();
+
+  const onInputFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) {
-      window.electron.showDialog('error', SELECT_FILE_ERROR);
+      await showDialog(ERROR_POPUP_TITLE, SELECT_FILE_ERROR, {
+        type: DialogType.Error,
+        buttons: [OK_POPUP_BUTTON],
+      });
       return;
     }
     if (selectedFile.type !== 'application/zip') {
-      window.electron.showDialog('error', INVALID_FILE_TYPE_ERROR);
+      await showDialog(ERROR_POPUP_TITLE, INVALID_FILE_TYPE_ERROR, {
+        type: DialogType.Error,
+        buttons: [OK_POPUP_BUTTON],
+      });
       return;
     }
 
@@ -73,15 +89,11 @@ export default function Upload() {
   };
 
   const onStartUploadClick = async () => {
-    const consent = await window.electron.showDialog(
-      'info',
-      UPLOAD_CONSENT_MESSAGE,
-      {
-        type: DialogType.Confirmation,
-        buttons: ['Agree', 'Abort'],
-      },
-    );
-    if (!consent?.data) return;
+    const consent = await showDialog(INFO_POPUP_TITLE, UPLOAD_CONSENT_MESSAGE, {
+      type: DialogType.Confirmation,
+      buttons: [AGREE_POPUP_BUTTON, ABORT_POPUP_BUTTON],
+    });
+    if (!consent.success) return;
 
     dispatch(showBusyIndicator('Uploading files...'));
     const response = await window.electron.uploadFiles(
@@ -92,7 +104,10 @@ export default function Upload() {
       dispatch(hideBusyIndicator());
       setIsUploadSuccess(true);
     } else {
-      window.electron.showDialog('error', UPLOAD_FAILURE_ERROR);
+      await showDialog(ERROR_POPUP_TITLE, UPLOAD_FAILURE_ERROR, {
+        type: DialogType.Error,
+        buttons: [OK_POPUP_BUTTON],
+      });
       dispatch(hideBusyIndicator());
     }
   };

@@ -6,8 +6,12 @@ import { IoCloseSharp } from 'react-icons/io5';
 import { Tooltip } from 'react-tooltip';
 
 import {
+  ABORT_POPUP_BUTTON,
+  AGREE_POPUP_BUTTON,
   ConsentMessage,
   ConsentTitle,
+  DELETE_RECORDING_POPUP_TITLE,
+  DELETE_RECORDING_POPUT_MESSAGE,
   FILTER_ALL,
   FILTER_CLOUD,
   FILTER_LOCAL,
@@ -16,8 +20,10 @@ import {
   FREE_UP_ALL_TOOLTIP,
   FREE_UP_SPACE_LABEL,
   LOCAL_STORAGE_INFO,
+  NO_POPUP_BUTTON,
   UPLOAD_CANCELLATION_LOG,
   UPLOAD_FAILURE_LOG,
+  YES_POPUP_BUTTON,
 } from '../../constants';
 import {
   DialogType,
@@ -29,6 +35,7 @@ import ProgressBar from '../components/ProgressBar';
 import VideoCardWrapper from '../components/VideoCardWrapper';
 import log from '../util/logger';
 import prettyBytes from '../util/prettyBytes';
+import { useDialog } from '../hooks/useDialog';
 
 export default function UploadDashboard() {
   const [filter, setFilter] = useState('all'); // State to track the active filter
@@ -39,6 +46,8 @@ export default function UploadDashboard() {
 
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [memoryUsage, setMemoryUsage] = useState(-1);
+
+  const { showDialog } = useDialog();
 
   const fetchMemoryUsage = async () => {
     const usage = await window.electron.getRecordingMemoryUsage();
@@ -106,12 +115,12 @@ export default function UploadDashboard() {
       ? [overrideSelectVideo]
       : Array.from(selectedVideos);
     log.info('Selected videos to upload', selectedVideoIds);
-    const res = await window.electron.showDialog(ConsentTitle, ConsentMessage, {
+    const res = await showDialog(ConsentTitle, ConsentMessage, {
       type: DialogType.Confirmation,
-      buttons: ['Agree', 'Abort'],
+      buttons: [AGREE_POPUP_BUTTON, ABORT_POPUP_BUTTON],
     });
-    if (res.status === 'success' && res.data) {
-      log.info('got concent to upload', {
+    if (res.success) {
+      log.info('got consent to upload', {
         consentedVideos: selectedVideoIds,
       });
       startUpload(overrideSelectVideo);
@@ -140,17 +149,17 @@ export default function UploadDashboard() {
       ? [overrideSelectVideo]
       : Array.from(selectedVideos);
     log.info('Selected videos to delete', selectedVideoIds);
-    const res = await window.electron.showDialog(
-      'Delete Recording',
-      'Are you sure you want to delete the selected recordings?',
+    const res = await showDialog(
+      DELETE_RECORDING_POPUP_TITLE,
+      DELETE_RECORDING_POPUT_MESSAGE,
       {
         type: DialogType.Confirmation,
-        buttons: ['Yes', 'No'],
+        buttons: [YES_POPUP_BUTTON, NO_POPUP_BUTTON],
       },
     );
-    if (res.status === 'success' && res.data) {
+    if (res.success) {
       // Delete the selected videos
-      log.info('got concent to delete', {
+      log.info('got consent to delete', {
         consentedVideos: selectedVideoIds,
       });
       startDelete(overrideSelectVideo);
@@ -160,15 +169,13 @@ export default function UploadDashboard() {
   };
 
   const handleFreeUpSpace = async () => {
-    const res = await window.electron.showDialog(
-      FREE_UP_ALL_TITLE,
-      FREE_UP_ALL_MESSAGE,
-      {
-        type: DialogType.Confirmation,
-        buttons: ['Yes', 'No'],
-      },
-    );
-    if (res.status === 'success' && res.data) {
+    const res = await showDialog(FREE_UP_ALL_TITLE, FREE_UP_ALL_MESSAGE, {
+      type: DialogType.Confirmation,
+      buttons: [YES_POPUP_BUTTON, NO_POPUP_BUTTON],
+      useNative: true,
+    });
+
+    if (res.success) {
       const deleteRes = await window.electron.cleanUpFromLocal([], true);
       if (deleteRes.status === 'success') {
         log.info('Deleted all uploaded recordings');

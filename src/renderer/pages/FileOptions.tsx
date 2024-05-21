@@ -5,10 +5,15 @@ import {
   MIN_DESCRIPTION_LENGTH_ERROR,
   RENAME_FOLDER_ERROR,
   DISCARD_RECORDING_ERROR,
+  ERROR_POPUP_TITLE,
+  OK_POPUP_BUTTON,
+  VIDEO_RETRIEVE_ERROR_POPUP_MESSAGE,
 } from '../../constants';
 
 import useAppState from '../store/hook';
 import log from '../util/logger';
+import { useDialog } from '../hooks/useDialog';
+import { DialogType } from '../../types/customTypes';
 
 export default function FileOptions() {
   const { state } = useAppState();
@@ -23,14 +28,19 @@ export default function FileOptions() {
     height: 500,
   });
   const [error, setError] = useState({ folderName: '', description: '' });
+  const { showDialog } = useDialog();
 
   useEffect(() => {
     const fetchVideoServerPort = async () => {
       const portRes = await window.electron.getVideoStreamingPort();
       if (portRes.status === 'error') {
-        window.electron.showDialog(
-          'error',
-          'Failed to retrieve video from storage',
+        await showDialog(
+          ERROR_POPUP_TITLE,
+          VIDEO_RETRIEVE_ERROR_POPUP_MESSAGE,
+          {
+            type: DialogType.Error,
+            buttons: [OK_POPUP_BUTTON],
+          },
         );
         return;
       }
@@ -38,7 +48,7 @@ export default function FileOptions() {
       setVideoServerPort(portRes.data);
     };
     fetchVideoServerPort();
-  }, []);
+  }, [showDialog]);
   useEffect(() => {
     const fetchRecordingResolution = async () => {
       const res = await window.electron.getRecordingResolution(recordingName);
@@ -128,14 +138,20 @@ export default function FileOptions() {
     if (res.status === 'success') {
       navigate('/');
     } else {
-      window.electron.showDialog('error', RENAME_FOLDER_ERROR);
+      await showDialog(ERROR_POPUP_TITLE, RENAME_FOLDER_ERROR, {
+        type: DialogType.Error,
+        buttons: [OK_POPUP_BUTTON],
+      });
     }
   };
 
   const onDiscard = async () => {
     const res = await window.electron.discardRecording(recordingName);
     if (res.status === 'error') {
-      window.electron.showDialog('error', DISCARD_RECORDING_ERROR);
+      await showDialog(ERROR_POPUP_TITLE, DISCARD_RECORDING_ERROR, {
+        type: DialogType.Error,
+        buttons: [OK_POPUP_BUTTON],
+      });
       return;
     }
     navigate('/');
