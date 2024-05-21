@@ -261,7 +261,7 @@ export default function UploadDashboard() {
       </div>
       <div
         className={`
-        flex flex-wrap overflow-auto gap-6 ml-5
+        flex flex-wrap overflow-auto gap-6 justify-evenly
       scrollbar-thumb-indigo-800/80 scrollbar-track-gray-700/25
         scrollbar-thumb-rounded-full
         scrollbar-track-rounded-full scrollbar-thin
