@@ -263,10 +263,11 @@ export default function UploadDashboard() {
       </div>
       <div
         className={`
-        grid grid-cols-fit-400 gap-4 overflow-auto
-        scrollbar-thumb-indigo-800/80 scrollbar-track-gray-700/25
+        flex flex-wrap overflow-auto gap-6 justify-evenly
+      scrollbar-thumb-indigo-800/80 scrollbar-track-gray-700/25
         scrollbar-thumb-rounded-full
-        scrollbar-track-rounded-full scrollbar-thin`}
+        scrollbar-track-rounded-full scrollbar-thin
+        `}
         style={{
           height: 'calc(100vh - 400px)',
         }}
@@ -274,6 +275,7 @@ export default function UploadDashboard() {
         {filteredVideos.map((video) => (
           <VideoCardWrapper
             video={video}
+            key={video.id}
             selectedVideos={selectedVideos}
             uploadProgress={uploadProgress}
             onBeforeUpload={onBeforeUpload}
