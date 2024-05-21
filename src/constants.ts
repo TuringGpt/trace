@@ -46,9 +46,22 @@ export const INVALID_FILE_TYPE_ERROR = 'Please select a zip file';
 export const UPLOAD_FAILURE_ERROR = 'Failed to upload the file';
 
 // UploadDashboard page constants
+
+export const ConsentTitle = 'Consent Required';
+export const LOCAL_STORAGE_INFO = 'used, upload to free up space.';
+export const FREE_UP_SPACE_LABEL = 'Click to free up space';
+export const UPLOAD_SUCCESS_LOG = 'Started uploading the selected recordings';
+export const UPLOAD_FAILURE_LOG =
+  'Failed to start uploading the selected recordings';
+export const UPLOAD_CANCELLATION_LOG = 'User cancelled the upload';
 export const FILTER_ALL = 'all';
 export const FILTER_LOCAL = 'local';
 export const FILTER_CLOUD = 'cloud';
+export const FREE_UP_ALL_TITLE = 'Free up space';
+export const FREE_UP_ALL_MESSAGE =
+  'Are you sure you want to delete all the recordings that are already uploaded?';
+export const FREE_UP_ALL_TOOLTIP =
+  'Delete all recording from your computer, that are already uploaded';
 
 // VideoRecorder constants
 export const INITIAL_CONSENT_TEXT =

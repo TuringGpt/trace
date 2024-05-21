@@ -1,5 +1,6 @@
 import { app, dialog } from 'electron';
 import fs from 'fs';
+import { readFile } from 'fs/promises';
 import path from 'path';
 import lockFile, { lock, LockOptions } from 'proper-lockfile';
 import { ZodError } from 'zod';
@@ -70,7 +71,7 @@ class DB {
     return this.withLock(async (): Promise<void> => {
       try {
         log.info('Loading data from file');
-        const data = fs.readFileSync(this.filePath, 'utf8');
+        const data = await readFile(this.filePath, 'utf8');
         this.data = StorageApplicationStateSchema.parse(JSON.parse(data));
       } catch (err) {
         if (err instanceof ZodError) {
