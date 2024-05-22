@@ -9,13 +9,17 @@ import { Tooltip } from 'react-tooltip';
 
 import {
   CLEAN_UP_LABEL,
+  CLEANUP_POPUP_MESSAGE,
+  CLEANUP_POPUP_TITLE,
   DELETE_LABEL,
   IN_QUEUE_TOOLTIP,
   MAX_FOLDER_NAME_LENGTH,
+  NO_POPUP_BUTTON,
   REMOVE_LOCAL_TOOLTIP,
   UPLOAD_FAILED_TOOLTIP,
   UPLOADED_TOOLTIP,
   UPLOADING_TOOLTIP,
+  YES_POPUP_BUTTON,
 } from '../../constants';
 import {
   DialogType,
@@ -28,6 +32,7 @@ import prettyBytes from '../util/prettyBytes';
 import prettyDuration from '../util/prettyDuration';
 import { formatDateInYYYYMMDDHHMM } from '../util/timeFormat';
 import Thumbnail from './Thumbnail';
+import { useDialog } from '../hooks/useDialog';
 
 type VideoCardProps = {
   video: RecordedFolder;
@@ -72,16 +77,14 @@ export default function VideoCard({
     !isVideoUploaded(uploadProgress) &&
     !video.isUploaded;
 
+  const { showDialog } = useDialog();
+
   const onCleanUp = async () => {
-    const res = await window.electron.showDialog(
-      'Clean up',
-      'Are you sure you want to delete this from your local?',
-      {
-        type: DialogType.Confirmation,
-        buttons: ['Yes', 'No'],
-      },
-    );
-    if (res.status === 'success' && res.data) {
+    const res = await showDialog(CLEANUP_POPUP_TITLE, CLEANUP_POPUP_MESSAGE, {
+      type: DialogType.Confirmation,
+      buttons: [YES_POPUP_BUTTON, NO_POPUP_BUTTON],
+    });
+    if (res.success) {
       const deleteRes = await window.electron.cleanUpFromLocal([video.id]);
       if (deleteRes.status === 'success') {
         log.info('Recording deleted successfully', {

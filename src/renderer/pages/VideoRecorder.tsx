@@ -9,6 +9,9 @@ import {
   ROUTE_VIDEO,
   SELECT_SOURCE_TEXT,
   VIDEO_CONVERSION_INDICATOR,
+  INFO_POPUP_TITLE,
+  AGREE_POPUP_BUTTON,
+  ABORT_POPUP_BUTTON,
 } from '../../constants';
 import { CapturedSource, DialogType } from '../../types/customTypes';
 import {
@@ -19,6 +22,8 @@ import {
 import useAppState from '../store/hook';
 import log from '../util/logger';
 import { formatTimeInHHMMSS } from '../util/timeFormat';
+
+import { useDialog } from '../hooks/useDialog';
 
 export default function VideoRecorder() {
   const [source, setSource] = useState<CapturedSource | null>(null);
@@ -33,6 +38,8 @@ export default function VideoRecorder() {
   );
   const { dispatch } = useAppState();
   const navigate = useNavigate();
+
+  const { showDialog } = useDialog();
 
   useEffect(() => {
     const cleanup = window.electron.onSelectVideoSource((selectedSource) => {
@@ -80,15 +87,11 @@ export default function VideoRecorder() {
   }, [isRecording]);
 
   const onStartRecording = async () => {
-    const consent = await window.electron.showDialog(
-      'info',
-      INITIAL_CONSENT_TEXT,
-      {
-        type: DialogType.Confirmation,
-        buttons: ['Agree', 'Abort'],
-      },
-    );
-    if (consent.status === 'success' && !consent.data) {
+    const consent = await showDialog(INFO_POPUP_TITLE, INITIAL_CONSENT_TEXT, {
+      type: DialogType.Confirmation,
+      buttons: [AGREE_POPUP_BUTTON, ABORT_POPUP_BUTTON],
+    });
+    if (!consent.success) {
       return;
     }
     setIsRecording(true);

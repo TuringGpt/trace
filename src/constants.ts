@@ -47,13 +47,8 @@ export const UPLOAD_FAILURE_ERROR = 'Failed to upload the file';
 
 // UploadDashboard page constants
 
-export const ConsentTitle = 'Consent Required';
 export const LOCAL_STORAGE_INFO = 'used, upload to free up space.';
 export const FREE_UP_SPACE_LABEL = 'Click to free up space';
-export const UPLOAD_SUCCESS_LOG = 'Started uploading the selected recordings';
-export const UPLOAD_FAILURE_LOG =
-  'Failed to start uploading the selected recordings';
-export const UPLOAD_CANCELLATION_LOG = 'User cancelled the upload';
 export const FILTER_ALL = 'all';
 export const FILTER_LOCAL = 'local';
 export const FILTER_CLOUD = 'cloud';
@@ -74,3 +69,21 @@ export const SELECT_SOURCE_TEXT = 'Please select a source to proceed.';
 export const ROUTE_VIDEO = '/save-video';
 export const ROUTE_UPLOAD = '/upload';
 export const ROUTE_UPLOAD_DASHBOARD = '/upload-dashboard';
+
+// useDialog constants
+
+export const AGREE_POPUP_BUTTON = 'Agree';
+export const ABORT_POPUP_BUTTON = 'Abort';
+export const OK_POPUP_BUTTON = 'Ok';
+export const YES_POPUP_BUTTON = 'Yes';
+export const NO_POPUP_BUTTON = 'No';
+export const INFO_POPUP_TITLE = 'Info';
+export const ERROR_POPUP_TITLE = 'Error';
+export const VIDEO_RETRIEVE_ERROR_POPUP_MESSAGE =
+  'Failed to retrieve video from storage';
+export const CLEANUP_POPUP_TITLE = 'Clean up';
+export const CLEANUP_POPUP_MESSAGE =
+  'Are you sure you want to delete this from your local?';
+export const DELETE_RECORDING_POPUP_TITLE = 'Delete Recording';
+export const DELETE_RECORDING_POPUT_MESSAGE =
+  'Are you sure you want to delete the selected recordings?';
