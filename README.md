@@ -110,7 +110,15 @@ To run an analysis of the bundle size:
 ANALYZE=true npm run build
 ```
 
-## Contributing
+## CI/CD
+
+Trace includes a CI pipeline for Dockerized testing as well as testing on each of the three platforms: windows, ubuntu, macOS
+
+### WDIO
+
+For platform testing automation, we are using [WDIO](https://webdriver.io/)
+
+# Contributing
 
 Contributions to Trace are always welcome! If you would like to contribute, please fork the repository and submit a pull request, or open an issue with your ideas and suggestions.
 
