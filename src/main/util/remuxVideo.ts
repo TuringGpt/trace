@@ -37,8 +37,7 @@ export default function remuxVideo(inputPath: string, outputPath: string) {
       .noAudio()
       .outputOptions([
         '-fflags +genpts', // Force FFmpeg to generate PTS if they are missing or incorrect
-        '-r 30', // Set frame rate to 30fps
-        // '-movflags +faststart' // Facilitate faster start of playback in network environments (eg. streaming) its good to have.
+        '-r 60',
       ])
       .format('mp4')
       .on('end', () => {

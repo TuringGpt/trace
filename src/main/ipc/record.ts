@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { readFile, rmdir, stat, unlink } from 'fs/promises';
+import { readFile, rmdir, stat } from 'fs/promises';
 
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
@@ -16,13 +16,13 @@ import {
   storeRecordingSize,
 } from '../util/storageHelpers';
 import UploadManager from '../util/UploadManager';
-import {
-  closeAllHintWindows,
-  closeOverLayWindow,
-  expandOverlayWindow,
-  showHintWindows,
-  shrinkOverlayWindow,
-} from './staticWindows';
+// import {
+//   closeAllHintWindows,
+//   closeOverLayWindow,
+//   expandOverlayWindow,
+//   showHintWindows,
+//   shrinkOverlayWindow,
+// } from './staticWindows';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.record' });
@@ -32,7 +32,7 @@ ipcHandle('start-new-recording', async () => {
   await markRecordingStarted();
   keylogger.startLogging();
   log.info('Keystrokes logging started');
-  showHintWindows();
+  // showHintWindows();
   return ipc.success(undefined);
 });
 
@@ -74,7 +74,7 @@ async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
     await remuxVideo(tempInputPath, tempOutputPath);
     const timeTakenToConvert = Date.now() - startTime;
     log.info(`Video conversion took ${timeTakenToConvert / 1000} seconds.`);
-    await unlink(tempInputPath);
+    // await unlink(tempInputPath);
 
     // Store the video file size in the database
     const folderId = recordingFolder.split('/').pop();
@@ -93,7 +93,7 @@ async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
   } catch (error) {
     log.error('Failed to remux the video file.', error);
     if (fs.existsSync(tempInputPath)) {
-      fs.unlinkSync(tempInputPath);
+      // fs.unlinkSync(tempInputPath);
     }
     if (fs.existsSync(tempOutputPath)) {
       fs.unlinkSync(tempOutputPath);
@@ -334,21 +334,21 @@ ipcHandle('get-recording-memory-usage', async () => {
 });
 
 ipcHandle('close-overlay-window', async () => {
-  closeOverLayWindow();
+  // closeOverLayWindow();
   return ipc.success(undefined);
 });
 
 ipcHandle('media-recording-stopped', async () => {
-  closeAllHintWindows();
+  // closeAllHintWindows();
   return ipc.success(undefined);
 });
 
 ipcHandle('expand-overlay-window', async () => {
-  expandOverlayWindow();
+  // expandOverlayWindow();
   return ipc.success(undefined);
 });
 
 ipcHandle('shrink-overlay-window', async () => {
-  shrinkOverlayWindow();
+  // shrinkOverlayWindow();
   return ipc.success(undefined);
 });
