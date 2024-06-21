@@ -32,13 +32,8 @@ export default function remuxVideo(inputPath: string, outputPath: string) {
   return new Promise<void>((resolve, reject) => {
     ffmpeg(inputPath)
       .output(outputPath)
-      .videoFilters('setpts=PTS-STARTPTS')
       .videoCodec('libx264')
       .noAudio()
-      .outputOptions([
-        '-fflags +genpts', // Force FFmpeg to generate PTS if they are missing or incorrect
-        '-r 60',
-      ])
       .format('mp4')
       .on('end', () => {
         log.info('Video remuxing completed.');

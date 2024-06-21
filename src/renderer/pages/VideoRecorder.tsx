@@ -104,7 +104,7 @@ export default function VideoRecorder() {
     }
     const options = {
       mimeType: 'video/webm; codecs=H264',
-      bitsPerSecond: 3000000,
+      bitsPerSecond: 8000000,
     };
     const recorder = new MediaRecorder(stream, options);
     setMediaRecorder(recorder);
