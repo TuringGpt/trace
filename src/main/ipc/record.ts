@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { readFile, rmdir, stat } from 'fs/promises';
 
+import path from 'path';
 import { ipc } from '../../types/customTypes';
 import storage from '../storage';
 import fileExists from '../util/fileExists';
@@ -138,6 +139,26 @@ ipcHandle('rename-recording', async (event, folderId, newName, description) => {
 
     folder.folderName = newName.trim();
     await storage.save(db);
+
+    const metadataPath = path.join(
+      getVideoStoragePath(),
+      folderId,
+      'metadata.json',
+    );
+    if (fs.existsSync(metadataPath)) {
+      const metadata = JSON.parse(
+        await fs.promises.readFile(metadataPath, 'utf-8'),
+      );
+      metadata.videoTitle = newName.trim();
+      metadata.videoDescription = description;
+      await fs.promises.writeFile(
+        metadataPath,
+        JSON.stringify(metadata, null, 2),
+      );
+      log.info('Metadata updated successfully', { metadataPath });
+    } else {
+      log.warn('metadata.json file not found', { metadataPath });
+    }
 
     return ipc.success(undefined);
   } catch (err) {

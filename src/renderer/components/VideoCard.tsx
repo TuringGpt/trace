@@ -2,7 +2,7 @@ import { FaCloudUploadAlt } from 'react-icons/fa';
 import { GiSandsOfTime } from 'react-icons/gi';
 import { GoSync } from 'react-icons/go';
 import { ImCheckboxChecked, ImCheckboxUnchecked } from 'react-icons/im';
-import { MdEdit, MdOutlineCloudSync, MdSyncProblem } from 'react-icons/md';
+import { MdOutlineCloudSync, MdSyncProblem } from 'react-icons/md';
 import { RiDeleteBin2Fill } from 'react-icons/ri';
 import { SiCcleaner } from 'react-icons/si';
 import { Tooltip } from 'react-tooltip';
@@ -130,9 +130,9 @@ export default function VideoCard({
                 ? `${video.folderName.substring(0, MAX_FOLDER_NAME_LENGTH)}...`
                 : video.folderName}
             </h2>
-            {needsToBeUploaded && (
+            {/* {needsToBeUploaded && (
               <MdEdit className="cursor-pointer opacity-50" />
-            )}
+            )} */}
           </div>
         </div>
         <p className="text-gray-300 text-sm opacity-50">

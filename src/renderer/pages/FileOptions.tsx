@@ -19,7 +19,7 @@ export default function FileOptions() {
   const { state } = useAppState();
   const navigate = useNavigate();
   const { recordingName } = state;
-  const [folderName, setFolderName] = useState(recordingName);
+  const [folderName, setFolderName] = useState('');
   const [videoServerPort, setVideoServerPort] = useState(-1);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [description, setDescription] = useState('');
