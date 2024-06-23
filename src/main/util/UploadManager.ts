@@ -1,12 +1,13 @@
 import archiver from 'archiver';
 import { BrowserWindow } from 'electron';
 import { once } from 'events';
-import { createWriteStream } from 'fs';
+import { createReadStream, createWriteStream } from 'fs';
 import { stat, unlink } from 'fs/promises';
 import { join } from 'path';
 
 import { BlobServiceClient } from '@azure/storage-blob';
 
+import axios from 'axios';
 import ensureError from '../../renderer/util/ensureError';
 import {
   StatusTypes,
@@ -34,21 +35,24 @@ class UploadManager {
 
   private isUploading = false;
 
-  private blobUrl: string;
+  private blobUrl?: string;
+
+  private gcsBucketUrl: string;
 
   private uploadStatusReport: UploadStatusReport = {};
 
   private constructor() {
     log.info('Creating Upload Manager instance');
-    if (!process.env.BLOB_STORAGE_URL) {
-      log.error('Cannot initialize Upload Manger. Blob URL not found', {
-        blobUrl: process.env.BLOB_STORAGE_URL,
-      });
-      throw new Error('Cannot initialize Upload Manger. Blob URL not found');
-    }
     this.blobUrl = process.env.BLOB_STORAGE_URL;
+    this.gcsBucketUrl = 'trace-recordings';
+
+    if (!this.blobUrl) {
+      log.info('Blob URL not found, using GCS for upload');
+    }
+
     log.info('Upload Manager instance created', {
       blobUrl: this.blobUrl,
+      gcsBucketUrl: this.gcsBucketUrl,
     });
   }
 
@@ -123,7 +127,7 @@ class UploadManager {
       log.info('Zipping folder', { folder });
       this.uploadStatusReport[folder] = { status: StatusTypes.Zipping };
       this.sendUploadProgress();
-      const blobName = `zipped.zip`;
+      const blobName = `${folder}.zip`;
       const zipPath = join(videoStoragePath, folder, blobName);
 
       if (await fileExists(zipPath)) {
@@ -164,38 +168,65 @@ class UploadManager {
       this.sendUploadProgress();
       const totalBytes = (await stat(zipPath)).size;
 
-      const blobServiceClient = BlobServiceClient.fromConnectionString(
-        this.blobUrl,
-      );
-      const containerClient =
-        blobServiceClient.getContainerClient('turing-videos');
-      const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-      log.info('Uploading zip file...', { zipPath });
-      await markFolderUploadStart(folder);
-      await blockBlobClient.uploadFile(zipPath, {
-        onProgress: (progress) => {
-          if (
-            this.uploadStatusReport[folder].status === StatusTypes.Completed ||
-            this.uploadStatusReport[folder].status === StatusTypes.Failed
-          ) {
-            log.info(
-              'Upload already completed or failed. Stopping upload progress',
+      if (this.blobUrl) {
+        // Azure Blob Storage upload
+        const blobServiceClient = BlobServiceClient.fromConnectionString(
+          this.blobUrl,
+        );
+        const containerClient =
+          blobServiceClient.getContainerClient('turing-videos');
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+        log.info('Uploading zip file to Azure Blob Storage...', { zipPath });
+        await markFolderUploadStart(folder);
+        await blockBlobClient.uploadFile(zipPath, {
+          onProgress: (progress) => {
+            if (
+              this.uploadStatusReport[folder].status ===
+                StatusTypes.Completed ||
+              this.uploadStatusReport[folder].status === StatusTypes.Failed
+            ) {
+              log.info(
+                'Upload already completed or failed. Stopping upload progress',
+              );
+              return;
+            }
+            const percentComplete = Math.round(
+              (progress.loadedBytes / totalBytes) * 100,
             );
-            return;
-          }
-          const percentComplete = Math.round(
-            (progress.loadedBytes / totalBytes) * 100,
-          );
-          log.debug('Upload progress', { folder, progress, percentComplete });
-          this.uploadStatusReport[folder] = {
-            status: StatusTypes.Uploading,
-            progress: percentComplete,
-          };
+            log.debug('Upload progress', { folder, progress, percentComplete });
+            this.uploadStatusReport[folder] = {
+              status: StatusTypes.Uploading,
+              progress: percentComplete,
+            };
+            this.sendUploadProgress();
+          },
+        });
+        log.info('Uploaded zip file to Azure Blob Storage', { zipPath });
+      } else {
+        // GCS upload
+        log.info('Uploading zip file to GCS...', { zipPath });
+        await markFolderUploadStart(folder);
+
+        const readStream = createReadStream(zipPath);
+        const uploadUrl = `https://storage.googleapis.com/trace-recordings/${folder}.zip`;
+
+        const response = await axios.put(uploadUrl, readStream, {
+          headers: {
+            'Content-Type': 'application/zip',
+          },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
+        });
+
+        if (response.status === 200) {
+          log.info('Uploaded zip file to GCS', { zipPath });
+          await markFolderUploadComplete(folder, true);
+          this.uploadStatusReport[folder] = { status: StatusTypes.Completed };
           this.sendUploadProgress();
-        },
-      });
-      log.info('Uploaded zip file', { zipPath });
+        } else {
+          throw new Error('Failed to upload zip file to GCS');
+        }
+      }
       await markFolderUploadComplete(folder, true);
       this.uploadStatusReport[folder] = { status: StatusTypes.Completed };
       this.sendUploadProgress();

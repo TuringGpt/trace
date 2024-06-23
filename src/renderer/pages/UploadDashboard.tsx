@@ -29,7 +29,7 @@ import {
   UploadStatusReport,
 } from '../../types/customTypes';
 import FilterButton from '../components/FilterButton';
-import ProgressBar from '../components/ProgressBar';
+// import ProgressBar from '../components/ProgressBar';
 import VideoCardWrapper from '../components/VideoCardWrapper';
 import log from '../util/logger';
 import prettyBytes from '../util/prettyBytes';
@@ -212,10 +212,10 @@ export default function UploadDashboard() {
   return (
     <div className="text-white p-6 relative">
       <Tooltip id="video-dashboard-tooltip" />
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <h1 className="text-2xl font-bold">Recorded Library</h1>
         <ProgressBar />
-      </div>
+      </div> */}
       <div className="mb-4 flex justify-between items-center">
         {memoryUsage !== -1 && (
           <div className="flex flex-col">
@@ -259,7 +259,7 @@ export default function UploadDashboard() {
             activeFilter={filter}
             handleFilterChange={handleFilterChange}
           >
-            Cloud
+            Uploaded
           </FilterButton>
         </div>
       </div>
