@@ -1,8 +1,7 @@
 import { app } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-
+import * as uuid from 'short-uuid';
 import storage from '../storage';
 import logger from './logger';
 
@@ -30,7 +29,7 @@ export function getThumbnailPath(): string {
 
 export async function markRecordingStarted() {
   try {
-    const currentRecordingFolder = uuidv4();
+    const currentRecordingFolder = uuid.generate();
     const db = await storage.getData();
     db.isRecording = true;
     db.currentRecordingFolder = {

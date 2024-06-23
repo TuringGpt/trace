@@ -62,7 +62,6 @@ export default function UploadDashboard() {
       const res = await window.electron.getVideoRecordingFolders();
       fetchMemoryUsage();
       if (res.status === 'success') {
-        log.info('Fetched video recording folders', res.data);
         setVideos(
           res.data.sort(
             (v1, v2) => v2.recordingStartedAt - v1.recordingStartedAt,

@@ -208,6 +208,10 @@ export default function VideoCard({
             )}
           </div>
         </div>
+
+          <p className="text-gray-300 text-xs opacity-70">
+            Id: {video.id}
+          </p>
       </div>
     </div>
   );
