@@ -40,7 +40,8 @@ class KeyLogger {
 
     log.info('Starting keylogging');
 
-    uIOhook.on('keyup', this.logKey);
+    uIOhook.on('keydown', this.logKeyDown);
+    uIOhook.on('keyup', this.logKeyUp);
     uIOhook.on('mousedown', this.logMouseDown);
     uIOhook.on('mouseup', this.logMouseUp);
     uIOhook.on('mousemove', throttle(this.logMouseMove, this.mouseLogInterval));
@@ -49,10 +50,17 @@ class KeyLogger {
     uIOhook.start();
   }
 
-  logKey = (e: UiohookKeyboardEvent) => {
+  logKeyDown = (e: UiohookKeyboardEvent) => {
     const timestamp = this.getFormattedTime();
     this.logEntries.push(
       `${timestamp}: Keyboard Button Press : ${keycodesMapping[e.keycode]}`,
+    );
+  };
+
+  logKeyUp = (e: UiohookKeyboardEvent) => {
+    const timestamp = this.getFormattedTime();
+    this.logEntries.push(
+      `${timestamp}: Keyboard Button Release : ${keycodesMapping[e.keycode]}`,
     );
   };
 
@@ -81,10 +89,51 @@ class KeyLogger {
       direction = e.rotation > 0 ? 'LEFT' : 'RIGHT';
     }
     this.logEntries.push(
-      `${timestamp}: Scrolled ${axis}, Direction: ${direction}, Intensity: ${
+      `${timestamp}: Mouse Scrolled ${axis}, Direction: ${direction}, Intensity: ${
         e.rotation < 0 ? e.rotation * -1 : e.rotation
       }`,
     );
+  };
+
+  logGamepadButton = (buttonName: string, value: number, pressed: boolean) => {
+    const timestamp = this.getFormattedTime();
+    const action = pressed ? 'Press' : 'Release';
+    const entry = `${timestamp}: Gamepad Button ${action}: ${buttonName}, Value: ${Math.abs(value).toFixed(2)}`;
+    if (
+      !this.logEntries.length ||
+      entry !== this.logEntries[this.logEntries.length - 1]
+    ) {
+      this.logEntries.push(entry);
+    }
+  };
+
+  logGamepadAxis = (axisIndex: number, value: number) => {
+    const axisNames: { [key: number]: string } = {
+      0: 'Left Stick X',
+      1: 'Left Stick Y',
+      2: 'Right Stick X',
+      3: 'Right Stick Y',
+      4: 'Left Trigger',
+      5: 'Right Trigger',
+    };
+    const timestamp = this.getFormattedTime();
+    const axisName = axisNames[axisIndex] || `Axis ${axisIndex}`;
+    let direction;
+    if (axisName.includes('X')) {
+      direction = value > 0 ? 'RIGHT' : 'LEFT';
+    } else if (axisName.includes('Y')) {
+      direction = value > 0 ? 'DOWN' : 'UP';
+    } else {
+      direction = value > 0 ? 'POSITIVE' : 'NEGATIVE';
+    }
+    const intensity = Math.abs(value).toFixed(2);
+    const entry = `${timestamp}: Gamepad Axis: ${axisName}, Movement: ${direction}, Intensity: ${intensity}`;
+    if (
+      !this.logEntries.length ||
+      entry !== this.logEntries[this.logEntries.length - 1]
+    ) {
+      this.logEntries.push(entry);
+    }
   };
 
   getFormattedTime() {
