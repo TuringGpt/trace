@@ -7,7 +7,7 @@ import './ipc';
 
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 
-import { autoUpdater } from 'electron-updater';
+// import { autoUpdater } from 'electron-updater';
 /**
  * This module executes inside of electron's main process. You can start
  * electron renderer process from here and communicate with the other processes
@@ -30,12 +30,12 @@ logger.info('App starting...');
 
 setupVideoAndThumbnailHttpServer();
 
-class AppUpdater {
-  constructor() {
-    autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
-  }
-}
+// class AppUpdater {
+//   constructor() {
+//     autoUpdater.logger = log;
+//     autoUpdater.checkForUpdatesAndNotify();
+//   }
+// }
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -125,7 +125,7 @@ const createWindow = async () => {
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
-  new AppUpdater();
+  // new AppUpdater();
 };
 
 /**
