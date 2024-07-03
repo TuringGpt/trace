@@ -35,7 +35,6 @@ export default function remuxVideo(inputPath: string, outputPath: string) {
       .videoCodec('libx264')
       .noAudio()
       .format('mp4')
-      .addOption('-preset', 'superfast')
       .on('end', () => {
         log.info('Video remuxing completed.');
         resolve();
