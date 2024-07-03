@@ -16,6 +16,8 @@ class KeyLogger {
 
   logEntries: string[];
 
+  uniqueKeys: Set<string>;
+
   startTime: number;
 
   lastMouseLogTime: number;
@@ -27,6 +29,7 @@ class KeyLogger {
   constructor() {
     this.isLogging = false;
     this.logEntries = [];
+    this.uniqueKeys = new Set();
     this.lastMouseLogTime = 0;
     this.mouseLogInterval = 50;
     this.scrollLogInterval = 50;
@@ -52,26 +55,28 @@ class KeyLogger {
 
   logKeyDown = (e: UiohookKeyboardEvent) => {
     const timestamp = this.getFormattedTime();
-    this.logEntries.push(
-      `${timestamp}: Keyboard Button Press : ${keycodesMapping[e.keycode]}`,
-    );
+    const key = keycodesMapping[e.keycode];
+    this.logEntries.push(`${timestamp}: Keyboard Button Press : ${key}`);
+    this.uniqueKeys.add(key);
   };
 
   logKeyUp = (e: UiohookKeyboardEvent) => {
     const timestamp = this.getFormattedTime();
-    this.logEntries.push(
-      `${timestamp}: Keyboard Button Release : ${keycodesMapping[e.keycode]}`,
-    );
+    const key = keycodesMapping[e.keycode];
+    this.logEntries.push(`${timestamp}: Keyboard Button Release : ${key}`);
   };
 
   logMouseDown = (e: UiohookMouseEvent) => {
     const timestamp = this.getFormattedTime();
-    this.logEntries.push(`${timestamp}: Mouse Button Press : ${e.button}`);
+    const button = `Mouse Button ${e.button}`;
+    this.logEntries.push(`${timestamp}: Mouse Button Press : ${button}`);
+    this.uniqueKeys.add(button);
   };
 
   logMouseUp = (e: UiohookMouseEvent) => {
     const timestamp = this.getFormattedTime();
-    this.logEntries.push(`${timestamp}: Mouse Button Release : ${e.button}`);
+    const button = `Mouse Button ${e.button}`;
+    this.logEntries.push(`${timestamp}: Mouse Button Release : ${button}`);
   };
 
   logMouseMove = (e: UiohookMouseEvent) => {
@@ -108,6 +113,12 @@ class KeyLogger {
     const fMilliseconds = milliseconds.toString().padStart(3, '0');
 
     return `${fHours}:${fMinutes}:${fSeconds}:${fMilliseconds}`;
+  }
+
+  getUniqueKeys() {
+    const uniqueKeys = Array.from(this.uniqueKeys);
+    this.uniqueKeys.clear();
+    return uniqueKeys;
   }
 
   stopLogging(): string | null {

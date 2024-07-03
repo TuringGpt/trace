@@ -119,6 +119,11 @@ type IPCHandler<TArgs extends any[], TRes> = (
   ...args: TArgs
 ) => Promise<IPCResult<TRes>>;
 
+export interface Control {
+  key: string;
+  action: string;
+}
+
 export type IPCHandleEvents = {
   'get-video-sources': IPCHandler<[], void>;
   'remux-video-file': IPCHandler<[uint8Array: Uint8Array], boolean>;
@@ -132,8 +137,14 @@ export type IPCHandleEvents = {
     [uint8Array: Uint8Array],
     { recordingFolderName: string }
   >;
+  'get-unique-keys': IPCHandler<[], string[]>;
   'rename-recording': IPCHandler<
-    [folderId: string, newName: string, description: string],
+    [
+      folderId: string,
+      newName: string,
+      description: string,
+      controls: Control[],
+    ],
     void
   >;
   'discard-recording': IPCHandler<[folderId: string], void>;
