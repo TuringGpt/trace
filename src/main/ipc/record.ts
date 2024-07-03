@@ -373,13 +373,3 @@ ipcHandle('shrink-overlay-window', async () => {
   // shrinkOverlayWindow();
   return ipc.success(undefined);
 });
-
-ipcHandle('log-gamepad-button', async (event, buttonName, value, pressed) => {
-  keylogger.logGamepadButton(buttonName, value, pressed);
-  return ipc.success(undefined);
-});
-
-ipcHandle('log-gamepad-axis', async (event, axisIndex, value) => {
-  keylogger.logGamepadAxis(axisIndex, value);
-  return ipc.success(undefined);
-});

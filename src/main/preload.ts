@@ -29,8 +29,6 @@ const electronHandler = {
   getVideoSources: ipcInvoke('get-video-sources'),
   uploadFiles: ipcInvoke('upload-zip-file'),
   logFromRenderer: ipcSend('log-from-renderer'),
-  logGamepadButton: ipcInvoke('log-gamepad-button'),
-  logGamepadAxis: ipcInvoke('log-gamepad-axis'),
   showDialog: ipcInvoke('show-dialog'),
   reportUnhandledError: ipcSend('report-renderer-unhandled-error'),
   closeOverLayWindow: ipcInvoke('close-overlay-window'),

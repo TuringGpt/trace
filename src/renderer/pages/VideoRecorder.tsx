@@ -25,58 +25,6 @@ import { formatTimeInHHMMSS } from '../util/timeFormat';
 
 import { useDialog } from '../hooks/useDialog';
 
-const xboxButtonMapping = [
-  'A',
-  'B',
-  'X',
-  'Y',
-  'Left Bumper',
-  'Right Bumper',
-  'Left Trigger',
-  'Right Trigger',
-  'Back',
-  'Start',
-  'Left Stick (Press)',
-  'Right Stick (Press)',
-  'D-Pad Up',
-  'D-Pad Down',
-  'D-Pad Left',
-  'D-Pad Right',
-  'Guide Button',
-];
-
-const playStationButtonMapping = [
-  'Cross (X)',
-  'Circle (O)',
-  'Square',
-  'Triangle',
-  'Left Bumper (L1)',
-  'Right Bumper (R1)',
-  'Left Trigger (L2)',
-  'Right Trigger (R2)',
-  'Share',
-  'Options',
-  'Left Stick (Press)',
-  'Right Stick (Press)',
-  'D-Pad Up',
-  'D-Pad Down',
-  'D-Pad Left',
-  'D-Pad Right',
-  'PlayStation (PS)',
-  'Touchpad',
-];
-
-const genericButtonMapping = Array.from(
-  { length: 16 },
-  (_, i) => `Button ${i}`,
-);
-
-interface AxesLogTimers {
-  [key: string]: {
-    [index: number]: boolean;
-  };
-}
-
 export default function VideoRecorder() {
   const [source, setSource] = useState<CapturedSource | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -92,9 +40,6 @@ export default function VideoRecorder() {
   const navigate = useNavigate();
 
   const { showDialog } = useDialog();
-
-  const loggedControllers = useRef<Set<string>>(new Set());
-  const axesLogTimers = useRef<AxesLogTimers>({});
 
   useEffect(() => {
     const cleanup = window.electron.onSelectVideoSource((selectedSource) => {
@@ -140,90 +85,6 @@ export default function VideoRecorder() {
     }
     return () => clearInterval(interval);
   }, [isRecording]);
-
-  useEffect(() => {
-    const previousGamepadState: any[] = [];
-    const previousAxesState: any[] = [];
-
-    const getButtonName = (gamepad: Gamepad, index: number) => {
-      if (gamepad.id.toLowerCase().includes('xbox'))
-        return xboxButtonMapping[index] || `Button ${index}`;
-      if (gamepad.id.toLowerCase().includes('playstation'))
-        return playStationButtonMapping[index] || `Button ${index}`;
-      return genericButtonMapping[index];
-    };
-
-    function updateGamepadStatus() {
-      const gamepads = navigator.getGamepads();
-      for (let i = 0; i < gamepads.length; i += 1) {
-        const gamepad = gamepads[i];
-        // eslint-disable-next-line no-continue
-        if (!gamepad) continue;
-
-        // Log the type of controller once
-        if (!loggedControllers.current.has(gamepad.id)) {
-          if (gamepad.id.toLowerCase().includes('xbox')) {
-            log.info('Xbox Controller connected');
-          } else if (gamepad.id.toLowerCase().includes('playstation')) {
-            log.info('PlayStation Controller connected');
-          } else {
-            log.info('Generic Controller connected');
-          }
-          loggedControllers.current.add(gamepad.id);
-        }
-
-        if (!previousGamepadState[i]) {
-          previousGamepadState[i] = gamepad.buttons.map(
-            (button) => button.pressed,
-          );
-        }
-        if (!previousAxesState[i]) {
-          previousAxesState[i] = gamepad.axes.slice();
-        }
-
-        gamepad.buttons.forEach((button, index) => {
-          const isPressed = button.pressed;
-          const wasPressed = previousGamepadState[i][index];
-          const buttonName = getButtonName(gamepad, index);
-
-          if (isPressed && !wasPressed) {
-            window.electron.logGamepadButton(buttonName, button.value, true);
-          }
-          if (!isPressed && wasPressed) {
-            window.electron.logGamepadButton(buttonName, button.value, false);
-          }
-
-          previousGamepadState[i][index] = isPressed;
-        });
-
-        const threshold = 0.9;
-
-        for (let index = 0; index < gamepad.axes.length; index += 1) {
-          const newAxisValue = gamepad.axes[index];
-          const oldAxisValue = previousAxesState[i][index];
-
-          if (Math.abs(newAxisValue - oldAxisValue) > threshold) {
-            window.electron.logGamepadAxis(index, newAxisValue);
-            previousAxesState[i][index] = newAxisValue;
-          }
-        }
-      }
-      requestAnimationFrame(updateGamepadStatus);
-    }
-
-    window.addEventListener('gamepadconnected', () =>
-      requestAnimationFrame(updateGamepadStatus),
-    );
-    window.addEventListener('gamepaddisconnected', (event) => {
-      log.info('Gamepad disconnected');
-      const { gamepad } = event;
-      if (axesLogTimers.current[gamepad.id]) {
-        delete axesLogTimers.current[gamepad.id];
-      }
-    });
-
-    if (navigator.getGamepads()[0]) requestAnimationFrame(updateGamepadStatus);
-  }, []);
 
   const onStartRecording = async () => {
     const consent = await showDialog(INFO_POPUP_TITLE, INITIAL_CONSENT_TEXT, {

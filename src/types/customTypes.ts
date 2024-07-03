@@ -128,11 +128,6 @@ export type IPCHandleEvents = {
     boolean
   >;
   'start-new-recording': IPCHandler<[], void>;
-  'log-gamepad-button': IPCHandler<
-    [buttonName: string, value: number, pressed: boolean],
-    void
-  >;
-  'log-gamepad-axis': IPCHandler<[index: number, newAxisValue: number], void>;
   'stop-recording': IPCHandler<
     [uint8Array: Uint8Array],
     { recordingFolderName: string }
