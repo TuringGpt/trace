@@ -128,44 +128,56 @@ ipcHandle('stop-recording', async (event, uint8Array) => {
   }
 });
 
-ipcHandle('rename-recording', async (event, folderId, newName, description) => {
-  try {
-    const db = await storage.getData();
-    const folder = db.recordingFolders.find((f) => f.id === folderId);
-    if (!folder) {
-      throw new Error('Folder not found');
-    }
-    folder.description = description;
-
-    folder.folderName = newName.trim();
-    await storage.save(db);
-
-    const metadataPath = path.join(
-      getVideoStoragePath(),
-      folderId,
-      'metadata.json',
-    );
-    if (fs.existsSync(metadataPath)) {
-      const metadata = JSON.parse(
-        await fs.promises.readFile(metadataPath, 'utf-8'),
-      );
-      metadata.videoTitle = newName.trim();
-      metadata.videoDescription = description;
-      await fs.promises.writeFile(
-        metadataPath,
-        JSON.stringify(metadata, null, 2),
-      );
-      log.info('Metadata updated successfully', { metadataPath });
-    } else {
-      log.warn('metadata.json file not found', { metadataPath });
-    }
-
-    return ipc.success(undefined);
-  } catch (err) {
-    log.error('Failed to rename recording', { err });
-    return ipc.error('Failed to rename recording', err);
-  }
+ipcHandle('get-unique-keys', async () => {
+  const uniqueKeys = keylogger.getUniqueKeys();
+  return ipc.success(uniqueKeys);
 });
+
+ipcHandle(
+  'rename-recording',
+  async (event, folderId, newName, description, controls) => {
+    try {
+      const db = await storage.getData();
+      const folder = db.recordingFolders.find((f) => f.id === folderId);
+      if (!folder) {
+        throw new Error('Folder not found');
+      }
+      folder.description = description;
+      folder.folderName = newName.trim();
+      await storage.save(db);
+
+      const folderPath = path.join(getVideoStoragePath(), folderId);
+      const metadataPath = path.join(folderPath, 'metadata.json');
+      const controlsPath = path.join(folderPath, 'controls.json');
+
+      if (fs.existsSync(metadataPath)) {
+        const metadata = JSON.parse(
+          await fs.promises.readFile(metadataPath, 'utf-8'),
+        );
+        metadata.videoTitle = newName.trim();
+        metadata.videoDescription = description;
+        await fs.promises.writeFile(
+          metadataPath,
+          JSON.stringify(metadata, null, 2),
+        );
+        log.info('Metadata updated successfully', { metadataPath });
+      } else {
+        log.warn('metadata.json file not found', { metadataPath });
+      }
+
+      await fs.promises.writeFile(
+        controlsPath,
+        JSON.stringify(controls, null, 2),
+      );
+      log.info('Controls updated successfully', { controlsPath });
+
+      return ipc.success(undefined);
+    } catch (err) {
+      log.error('Failed to rename recording', { err });
+      return ipc.error('Failed to rename recording', err);
+    }
+  },
+);
 
 // Discard recording from FileOptions page,
 // deletes only one folder, that was just recorded.

@@ -34,6 +34,7 @@ const electronHandler = {
   closeOverLayWindow: ipcInvoke('close-overlay-window'),
   startNewRecording: ipcInvoke('start-new-recording'),
   stopRecording: ipcInvoke('stop-recording'),
+  getUniqueKeys: ipcInvoke('get-unique-keys'),
   renameRecording: ipcInvoke('rename-recording'),
   discardRecording: ipcInvoke('discard-recording'),
   discardMultipleRecordings: ipcInvoke('discard-multiple-recordings'),

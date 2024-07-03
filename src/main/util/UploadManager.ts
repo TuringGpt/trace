@@ -147,6 +147,9 @@ class UploadManager {
       archive.file(join(videoStoragePath, folder, 'metadata.json'), {
         name: 'metadata.json',
       });
+      archive.file(join(videoStoragePath, folder, 'controls.json'), {
+        name: 'controls.json',
+      });
 
       // check if there is a thumbnail file and add it if it exists
       const thumbnailPath = join(getThumbnailPath(), `${folder}.png`);

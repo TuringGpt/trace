@@ -13,7 +13,7 @@ import {
 import useAppState from '../store/hook';
 import log from '../util/logger';
 import { useDialog } from '../hooks/useDialog';
-import { DialogType } from '../../types/customTypes';
+import { DialogType, IPCResult, Control } from '../../types/customTypes';
 
 export default function FileOptions() {
   const { state } = useAppState();
@@ -27,8 +27,28 @@ export default function FileOptions() {
     width: 1200,
     height: 500,
   });
-  const [error, setError] = useState({ folderName: '', description: '' });
+  const [error, setError] = useState({
+    folderName: '',
+    description: '',
+    controls: '',
+  });
   const { showDialog } = useDialog();
+  const [controls, setControls] = useState<Control[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const res: IPCResult<string[]> = await window.electron.getUniqueKeys();
+      if (res.status === 'success') {
+        const uniqueKeys: string[] = res.data;
+        log.info('uniqueKeys:', uniqueKeys);
+        const initialControls = uniqueKeys.map((key: string) => ({
+          key,
+          action: '',
+        }));
+        setControls(initialControls);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const fetchVideoServerPort = async () => {
@@ -115,25 +135,65 @@ export default function FileOptions() {
     };
   }, [videoServerPort, recordingName]);
 
+  const handleControlChange = (
+    index: number,
+    key: keyof Control,
+    value: string,
+  ) => {
+    const newControls: Control[] = [...controls];
+    newControls[index][key] = value;
+    setControls(newControls);
+  };
+
+  const addControl = () => {
+    setControls([...controls, { key: '', action: '' }]);
+  };
+
+  const deleteControl = (index: number) => {
+    setControls(controls.filter((_, i) => i !== index));
+  };
+
   const onSave = async () => {
-    if (!folderName.trim() || !description.trim()) {
-      setError({
-        folderName: !folderName.trim() ? FIELD_REQUIRED_ERROR : '',
-        description: !description.trim() ? FIELD_REQUIRED_ERROR : '',
-      });
-      return;
+    let hasError = false;
+
+    if (!folderName.trim()) {
+      setError((prevError) => ({
+        ...prevError,
+        folderName: FIELD_REQUIRED_ERROR,
+      }));
+      hasError = true;
     }
-    if (description.length < 15) {
-      setError({
+    if (!description.trim()) {
+      setError((prevError) => ({
+        ...prevError,
+        description: FIELD_REQUIRED_ERROR,
+      }));
+      hasError = true;
+    } else if (description.length < 15) {
+      setError((prevError) => ({
+        ...prevError,
         description: MIN_DESCRIPTION_LENGTH_ERROR,
-        folderName: '',
-      });
-      return;
+      }));
+      hasError = true;
     }
+
+    controls.forEach((control) => {
+      if (!control.action.trim()) {
+        setError((prevError) => ({
+          ...prevError,
+          controls: `Action required for key: ${control.key}`,
+        }));
+        hasError = true;
+      }
+    });
+
+    if (hasError) return;
+
     const res = await window.electron.renameRecording(
       recordingName,
       folderName,
       description,
+      controls,
     );
     if (res.status === 'success') {
       navigate('/');
@@ -161,7 +221,7 @@ export default function FileOptions() {
     (recordingResolution.height / recordingResolution.width) * 100;
 
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className="flex flex-col justify-center items-center min-h-screen bg-slate-900 text-white">
       <div className="flex items-center flex-col w-full max-w-2xl rounded-lg m-4 mt-0 p-4">
         <h2 className="text-2xl font-semibold text-white mb-4">
           What is the recording about?
@@ -247,6 +307,50 @@ export default function FileOptions() {
             </p>
           )}
         </label>
+
+        <div className="w-full mt-4">
+          <h3 className="text-xl font-semibold text-white mb-2">Controls</h3>
+          {controls.map((control, index) => (
+            <div key={control.key} className="flex items-center space-x-4 mb-4">
+              <input
+                className="flex-1 p-2 rounded-md bg-white text-black border-2 border-gray-300"
+                placeholder="Key"
+                value={control.key}
+                onChange={(e) =>
+                  handleControlChange(index, 'key', e.target.value)
+                }
+              />
+              <input
+                className="flex-1 p-2 rounded-md bg-white text-black border-2 border-gray-300"
+                placeholder="Action"
+                value={control.action}
+                onChange={(e) =>
+                  handleControlChange(index, 'action', e.target.value)
+                }
+              />
+              <button
+                type="button"
+                className="bg-red-600 rounded-md px-3 py-2 text-white"
+                onClick={() => deleteControl(index)}
+              >
+                X
+              </button>
+            </div>
+          ))}
+          {error.controls && (
+            <p className="controls-error text-red-500">{error.controls}</p>
+          )}
+          <div className="w-full flex justify-center mt-8">
+            <button
+              type="button"
+              className="bg-green-600 rounded-md px-4 py-2 text-white"
+              onClick={addControl}
+            >
+              Add Control
+            </button>
+          </div>
+        </div>
+
         <div className="flex items-center mt-16">
           <button
             type="button"
