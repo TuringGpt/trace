@@ -25,6 +25,8 @@ import { formatTimeInHHMMSS } from '../util/timeFormat';
 
 import { useDialog } from '../hooks/useDialog';
 
+let recordingStopTime: number | null = null;
+
 export default function VideoRecorder() {
   const [source, setSource] = useState<CapturedSource | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -123,6 +125,7 @@ export default function VideoRecorder() {
       const arrayBuffer = await blob.arrayBuffer();
       const res = await window.electron.stopRecording(
         new Uint8Array(arrayBuffer),
+        recordingStopTime === null ? Date.now() : recordingStopTime,
       );
       setIsRecording(false);
       if (res.status === 'error') {
@@ -142,6 +145,7 @@ export default function VideoRecorder() {
   };
 
   const onStopRecording = () => {
+    recordingStopTime = Date.now();
     log.info('Recording stopped', mediaRecorder?.state);
     if (mediaRecorder?.state === 'recording') {
       mediaRecorder.stop();

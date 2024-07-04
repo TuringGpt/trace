@@ -103,30 +103,33 @@ async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
   }
 }
 
-ipcHandle('stop-recording', async (event, uint8Array) => {
-  try {
-    const recordingFolder = await getCurrentRecordingFolder();
-    const db = await storage.getData();
-    const logContent = keylogger.stopLogging();
-    const metadata = await getDeviceMetadata();
-    await markRecordingStopped();
+ipcHandle(
+  'stop-recording',
+  async (event, uint8Array, recordingStopTime: number) => {
+    try {
+      const recordingFolder = await getCurrentRecordingFolder();
+      const db = await storage.getData();
+      const logContent = keylogger.stopLogging(recordingStopTime);
+      const metadata = await getDeviceMetadata();
+      await markRecordingStopped();
 
-    log.info('Recording stopped');
+      log.info('Recording stopped');
 
-    await writeKeylogToFile(logContent, recordingFolder);
+      await writeKeylogToFile(logContent, recordingFolder);
 
-    await writeMetadataToFile(JSON.stringify(metadata), recordingFolder);
+      await writeMetadataToFile(JSON.stringify(metadata), recordingFolder);
 
-    await writeVideoToFile(uint8Array, recordingFolder);
+      await writeVideoToFile(uint8Array, recordingFolder);
 
-    return ipc.success({
-      recordingFolderName: db.currentRecordingFolder!.folderName,
-    });
-  } catch (err) {
-    log.error('Failed during stop recording', { err });
-    return ipc.error('Error while saving the log', err);
-  }
-});
+      return ipc.success({
+        recordingFolderName: db.currentRecordingFolder!.folderName,
+      });
+    } catch (err) {
+      log.error('Failed during stop recording', { err });
+      return ipc.error('Error while saving the log', err);
+    }
+  },
+);
 
 ipcHandle('get-unique-keys', async () => {
   const uniqueKeys = keylogger.getUniqueKeys();

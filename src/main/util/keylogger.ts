@@ -20,6 +20,8 @@ class KeyLogger {
 
   startTime: number;
 
+  stopTime: number;
+
   lastMouseLogTime: number;
 
   mouseLogInterval: number;
@@ -34,6 +36,7 @@ class KeyLogger {
     this.mouseLogInterval = 50;
     this.scrollLogInterval = 50;
     this.startTime = 0;
+    this.stopTime = Infinity;
   }
 
   startLogging() {
@@ -54,6 +57,7 @@ class KeyLogger {
   }
 
   logKeyDown = (e: UiohookKeyboardEvent) => {
+    if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
     const key = keycodesMapping[e.keycode];
     this.logEntries.push(`${timestamp}: Keyboard Button Press : ${key}`);
@@ -61,12 +65,14 @@ class KeyLogger {
   };
 
   logKeyUp = (e: UiohookKeyboardEvent) => {
+    if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
     const key = keycodesMapping[e.keycode];
     this.logEntries.push(`${timestamp}: Keyboard Button Release : ${key}`);
   };
 
   logMouseDown = (e: UiohookMouseEvent) => {
+    if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
     const button = `Mouse Button ${e.button}`;
     this.logEntries.push(`${timestamp}: Mouse Button Press : ${button}`);
@@ -74,17 +80,20 @@ class KeyLogger {
   };
 
   logMouseUp = (e: UiohookMouseEvent) => {
+    if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
     const button = `Mouse Button ${e.button}`;
     this.logEntries.push(`${timestamp}: Mouse Button Release : ${button}`);
   };
 
   logMouseMove = (e: UiohookMouseEvent) => {
+    if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
     this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
   };
 
   logScroll = (e: UiohookWheelEvent) => {
+    if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
     const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
     let direction;
@@ -121,15 +130,17 @@ class KeyLogger {
     return uniqueKeys;
   }
 
-  stopLogging(): string | null {
+  stopLogging(recordingStopTime: number): string | null {
     if (!this.isLogging) return null;
 
     log.info('Keylogging being stopped');
+    this.stopTime = recordingStopTime;
     this.isLogging = false;
     uIOhook.removeAllListeners();
     uIOhook.stop();
     const logContent = this.logEntries.join('\n');
     this.logEntries = [];
+    this.stopTime = Infinity;
     return logContent;
   }
 }

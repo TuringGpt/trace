@@ -134,7 +134,7 @@ export type IPCHandleEvents = {
   >;
   'start-new-recording': IPCHandler<[], void>;
   'stop-recording': IPCHandler<
-    [uint8Array: Uint8Array],
+    [uint8Array: Uint8Array, recordingStopTime: number],
     { recordingFolderName: string }
   >;
   'get-unique-keys': IPCHandler<[], string[]>;
