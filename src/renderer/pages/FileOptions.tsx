@@ -52,7 +52,8 @@ export default function FileOptions() {
 
   useEffect(() => {
     const fetchVideoServerPort = async () => {
-      const portRes = await window.electron.getVideoStreamingPort();
+      const portRes: IPCResult<number> =
+        await window.electron.getVideoStreamingPort();
       if (portRes.status === 'error') {
         await showDialog(
           ERROR_POPUP_TITLE,
@@ -69,9 +70,11 @@ export default function FileOptions() {
     };
     fetchVideoServerPort();
   }, [showDialog]);
+
   useEffect(() => {
     const fetchRecordingResolution = async () => {
-      const res = await window.electron.getRecordingResolution(recordingName);
+      const res: IPCResult<{ width: number; height: number }> =
+        await window.electron.getRecordingResolution(recordingName);
       if (res.status === 'error') {
         log.error('Failed to retrieve recording');
         return;
@@ -81,6 +84,7 @@ export default function FileOptions() {
     };
     fetchRecordingResolution();
   }, [recordingName]);
+
   useEffect(() => {
     const video = videoRef.current;
 
@@ -140,7 +144,7 @@ export default function FileOptions() {
     key: keyof Control,
     value: string,
   ) => {
-    const newControls: Control[] = [...controls];
+    const newControls = [...controls];
     newControls[index][key] = value;
     setControls(newControls);
   };
@@ -177,15 +181,23 @@ export default function FileOptions() {
       hasError = true;
     }
 
-    controls.forEach((control) => {
-      if (!control.action.trim()) {
-        setError((prevError) => ({
-          ...prevError,
-          controls: `Action required for key: ${control.key}`,
-        }));
-        hasError = true;
-      }
-    });
+    if (controls.length === 0) {
+      setError((prevError) => ({
+        ...prevError,
+        controls: 'At least one control is required',
+      }));
+      hasError = true;
+    } else {
+      controls.forEach((control) => {
+        if (!control.action.trim()) {
+          setError((prevError) => ({
+            ...prevError,
+            controls: `Action required for key: ${control.key}`,
+          }));
+          hasError = true;
+        }
+      });
+    }
 
     if (hasError) return;
 
