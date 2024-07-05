@@ -8,6 +8,7 @@ type VideoCardWrapperProps = {
   selectedVideos: Set<string>;
   uploadProgress: UploadStatusReport;
   onBeforeUpload: (id: string) => void;
+  retryUpload: (id: string) => void;
   onBeforeDelete: (id: string) => void;
   setSelectedVideos: Dispatch<SetStateAction<Set<string>>>;
 };
@@ -17,6 +18,7 @@ export default function VideoCardWrapper({
   selectedVideos,
   uploadProgress,
   onBeforeUpload,
+  retryUpload,
   onBeforeDelete,
   setSelectedVideos,
 }: VideoCardWrapperProps) {
@@ -29,6 +31,9 @@ export default function VideoCardWrapper({
       isSelected={selectedVideos.has(video.id) || false}
       onUploadTrigger={() => {
         onBeforeUpload(video.id);
+      }}
+      onRetryTrigger={() => {
+        retryUpload(video.id);
       }}
       onDiscardTrigger={() => {
         onBeforeDelete(video.id);

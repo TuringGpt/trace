@@ -126,6 +126,11 @@ export default function UploadDashboard() {
     }
   };
 
+  const retryUpload = async (videoId: string) => {
+    log.info('Retrying upload for video', { videoId });
+    startUpload(videoId);
+  };
+
   const startDelete = async (overrideSelectVideo?: string) => {
     const itemsForDelete = overrideSelectVideo
       ? [overrideSelectVideo]
@@ -281,6 +286,7 @@ export default function UploadDashboard() {
             selectedVideos={selectedVideos}
             uploadProgress={uploadProgress}
             onBeforeUpload={onBeforeUpload}
+            retryUpload={retryUpload}
             onBeforeDelete={onBeforeDelete}
             setSelectedVideos={setSelectedVideos}
           />

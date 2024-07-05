@@ -40,6 +40,7 @@ type VideoCardProps = {
   uploadProgress: UploadItemStatus;
   onSelect: () => void;
   onUploadTrigger: () => void;
+  onRetryTrigger: () => void;
   onDiscardTrigger: () => void;
   multiSelectInProgress: boolean;
 };
@@ -68,6 +69,7 @@ export default function VideoCard({
   uploadProgress,
   onSelect,
   onUploadTrigger,
+  onRetryTrigger,
   onDiscardTrigger,
   multiSelectInProgress,
 }: VideoCardProps) {
@@ -130,9 +132,6 @@ export default function VideoCard({
                 ? `${video.folderName.substring(0, MAX_FOLDER_NAME_LENGTH)}...`
                 : video.folderName}
             </h2>
-            {/* {needsToBeUploaded && (
-              <MdEdit className="cursor-pointer opacity-50" />
-            )} */}
           </div>
         </div>
         <p className="text-gray-300 text-sm opacity-50">
@@ -142,7 +141,9 @@ export default function VideoCard({
           <p className="text-gray-300 text-xs opacity-70">
             Recorded: {formatDateInYYYYMMDDHHMM(video.recordingStartedAt)}
           </p>
-          <div className="absolute right-2 top-2">
+          <div
+            className={`absolute right-2 ${isUploadError(uploadProgress, video) ? 'bottom-2' : 'top-2'}`}
+          >
             {video.isUploaded && (
               <MdOutlineCloudSync
                 data-tooltip-id="video-tooltip"
@@ -158,55 +159,81 @@ export default function VideoCard({
               />
             )}
             {isVideoUploading(uploadProgress) && (
-              <GoSync
-                data-tooltip-id="video-tooltip"
-                data-tooltip-content={UPLOADING_TOOLTIP}
-                className="mr-2 text-3xl text-indigo-600 animate-spin-slow-reverse"
-              />
-            )}
-            {isUploadError(uploadProgress, video) && (
-              <MdSyncProblem
-                data-tooltip-id="video-tooltip"
-                data-tooltip-content={UPLOAD_FAILED_TOOLTIP}
-                data-tooltip-variant="error"
-                className="mr-2 text-3xl text-red-900"
-              />
-            )}
-          </div>
-
-          <div className="flex space-x-2">
-            {needsToBeUploaded && !multiSelectInProgress && (
               <>
-                <button
-                  type="button"
-                  onClick={() => onUploadTrigger()}
-                  className="interactive-button bg-indigo-600 w-22"
-                >
-                  <FaCloudUploadAlt className="mr-2" /> Upload
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDiscardTrigger()}
-                  className="w-8 interactive-button bg-red-500 "
-                >
-                  <span className="sr-only">{DELETE_LABEL}</span>
-                  <RiDeleteBin2Fill />
-                </button>
+                {uploadProgress.progress > 0 &&
+                  uploadProgress.progress < 100 && (
+                    <p className="text-l">{`${uploadProgress.progress} %`}</p>
+                  )}
+                <GoSync
+                  data-tooltip-id="video-tooltip"
+                  data-tooltip-content={UPLOADING_TOOLTIP}
+                  className="mr-2 text-3xl text-indigo-600 animate-spin-slow-reverse"
+                />
               </>
             )}
-            {video.isUploaded && !video.isDeletedFromLocal && (
-              <button
-                type="button"
-                data-tooltip-id="video-tooltip"
-                data-tooltip-html={REMOVE_LOCAL_TOOLTIP}
-                className="w-14 text-2xl interactive-button bg-green-500"
-                onClick={() => onCleanUp()}
-              >
-                <span className="sr-only">{CLEAN_UP_LABEL}</span>
-                <SiCcleaner />
-              </button>
+            {isUploadError(uploadProgress, video) && (
+              <>
+                <MdSyncProblem
+                  data-tooltip-id="video-tooltip"
+                  data-tooltip-content={UPLOAD_FAILED_TOOLTIP}
+                  data-tooltip-variant="error"
+                  className="mb-12 ml-24 text-3xl text-red-900"
+                />
+                <div className="flex space-x-2 cursor-pointer z-50">
+                  <button
+                    type="button"
+                    onClick={() => onRetryTrigger()}
+                    className="bg-indigo-600 text-white py-2 px-4 cursor-pointer rounded flex items-center justify-center text-sm font-medium hover:bg-indigo-700"
+                  >
+                    <FaCloudUploadAlt className="mr-2 cursor-pointer" /> Retry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDiscardTrigger()}
+                    className="bg-red-500 text-white cursor-pointer py-2 px-4 rounded flex items-center justify-center text-sm font-medium hover:bg-red-600"
+                    aria-label="delete"
+                  >
+                    <RiDeleteBin2Fill />
+                  </button>
+                </div>
+              </>
             )}
           </div>
+          {!isUploadError(uploadProgress, video) && (
+            <div className="flex space-x-2">
+              {needsToBeUploaded && !multiSelectInProgress && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onUploadTrigger()}
+                    className="interactive-button bg-indigo-600 w-22"
+                  >
+                    <FaCloudUploadAlt className="mr-2" /> Upload
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDiscardTrigger()}
+                    className="w-8 interactive-button bg-red-500 "
+                  >
+                    <span className="sr-only">{DELETE_LABEL}</span>
+                    <RiDeleteBin2Fill />
+                  </button>
+                </>
+              )}
+              {video.isUploaded && !video.isDeletedFromLocal && (
+                <button
+                  type="button"
+                  data-tooltip-id="video-tooltip"
+                  data-tooltip-html={REMOVE_LOCAL_TOOLTIP}
+                  className="w-14 text-2xl interactive-button bg-green-500"
+                  onClick={() => onCleanUp()}
+                >
+                  <span className="sr-only">{CLEAN_UP_LABEL}</span>
+                  <SiCcleaner />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <p className="text-gray-300 text-xs opacity-70">Id: {video.id}</p>
