@@ -1,28 +1,22 @@
-import archiver from 'archiver';
 import { BrowserWindow } from 'electron';
-import { once } from 'events';
-import { createReadStream, createWriteStream } from 'fs';
-import { stat, unlink } from 'fs/promises';
+import { createReadStream } from 'fs';
+import { stat } from 'fs/promises';
 import { join } from 'path';
-
-import { BlobServiceClient } from '@azure/storage-blob';
-
 import axios from 'axios';
-import ensureError from '../../renderer/util/ensureError';
+import logger from './logger';
+import { getAccessToken } from '../ipc/tokens';
 import {
-  StatusTypes,
   UploadItemStatus,
   UploadStatusReport,
+  StatusTypes,
 } from '../../types/customTypes';
-import fileExists from './fileExists';
-import logger from './logger';
 import {
-  getThumbnailPath,
   getVideoStoragePath,
   markFolderUploadComplete,
-  markFolderUploadStart,
 } from './storageHelpers';
-import { getAccessToken } from '../ipc/tokens';
+import ensureError from '../../renderer/util/ensureError';
+import fileExists from './fileExists';
+import { BACKEND_URL } from '../../constants';
 
 const log = logger.child({ module: 'util.UploadManager' });
 
@@ -31,10 +25,6 @@ class UploadManager {
   private static instance: UploadManager;
 
   public static mainWindowInstance: BrowserWindow;
-
-  private queue: string[] = [];
-
-  private isUploading = false;
 
   private blobUrl?: string;
 
@@ -81,37 +71,10 @@ class UploadManager {
     return this.uploadStatusReport;
   }
 
-  public addToQueue(folder: string): void {
-    if (this.queue.length === 0) {
-      // Start of a new upload batch, clear the status report
-      this.uploadStatusReport = {};
-    }
-    this.queue.push(folder);
+  public async startUpload(folder: string): Promise<void> {
+    log.info(`Starting upload for folder: ${folder}`);
     this.uploadStatusReport[folder] = { status: StatusTypes.Pending };
-  }
-
-  public async start(): Promise<void> {
-    if (this.isUploading) {
-      return;
-    }
-    this.isUploading = true;
-    log.info('Starting upload process queue');
-    await this.processQueue();
-  }
-
-  public stop(): void {
-    this.isUploading = false;
-  }
-
-  private async processQueue(): Promise<void> {
-    while (this.queue.length > 0 && this.isUploading) {
-      const folder = this.queue.shift();
-      if (folder) {
-        // eslint-disable-next-line no-await-in-loop
-        await this.uploadFolder(folder);
-      }
-    }
-    this.isUploading = false;
+    await this.uploadFolder(folder);
   }
 
   private async sendUploadProgress(): Promise<void> {
@@ -120,17 +83,67 @@ class UploadManager {
     });
   }
 
-  /**
-   *
-   * on discard complete, remove the folder from the status report
-   * and send the updated status report to the renderer
-   * this also forces the renderer to get the recording folders state again
-   * so we can hack into this to force a refresh of the recording folders
-   * this is debounced in the renderer so fell free to call this multiple times
-   */
   public async updateOnDiscardComplete(folder: string): Promise<void> {
     delete this.uploadStatusReport[folder];
     this.sendUploadProgress();
+  }
+
+  private async uploadFileResumable(
+    filePath: string,
+    signedUrl: string,
+    folder: string,
+    fileType: string,
+    offset = 0,
+  ): Promise<void> {
+    const chunkSize = 1024 * 1024 * 5; // 5MB chunks
+    const totalSize = (await stat(filePath)).size;
+
+    while (offset < totalSize) {
+      const start = offset;
+      const end = Math.min(offset + chunkSize, totalSize) - 1;
+      const chunk = createReadStream(filePath, { start, end });
+
+      const headers = {
+        'Content-Range': `bytes ${start}-${end}/${totalSize}`,
+        'Content-Type': 'application/octet-stream',
+      };
+
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const response = await axios.put(signedUrl, chunk, {
+          headers,
+          timeout: 10000,
+        });
+
+        if (response.status !== 200 && response.status !== 201) {
+          throw new Error(`Failed to upload ${fileType} chunk to GCS`);
+        }
+
+        // eslint-disable-next-line no-param-reassign
+        offset += chunkSize;
+
+        const percentComplete = Math.round((offset / totalSize) * 100);
+        log.debug('Resumable upload progress', {
+          folder,
+          fileType,
+          progress: percentComplete,
+        });
+        this.uploadStatusReport[folder] = {
+          status: StatusTypes.Uploading,
+          progress: percentComplete,
+        };
+        this.sendUploadProgress();
+      } catch (error: any) {
+        chunk.destroy(); // Destroy the stream to free up resources
+        this.uploadStatusReport[folder] = {
+          status: StatusTypes.Failed,
+        };
+        this.sendUploadProgress();
+        throw new Error(
+          `Failed to upload ${fileType} chunk to GCS: ${error.message}`,
+        );
+      }
+    }
   }
 
   private async uploadFolder(folder: string): Promise<void> {
@@ -138,117 +151,96 @@ class UploadManager {
       log.info('Uploading folder', { folder });
       const videoStoragePath = getVideoStoragePath();
 
-      log.info('Zipping folder', { folder });
+      log.info('Generating signed URLs', { folder });
       this.uploadStatusReport[folder] = { status: StatusTypes.Zipping };
       this.sendUploadProgress();
-      const blobName = `${folder}.zip`;
-      const zipPath = join(videoStoragePath, folder, blobName);
 
-      if (await fileExists(zipPath)) {
-        await unlink(zipPath);
+      if (!this.authToken) {
+        throw new Error('Auth token is not set');
       }
 
-      const archive = archiver('zip', { zlib: { level: 9 } });
-      const output = createWriteStream(zipPath);
-
-      archive.pipe(output);
-      archive.file(join(videoStoragePath, folder, 'video.mp4'), {
-        name: 'video.mp4',
-      });
-      archive.file(join(videoStoragePath, folder, 'keylog.txt'), {
-        name: 'keylog.txt',
-      });
-      archive.file(join(videoStoragePath, folder, 'metadata.json'), {
-        name: 'metadata.json',
-      });
-      archive.file(join(videoStoragePath, folder, 'controls.json'), {
-        name: 'controls.json',
-      });
-
-      // check if there is a thumbnail file and add it if it exists
-      const thumbnailPath = join(getThumbnailPath(), `${folder}.png`);
-      if (await fileExists(thumbnailPath)) {
-        archive.file(thumbnailPath, { name: 'thumbnail.png' });
-      } else {
-        log.error('Could not find thumbnail to upload', { thumbnailPath });
-      }
-
-      await archive.finalize();
-
-      await once(output, 'close');
-      log.info('Writing zip successful. Wrote %d bytes', output.bytesWritten);
-
-      this.uploadStatusReport[folder] = {
-        status: StatusTypes.Uploading,
-        progress: 0,
-      };
-      this.sendUploadProgress();
-      const totalBytes = (await stat(zipPath)).size;
-
-      if (this.blobUrl) {
-        // Azure Blob Storage upload
-        const blobServiceClient = BlobServiceClient.fromConnectionString(
-          this.blobUrl,
+      // Fetch signed URLs from backend
+      let signedUrlsResponse;
+      try {
+        log.info(
+          `Fetching Signed URLs ${BACKEND_URL}/signed-url ${this.authToken}`,
         );
-        const containerClient =
-          blobServiceClient.getContainerClient('turing-videos');
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-        log.info('Uploading zip file to Azure Blob Storage...', { zipPath });
-        await markFolderUploadStart(folder);
-        await blockBlobClient.uploadFile(zipPath, {
-          onProgress: (progress) => {
-            if (
-              this.uploadStatusReport[folder].status ===
-                StatusTypes.Completed ||
-              this.uploadStatusReport[folder].status === StatusTypes.Failed
-            ) {
-              log.info(
-                'Upload already completed or failed. Stopping upload progress',
-              );
-              return;
-            }
-            const percentComplete = Math.round(
-              (progress.loadedBytes / totalBytes) * 100,
-            );
-            log.debug('Upload progress', { folder, progress, percentComplete });
-            this.uploadStatusReport[folder] = {
-              status: StatusTypes.Uploading,
-              progress: percentComplete,
-            };
-            this.sendUploadProgress();
+        signedUrlsResponse = await axios.post(
+          `${BACKEND_URL}/signed-url`,
+          { folderName: folder },
+          {
+            headers: {
+              Authorization: `Bearer ${this.authToken}`,
+            },
           },
+        );
+        log.info('Signed URLs response received', {
+          data: signedUrlsResponse.data,
         });
-        log.info('Uploaded zip file to Azure Blob Storage', { zipPath });
-      } else {
-        // GCS upload
-        log.info('Uploading zip file to GCS...', { zipPath });
-        await markFolderUploadStart(folder);
-
-        const readStream = createReadStream(zipPath);
-        const uploadUrl = `https://storage.googleapis.com/trace-recordings/${folder}.zip`;
-
-        const response = await axios.put(uploadUrl, readStream, {
-          headers: {
-            'Content-Type': 'application/zip',
-          },
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
+      } catch (error: any) {
+        log.error('Error generating signed URLs', {
+          message: error.message,
+          stack: error.stack,
         });
-
-        if (response.status === 200) {
-          log.info('Uploaded zip file to GCS', { zipPath });
-          await markFolderUploadComplete(folder, true);
-          this.uploadStatusReport[folder] = { status: StatusTypes.Completed };
-          this.sendUploadProgress();
-        } else {
-          throw new Error('Failed to upload zip file to GCS');
+        if (axios.isAxiosError(error) && error.response) {
+          log.error('Response data:', { data: error.response.data });
         }
+        throw new Error('Failed to generate signed URLs');
       }
-      await markFolderUploadComplete(folder, true);
+
+      if (signedUrlsResponse.status !== 200) {
+        log.error('Failed to generate signed URLs', {
+          status: signedUrlsResponse.status,
+          data: signedUrlsResponse.data,
+        });
+        throw new Error('Failed to generate signed URLs');
+      }
+
+      const { signedUrls } = signedUrlsResponse.data;
+      log.info('Signed URLs received', { signedUrls });
+
+      // Upload files in resumable format
+      const filesToUpload = [
+        'keylog.txt',
+        'metadata.json',
+        'controls.json',
+        'thumbnail.png',
+        'video.mp4',
+      ];
+      filesToUpload.forEach(async (file) => {
+        const filePath = join(videoStoragePath, folder, file);
+        if (await fileExists(filePath)) {
+          try {
+            await this.uploadFileResumable(
+              filePath,
+              signedUrls[file],
+              folder,
+              file,
+            );
+          } catch (error: any) {
+            log.error(
+              `Failed to upload ${file} for folder ${folder}: ${error.message}`,
+            );
+            this.uploadStatusReport[folder] = { status: StatusTypes.Failed };
+            this.sendUploadProgress();
+            await markFolderUploadComplete(folder, false, ensureError(error));
+            throw error;
+          }
+        } else {
+          log.warn(`File not found, skipping upload: ${filePath}`);
+        }
+      });
+
       this.uploadStatusReport[folder] = { status: StatusTypes.Completed };
       this.sendUploadProgress();
-    } catch (err) {
-      log.error('Failed to upload the zip file.', { err, folder });
+      await markFolderUploadComplete(folder, true);
+    } catch (err: any) {
+      log.error('Failed to upload the folder.', {
+        message: err.message,
+        stack: err.stack,
+        folder,
+        response: err.response?.data,
+      });
       this.uploadStatusReport[folder] = { status: StatusTypes.Failed };
       this.sendUploadProgress();
       await markFolderUploadComplete(folder, false, ensureError(err));

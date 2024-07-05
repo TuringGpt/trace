@@ -44,9 +44,8 @@ ipcHandle('start-uploading-recording', async (e, folderIds: string[]) => {
       folderIds.includes(folder.id),
     );
     folders.forEach((folder) => {
-      UploadManager.getInstance().addToQueue(folder.id);
+      UploadManager.getInstance().startUpload(folder.id);
     });
-    UploadManager.getInstance().start();
     return ipc.success(true);
   } catch (error) {
     log.error('Failed to upload the recording', error);
