@@ -6,4 +6,4 @@ import './staticWindows';
 import './record';
 import './thumbnail';
 import './signInWithGoogle';
-import './refreshToken';
+import './tokens';

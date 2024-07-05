@@ -18,6 +18,7 @@ function LogoutButton() {
     if (consent.success) {
       localStorage.removeItem('authToken');
       await window.electron.removeRefreshToken();
+      await window.electron.removeAccessToken();
       window.location.reload();
     }
   };
@@ -29,7 +30,7 @@ function LogoutButton() {
       onClick={handleLogout}
       aria-label="Log out"
     >
-      <FaSignOutAlt className="h-8 text-5xl text-indigo-600 hover:scale-105" /> 
+      <FaSignOutAlt className="h-8 text-5xl text-indigo-600 hover:scale-105" />
     </button>
   );
 }

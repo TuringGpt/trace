@@ -172,6 +172,7 @@ export type IPCHandleEvents = {
   'open-google-auth': IPCHandler<[], void>;
   'get-refresh-token': IPCHandler<[], string>;
   'remove-refresh-token': IPCHandler<[], void>;
+  'remove-access-token': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {
