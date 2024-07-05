@@ -22,6 +22,7 @@ import {
   markFolderUploadComplete,
   markFolderUploadStart,
 } from './storageHelpers';
+import { getAccessToken } from '../ipc/tokens';
 
 const log = logger.child({ module: 'util.UploadManager' });
 
@@ -40,6 +41,8 @@ class UploadManager {
   private gcsBucketUrl: string;
 
   private uploadStatusReport: UploadStatusReport = {};
+
+  private authToken: string | null = null;
 
   private constructor() {
     log.info('Creating Upload Manager instance');
@@ -60,7 +63,18 @@ class UploadManager {
     if (!UploadManager.instance) {
       UploadManager.instance = new UploadManager();
     }
+    if (!UploadManager.instance.authToken) {
+      UploadManager.instance.loadAuthToken();
+    }
     return UploadManager.instance;
+  }
+
+  private async loadAuthToken() {
+    try {
+      this.authToken = await getAccessToken();
+    } catch (error) {
+      log.error('Error loading OAuth token from file:', error);
+    }
   }
 
   public getStatusReport(): Record<string, UploadItemStatus> {

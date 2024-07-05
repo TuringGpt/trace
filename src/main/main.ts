@@ -17,7 +17,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { setRefreshToken } from './ipc/refreshToken';
+import { setRefreshToken, setAccessToken } from './ipc/tokens';
 import MenuBuilder from './menu';
 import db from './storage';
 import { resolveHtmlPath } from './util';
@@ -156,6 +156,7 @@ app.on('open-url', (event, url) => {
           .executeJavaScript(`localStorage.setItem('authToken', '${token}');`)
           .then(() => {
             log.info('OAuth token stored in local storage');
+            setAccessToken(token);
           })
           .catch((err) => {
             log.error('Error storing token in local storage:', err);

@@ -68,6 +68,7 @@ export default function App() {
         console.error('No refresh token available, logging out.');
         localStorage.removeItem('authToken');
         await window.electron.removeRefreshToken();
+        await window.electron.removeAccessToken();
         setAuthToken(null);
         return;
       }
@@ -91,6 +92,7 @@ export default function App() {
         console.error('Failed to refresh token:', error);
         localStorage.removeItem('authToken');
         await window.electron.removeRefreshToken();
+        await window.electron.removeAccessToken();
         setAuthToken(null);
       }
     };
