@@ -169,6 +169,9 @@ export type IPCHandleEvents = {
   >;
   'start-uploading-recording': IPCHandler<[folderIds: string[]], boolean>;
   'close-overlay-window': IPCHandler<[], void>;
+  'open-google-auth': IPCHandler<[], void>;
+  'get-refresh-token': IPCHandler<[], string>;
+  'remove-refresh-token': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {
