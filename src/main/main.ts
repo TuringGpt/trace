@@ -17,6 +17,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
+import { setRefreshToken } from './ipc/refreshToken';
 import MenuBuilder from './menu';
 import db from './storage';
 import { resolveHtmlPath } from './util';
@@ -137,6 +138,33 @@ app.on('window-all-closed', () => {
   // after all windows have been closed
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+app.setAsDefaultProtocolClient('trace');
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  if (url.startsWith('trace://auth')) {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+      const parsedUrl = new URL(url);
+      const token = parsedUrl.searchParams.get('token');
+      const refreshToken = parsedUrl.searchParams.get('refreshToken');
+      if (token) {
+        mainWindow.webContents
+          .executeJavaScript(`localStorage.setItem('authToken', '${token}');`)
+          .then(() => {
+            log.info('OAuth token stored in local storage');
+          })
+          .catch((err) => {
+            log.error('Error storing token in local storage:', err);
+          });
+      }
+      if (refreshToken) {
+        setRefreshToken(refreshToken);
+      }
+    }
   }
 });
 
