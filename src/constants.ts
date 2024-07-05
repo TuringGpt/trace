@@ -1,6 +1,6 @@
 // URL Constants
-export const BACKEND_URL = 'http://localhost:3000'; // change once backend is deployed
-// export const BACKEND_URL = `https://trace.gpt.turing.com`;
+export const BACKEND_URL = `https://trace.turing.com`;
+// export const BACKEND_URL = 'http://localhost:3000'; // for local devt
 
 // Action Types constants
 export const SET_RECORDING_NAME = 'setRecordingName';
