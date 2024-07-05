@@ -23,6 +23,7 @@ import UploadDashboard from './pages/UploadDashboard';
 import VideoRecorder from './pages/VideoRecorder';
 import useAppState from './store/hook';
 import AppStateProvider from './store/provider';
+import Logout from './components/Logout';
 
 function AppRoutes() {
   const { state } = useAppState();
@@ -113,6 +114,7 @@ export default function App() {
               <BusyOverlay />
               <NavigationButton />
               <AppRoutes />
+              <Logout />
             </div>
           ) : (
             <div className="h-full flex flex-col">
@@ -121,7 +123,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  className="text-white w-full max-w-xs mx-auto bg-[#4285F4] hover:bg-[#4285F4]/90 focus:ring-4 focus:outline-none focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-center transition duration-300 ease-in-out transform hover:-translate-y-1"
+                  className="text-white w-full max-w-xs mx-auto bg-indigo-800 hover:bg-indigo-900 focus:ring-4 focus:outline-none focus:ring-[#4285F4]/50 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center justify-center transition duration-300 ease-in-out transform hover:-translate-y-1"
                 >
                   <svg
                     className="mr-2 -ml-1 w-4 h-4"

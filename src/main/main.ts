@@ -164,6 +164,7 @@ app.on('open-url', (event, url) => {
       if (refreshToken) {
         setRefreshToken(refreshToken);
       }
+      mainWindow.reload();
     }
   }
 });
