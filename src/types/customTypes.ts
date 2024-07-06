@@ -1,6 +1,14 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { z } from 'zod';
 
+const signedUrlSchema = z.record(z.string());
+
+const uploadInfoSchema = z.object({
+  signedUrls: signedUrlSchema.optional(),
+  signedUrlExpirationTime: z.number().optional(),
+  fileOffsets: z.record(z.number()).optional(),
+});
+
 const RecordedFolderSchema = z.object({
   folderName: z.string(),
   id: z.string(),
@@ -14,6 +22,7 @@ const RecordedFolderSchema = z.object({
   uploadingInProgress: z.boolean(),
   uploadError: z.string().optional(),
   uploadedAt: z.number().optional(),
+  uploadInfo: uploadInfoSchema.optional(),
 });
 
 export type RecordedFolder = z.infer<typeof RecordedFolderSchema>;
@@ -76,20 +85,16 @@ export type IPCResult<Payload> = IPCSuccess<Payload> | IPCError;
 
 export enum StatusTypes {
   Pending = 'Pending',
-  Zipping = 'Zipping',
+  FetchingUploadURLs = 'Getting Upload URLs',
   Uploading = 'Uploading',
-  Completed = 'Completed',
+  Uploaded = 'Upladed',
   Failed = 'Failed',
 }
 
-export type UploadItemStatus =
-  | {
-      status: Exclude<StatusTypes, StatusTypes.Uploading>;
-    }
-  | {
-      status: StatusTypes.Uploading;
-      progress: number;
-    };
+export type UploadItemStatus = {
+  status: StatusTypes;
+  progress?: number;
+};
 
 export type UploadStatusReport = Record<string, UploadItemStatus>;
 
