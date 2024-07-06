@@ -17,8 +17,7 @@ function LogoutButton() {
 
     if (consent.success) {
       localStorage.removeItem('authToken');
-      await window.electron.removeRefreshToken();
-      await window.electron.removeAccessToken();
+      await window.electron.removeTokens();
       window.location.reload();
     }
   };

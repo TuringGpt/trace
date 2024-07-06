@@ -49,9 +49,8 @@ const electronHandler = {
   expandOverlayWindow: ipcInvoke('expand-overlay-window'),
   shrinkOverlayWindow: ipcInvoke('shrink-overlay-window'),
   openGoogleAuth: ipcInvoke('open-google-auth'),
-  getRefreshToken: ipcInvoke('get-refresh-token'),
-  removeRefreshToken: ipcInvoke('remove-refresh-token'),
-  removeAccessToken: ipcInvoke('remove-access-token'),
+  getTokens: ipcInvoke('get-tokens'),
+  removeTokens: ipcInvoke('remove-tokens'),
   onSelectVideoSource,
   onUploadProgress,
 };

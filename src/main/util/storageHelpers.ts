@@ -163,3 +163,37 @@ export async function saveVideoDuration(folderId: string, duration: number) {
     throw err;
   }
 }
+
+export async function setTokens(accessToken: string, refreshToken: string) {
+  try {
+    const db = await storage.getData();
+    db.tokens = {
+      accessToken,
+      refreshToken,
+    };
+    await storage.save(db);
+  } catch (err) {
+    log.error('Failed to set tokens.', { err });
+    throw err;
+  }
+}
+
+export async function getTokens() {
+  try {
+    const db = await storage.getData();
+    return db.tokens;
+  } catch (err) {
+    log.error('Failed to get tokens.', { err });
+    throw err;
+  }
+}
+
+export async function removeTokens() {
+  try {
+    const db = await storage.getData();
+    db.tokens = undefined;
+  } catch (err) {
+    log.error('Failed to get tokens.', { err });
+    throw err;
+  }
+}
