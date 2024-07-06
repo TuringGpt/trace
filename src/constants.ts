@@ -87,7 +87,7 @@ export const VIDEO_RETRIEVE_ERROR_POPUP_MESSAGE =
   'Failed to retrieve video from storage';
 export const CLEANUP_POPUP_TITLE = 'Clean up';
 export const CLEANUP_POPUP_MESSAGE =
-  'Are you sure you want to delete this from your local?';
+  'Are you sure you want to delete this from your local? This action cannot be undone.';
 export const DELETE_RECORDING_POPUP_TITLE = 'Delete Recording';
 export const DELETE_RECORDING_POPUT_MESSAGE =
-  'Are you sure you want to delete the selected recordings?';
+  'Are you sure you want to delete the selected recordings? It is not uploaded yet. This action cannot be undone.';
