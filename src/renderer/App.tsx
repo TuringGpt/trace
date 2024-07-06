@@ -58,17 +58,17 @@ export default function App() {
   useEffect(() => {
     const refreshAuthToken = async () => {
       const token = localStorage.getItem('authToken');
-      const res = await window.electron.getRefreshToken();
+      const res = await window.electron.getTokens();
       let refreshToken;
       if (res.status === 'success') {
-        refreshToken = res.data;
+        const tokens = res.data;
+        refreshToken = tokens.refreshToken;
       } else {
         // No refresh token available, log out the user
         // eslint-disable-next-line no-console
         console.error('No refresh token available, logging out.');
         localStorage.removeItem('authToken');
-        await window.electron.removeRefreshToken();
-        await window.electron.removeAccessToken();
+        await window.electron.removeTokens();
         setAuthToken(null);
         return;
       }
@@ -91,8 +91,7 @@ export default function App() {
         // eslint-disable-next-line no-console
         console.error('Failed to refresh token:', error);
         localStorage.removeItem('authToken');
-        await window.electron.removeRefreshToken();
-        await window.electron.removeAccessToken();
+        await window.electron.removeTokens();
         setAuthToken(null);
       }
     };

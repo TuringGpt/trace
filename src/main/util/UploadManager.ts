@@ -4,13 +4,13 @@ import { stat } from 'fs/promises';
 import { join } from 'path';
 import axios from 'axios';
 import logger from './logger';
-import { getAccessToken } from '../ipc/tokens';
 import {
   UploadItemStatus,
   UploadStatusReport,
   StatusTypes,
 } from '../../types/customTypes';
 import {
+  getTokens,
   getVideoStoragePath,
   markFolderUploadComplete,
 } from './storageHelpers';
@@ -54,18 +54,7 @@ class UploadManager {
     if (!UploadManager.instance) {
       UploadManager.instance = new UploadManager();
     }
-    if (!UploadManager.instance.authToken) {
-      UploadManager.instance.loadAuthToken();
-    }
     return UploadManager.instance;
-  }
-
-  private async loadAuthToken() {
-    try {
-      this.authToken = await getAccessToken();
-    } catch (error) {
-      log.error('Error loading OAuth token from file:', error);
-    }
   }
 
   public getStatusReport(): Record<string, UploadItemStatus> {
@@ -93,7 +82,9 @@ class UploadManager {
     folder: string,
   ): Promise<Record<string, string>> {
     if (!this.authToken) {
-      throw new Error('Auth token is not set');
+      const tokens = await getTokens();
+      if (!tokens) throw new Error('Auth token is not set');
+      this.authToken = tokens.accessToken;
     }
 
     try {
