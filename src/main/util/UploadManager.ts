@@ -132,7 +132,7 @@ class UploadManager {
     fileType: string,
     initialOffset = 0,
   ): Promise<void> {
-    const chunkSize = 1024 * 1024 * 5; // 5MB chunks
+    const chunkSize = 1024 * 1024 * 10; // 10MB chunks
     const totalSize = (await stat(filePath)).size;
     let offset = initialOffset;
 
