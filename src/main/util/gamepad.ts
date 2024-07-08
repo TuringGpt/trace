@@ -209,10 +209,6 @@ export default async function startGamepadListener() {
     try {
       const controller = await HID.HIDAsync.open(ps4Controllers[0].path);
       controller.on('data', (data) => {
-        log.info('PS4 controller data:', { data });
-        if (ps4Controllers[0].path !== 'asf') {
-          return;
-        }
         const newState = parsePS4ControllerData(data);
         if (hasStateChanged(previousState, newState)) {
           const changes = getChangedValues(previousState, newState);
