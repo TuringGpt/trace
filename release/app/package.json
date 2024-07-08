@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "ffmpeg-static-electron": "^2.0.3",
+    "node-hid": "^3.1.0",
     "uiohook-napi": "^1.5.4"
   }
 }

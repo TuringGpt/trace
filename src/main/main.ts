@@ -20,10 +20,11 @@ import path from 'path';
 import MenuBuilder from './menu';
 import db from './storage';
 import { resolveHtmlPath } from './util';
+import startGamepadListener from './util/gamepad';
 import logger from './util/logger';
+import { setTokens } from './util/storageHelpers';
 import UploadManager from './util/UploadManager';
 import setupVideoAndThumbnailHttpServer from './videoHttpServer';
-import { setTokens } from './util/storageHelpers';
 
 const log = logger.child({ module: 'main' });
 
@@ -175,6 +176,8 @@ app
     createWindow();
     db.load();
     UploadManager.getInstance();
+    // TODO - temporarily add listener for testing here, remove later
+    startGamepadListener();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
