@@ -33,11 +33,19 @@ const SelectedDisplaySchema = z.object({
   name: z.string(),
 });
 
+export const TokensSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+});
+
+type Tokens = z.infer<typeof TokensSchema>;
+
 export const StorageApplicationStateSchema = z.object({
   currentRecordingFolder: RecordedFolderSchema.optional(),
   isRecording: z.boolean(),
   selectedDisplay: SelectedDisplaySchema.optional(),
   recordingFolders: z.array(RecordedFolderSchema),
+  tokens: TokensSchema.optional(),
 });
 
 export type StorageApplicationState = z.infer<
@@ -175,9 +183,8 @@ export type IPCHandleEvents = {
   'start-uploading-recording': IPCHandler<[folderIds: string[]], boolean>;
   'close-overlay-window': IPCHandler<[], void>;
   'open-google-auth': IPCHandler<[], void>;
-  'get-refresh-token': IPCHandler<[], string>;
-  'remove-refresh-token': IPCHandler<[], void>;
-  'remove-access-token': IPCHandler<[], void>;
+  'get-tokens': IPCHandler<[], Tokens>;
+  'remove-tokens': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {
