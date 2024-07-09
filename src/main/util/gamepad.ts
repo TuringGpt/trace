@@ -1,6 +1,8 @@
 /* eslint-disable no-bitwise */
 import HID from 'node-hid';
 
+import { onExit } from 'signal-exit';
+
 import logger from './logger';
 
 const log = logger.child({ module: 'gamepad' });
@@ -208,6 +210,7 @@ export default async function startGamepadListener() {
     });
     try {
       const controller = await HID.HIDAsync.open(ps4Controllers[0].path);
+      controller.setNonBlocking(true);
       controller.on('data', (data) => {
         const newState = parsePS4ControllerData(data);
         if (hasStateChanged(previousState, newState)) {
@@ -221,6 +224,10 @@ export default async function startGamepadListener() {
       });
       controller.on('error', (err) => {
         log.error('PS4 controller error:', { err });
+      });
+      onExit(() => {
+        log.info('Closing controller...');
+        controller.close();
       });
     } catch (err) {
       if (err instanceof Error) {
