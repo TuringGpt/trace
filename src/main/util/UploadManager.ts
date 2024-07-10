@@ -2,6 +2,7 @@ import { BrowserWindow } from 'electron';
 import { createReadStream } from 'fs';
 import { stat } from 'fs/promises';
 import { join } from 'path';
+import { request } from 'https';
 import axios from 'axios';
 import logger from './logger';
 import {
@@ -78,8 +79,8 @@ class UploadManager {
     this.sendUploadProgress();
   }
 
-  private async fetchSignedUrls(
-    folder: string,
+  private async fetchResumableSessionUris(
+    folderName: string,
   ): Promise<Record<string, string>> {
     if (!this.authToken) {
       const tokens = await getTokens();
@@ -88,10 +89,12 @@ class UploadManager {
     }
 
     try {
-      log.info(`Fetching Signed URLs from ${BACKEND_URL}/signed-url`);
+      log.info(
+        `Fetching Resumable Session URIs from ${BACKEND_URL}/session-uri`,
+      );
       const response = await axios.post(
-        `${BACKEND_URL}/signed-url`,
-        { folderName: folder },
+        `${BACKEND_URL}/session-uri`,
+        { folderName },
         {
           headers: {
             Authorization: `Bearer ${this.authToken}`,
@@ -100,88 +103,101 @@ class UploadManager {
       );
 
       if (response.status !== 200) {
-        throw new Error(`Failed to generate signed URLs: ${response.status}`);
+        throw new Error(
+          `Failed to generate resumable session URIs: ${response.status}`,
+        );
       }
 
-      return response.data.signedUrls;
+      return response.data.sessionUris;
     } catch (error: any) {
-      log.error('Error generating signed URLs', {
+      log.error('Error generating resumable session URIs', {
         message: error.message,
         stack: error.stack,
       });
       if (axios.isAxiosError(error) && error.response) {
         log.error('Response data:', { data: error.response.data });
       }
-      throw new Error('Failed to generate signed URLs');
+      throw new Error('Failed to generate resumable session URIs');
     }
   }
 
   private async uploadFileResumable(
     filePath: string,
-    signedUrl: string,
+    sessionUri: string,
     folder: string,
     fileType: string,
-    initialOffset = 0,
   ): Promise<void> {
-    const chunkSize = 1024 * 1024 * 10; // 10MB chunks
     const totalSize = (await stat(filePath)).size;
-    let offset = initialOffset;
+    const fileStream = createReadStream(filePath);
 
-    let percentComplete = 0;
-    while (offset < totalSize) {
-      const start = offset;
-      const end = Math.min(offset + chunkSize, totalSize) - 1;
-      const chunk = createReadStream(filePath, { start, end });
+    const headers = {
+      'Content-Type': UploadManager.getContentType(fileType),
+      'Content-Length': totalSize,
+    };
 
-      const headers = {
-        'Content-Range': `bytes ${start}-${end}/${totalSize}`,
-        'Content-Type': 'application/octet-stream',
-      };
+    return new Promise<void>((resolve, reject) => {
+      const url = new URL(sessionUri);
 
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        const response = await axios.put(signedUrl, chunk, {
+      const req = request(
+        {
+          method: 'PUT',
+          hostname: url.hostname,
+          port: url.port,
+          path: url.pathname + url.search,
           headers,
-          timeout: 10000,
+        },
+        (res) => {
+          if (res.statusCode === 200 || res.statusCode === 201) {
+            log.debug('Resumable upload progress', {
+              folder,
+              fileType,
+              progress: 100,
+            });
+            this.uploadStatusReport[folder] = {
+              status: StatusTypes.Uploading,
+              progress: 100,
+            };
+            this.sendUploadProgress();
+            resolve();
+          } else {
+            log.error(`Failed to upload ${fileType} to GCS`, {
+              statusCode: res.statusCode,
+              statusMessage: res.statusMessage,
+            });
+            reject(new Error(`Failed to upload ${fileType} to GCS`));
+          }
+        },
+      );
+
+      req.on('error', (err) => {
+        log.error(`Upload Failed for folder '${folder}', 0% Completed`, {
+          message: err.message,
+          stack: err.stack,
         });
-
-        if (response.status !== 200 && response.status !== 201) {
-          throw new Error(`Failed to upload ${fileType} chunk to GCS`);
-        }
-
-        // Update the offset correctly using end + 1 if the entire chunk is uploaded
-        offset = end + 1;
-
-        // Save the current offset to resume later if needed
-        // eslint-disable-next-line no-await-in-loop
-        await UploadManager.updateFileOffset(folder, fileType, offset);
-
-        percentComplete = Math.round((offset / totalSize) * 100);
-        log.debug('Resumable upload progress', {
-          folder,
-          fileType,
-          progress: percentComplete,
-        });
-        this.uploadStatusReport[folder] = {
-          status: StatusTypes.Uploading,
-          progress: percentComplete,
-        };
-        this.sendUploadProgress();
-      } catch (error: any) {
-        chunk.destroy(); // Destroy the stream to free up resources
         this.uploadStatusReport[folder] = {
           status: StatusTypes.Failed,
-          progress: percentComplete || 0,
+          progress: 0,
         };
-        log.error(
-          `Upload Failed for folder '${folder}', ${percentComplete}% Completed`,
-        );
         this.sendUploadProgress();
-        throw new Error(
-          `Failed to upload ${fileType} chunk to GCS: ${error.message}`,
+        reject(
+          new Error(`Failed to upload ${fileType} to GCS: ${err.message}`),
         );
-      }
-    }
+      });
+
+      fileStream.pipe(req);
+    });
+  }
+
+  private static getContentType(fileName: string): string {
+    const contentTypeMapping: { [key: string]: string } = {
+      txt: 'text/plain',
+      json: 'application/json',
+      webm: 'video/webm',
+      mp4: 'video/mp4',
+      png: 'image/png',
+    };
+    const fileExtension = fileName.split('.').pop() || '';
+    return contentTypeMapping[fileExtension] || 'application/octet-stream';
   }
 
   private async uploadFolder(folder: string): Promise<void> {
@@ -195,37 +211,13 @@ class UploadManager {
         throw new Error(`Folder data not found in DB for folder: ${folder}`);
       }
 
-      log.info('Checking existing signed URLs', { folder });
-
-      let signedUrls = folderData.uploadInfo?.signedUrls;
-      const currentTime = Date.now();
-      const signedUrlExpirationTime =
-        folderData.uploadInfo?.signedUrlExpirationTime || 0;
-
-      // Check if signed URLs are expired or not present
-      if (!signedUrls || currentTime > signedUrlExpirationTime) {
-        log.info('Signed URLs are expired or not present, fetching new ones', {
-          folder,
-        });
-        signedUrls = await this.fetchSignedUrls(folder);
-        // Save the new signed URLs and expiration time in the database
-        if (!folderData.uploadInfo) {
-          folderData.uploadInfo = {};
-        }
-        folderData.uploadInfo.signedUrls = signedUrls;
-        folderData.uploadInfo.signedUrlExpirationTime =
-          currentTime + 3600 * 1000;
-        await storage.save(db);
-      }
-
-      log.info('Using signed URLs', { signedUrls });
-
       this.uploadStatusReport[folder] = {
         status: StatusTypes.FetchingUploadURLs,
       };
       this.sendUploadProgress();
 
-      // Upload files in resumable format
+      const sessionUris = await this.fetchResumableSessionUris(folder);
+
       const filesToUpload = [
         'keylog.txt',
         'metadata.json',
@@ -238,16 +230,11 @@ class UploadManager {
         const filePath = join(videoStoragePath, folder, file);
         if (await fileExists(filePath)) {
           try {
-            const initialOffset = await UploadManager.getFileOffset(
-              folder,
-              file,
-            );
             await this.uploadFileResumable(
               filePath,
-              signedUrls[file],
+              sessionUris[file],
               folder,
               file,
-              initialOffset,
             );
           } catch (error: any) {
             log.error(
@@ -303,44 +290,6 @@ class UploadManager {
       await markFolderUploadComplete(folder, false, ensureError(err));
       throw err;
     }
-  }
-
-  // Helper methods to manage file offsets
-  private static async updateFileOffset(
-    folder: string,
-    file: string,
-    offset: number,
-  ) {
-    const db = await storage.getData();
-    const folderData = db.recordingFolders.find((f) => f.id === folder);
-
-    if (folderData) {
-      if (!folderData.uploadInfo) {
-        folderData.uploadInfo = {};
-      }
-      if (!folderData.uploadInfo.fileOffsets) {
-        folderData.uploadInfo.fileOffsets = {};
-      }
-      folderData.uploadInfo.fileOffsets[file] = offset;
-      await storage.save(db);
-    }
-  }
-
-  private static async getFileOffset(
-    folder: string,
-    file: string,
-  ): Promise<number> {
-    const db = await storage.getData();
-    const folderData = db.recordingFolders.find((f) => f.id === folder);
-
-    if (
-      folderData?.uploadInfo?.fileOffsets &&
-      folderData.uploadInfo.fileOffsets[file]
-    ) {
-      return folderData.uploadInfo.fileOffsets[file];
-    }
-
-    return 0;
   }
 }
 
