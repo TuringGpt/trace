@@ -225,6 +225,12 @@
     "win": {
       "target": [
         "nsis"
+      ],
+      "protocols": [
+        {
+          "name": "Trace Protocol",
+          "schemes": ["trace"]
+        }
       ]
     },
     "linux": {
