@@ -197,3 +197,50 @@ export async function removeTokens() {
     throw err;
   }
 }
+
+export async function setSessionUris(
+  folderId: string,
+  sessionUris: Record<string, string>,
+  expirationTime: number,
+) {
+  try {
+    const db = await storage.getData();
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    folder.uploadInfo = {
+      sessionUris,
+      sessionUrisExpirationTime: expirationTime,
+    };
+    await storage.save(db);
+  } catch (err) {
+    log.error('Failed to set session URIs.', {
+      err,
+      folderId,
+    });
+    throw err;
+  }
+}
+
+export async function getSessionUris(
+  folderId: string,
+): Promise<{ sessionUris?: Record<string, string>; expirationTime?: number }> {
+  try {
+    const db = await storage.getData();
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    return {
+      sessionUris: folder.uploadInfo?.sessionUris,
+      expirationTime: folder.uploadInfo?.sessionUrisExpirationTime,
+    };
+  } catch (err) {
+    log.error('Failed to get session URIs.', {
+      err,
+      folderId,
+    });
+    throw err;
+  }
+}
