@@ -6,10 +6,7 @@ import clsx from 'clsx';
 import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
 import {
-  BACKEND_URL,
   ROUTE_UPLOAD,
   ROUTE_UPLOAD_DASHBOARD,
   ROUTE_VIDEO,
@@ -53,52 +50,6 @@ export default function App() {
       setAuthToken(token);
     };
     checkAuthToken();
-  }, []);
-
-  useEffect(() => {
-    const refreshAuthToken = async () => {
-      const token = localStorage.getItem('authToken');
-      const res = await window.electron.getTokens();
-      let refreshToken;
-      if (res.status === 'success') {
-        const tokens = res.data;
-        refreshToken = tokens.refreshToken;
-      } else {
-        // No refresh token available, log out the user
-        // eslint-disable-next-line no-console
-        console.error('No refresh token available, logging out.');
-        localStorage.removeItem('authToken');
-        await window.electron.removeTokens();
-        setAuthToken(null);
-        return;
-      }
-
-      try {
-        const decodedToken: any = token ? jwtDecode(token) : null;
-        const expiryTime = decodedToken ? decodedToken.exp * 1000 : 0;
-        const currentTime = Date.now();
-
-        if (!token || expiryTime < currentTime) {
-          // Token is expired or not available
-          const response = await axios.post(`${BACKEND_URL}/refresh-token`, {
-            refreshToken,
-          });
-          const newToken = response.data.accessToken;
-          localStorage.setItem('authToken', newToken);
-          setAuthToken(newToken);
-        }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to refresh token:', error);
-        localStorage.removeItem('authToken');
-        await window.electron.removeTokens();
-        setAuthToken(null);
-      }
-    };
-
-    refreshAuthToken(); // Check immediately on component mount
-    const intervalId = setInterval(refreshAuthToken, 2 * 60 * 60 * 1000); // Check every 2 hours
-    return () => clearInterval(intervalId);
   }, []);
 
   const handleGoogleSignIn = () => {

@@ -3,7 +3,7 @@ import { createReadStream } from 'fs';
 import { stat } from 'fs/promises';
 import { join } from 'path';
 import { request } from 'https';
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 import logger from './logger';
 import {
   UploadItemStatus,
@@ -11,7 +11,6 @@ import {
   StatusTypes,
 } from '../../types/customTypes';
 import {
-  getTokens,
   getVideoStoragePath,
   markFolderUploadComplete,
 } from './storageHelpers';
@@ -79,28 +78,16 @@ class UploadManager {
     this.sendUploadProgress();
   }
 
-  private async fetchResumableSessionUris(
+  private static async fetchResumableSessionUris(
     folderName: string,
   ): Promise<Record<string, string>> {
-    if (!this.authToken) {
-      const tokens = await getTokens();
-      if (!tokens) throw new Error('Auth token is not set');
-      this.authToken = tokens.accessToken;
-    }
-
     try {
       log.info(
         `Fetching Resumable Session URIs from ${BACKEND_URL}/session-uri`,
       );
-      const response = await axios.post(
-        `${BACKEND_URL}/session-uri`,
-        { folderName },
-        {
-          headers: {
-            Authorization: `Bearer ${this.authToken}`,
-          },
-        },
-      );
+      const response = await axiosInstance.post(`${BACKEND_URL}/session-uri`, {
+        folderName,
+      });
 
       if (response.status !== 200) {
         throw new Error(
@@ -114,9 +101,6 @@ class UploadManager {
         message: error.message,
         stack: error.stack,
       });
-      if (axios.isAxiosError(error) && error.response) {
-        log.error('Response data:', { data: error.response.data });
-      }
       throw new Error('Failed to generate resumable session URIs');
     }
   }
@@ -216,7 +200,7 @@ class UploadManager {
       };
       this.sendUploadProgress();
 
-      const sessionUris = await this.fetchResumableSessionUris(folder);
+      const sessionUris = await UploadManager.fetchResumableSessionUris(folder);
 
       const filesToUpload = [
         'keylog.txt',
