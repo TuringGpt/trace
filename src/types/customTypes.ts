@@ -1,12 +1,11 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { z } from 'zod';
 
-const signedUrlSchema = z.record(z.string());
+const sessionUrisSchema = z.record(z.string());
 
 const uploadInfoSchema = z.object({
-  signedUrls: signedUrlSchema.optional(),
-  signedUrlExpirationTime: z.number().optional(),
-  fileOffsets: z.record(z.number()).optional(),
+  sessionUris: sessionUrisSchema.optional(),
+  sessionUrisExpirationTime: z.number().optional(),
 });
 
 const RecordedFolderSchema = z.object({
@@ -95,7 +94,7 @@ export enum StatusTypes {
   Pending = 'Pending',
   FetchingUploadURLs = 'Getting Upload URLs',
   Uploading = 'Uploading',
-  Uploaded = 'Upladed',
+  Uploaded = 'Uploaded',
   Failed = 'Failed',
 }
 

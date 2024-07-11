@@ -13,6 +13,8 @@ import {
 import {
   getVideoStoragePath,
   markFolderUploadComplete,
+  setSessionUris,
+  getSessionUris,
 } from './storageHelpers';
 import ensureError from '../../renderer/util/ensureError';
 import fileExists from './fileExists';
@@ -200,7 +202,15 @@ class UploadManager {
       };
       this.sendUploadProgress();
 
-      const sessionUris = await UploadManager.fetchResumableSessionUris(folder);
+      let { sessionUris, expirationTime } = await getSessionUris(folder);
+
+      const now = Date.now();
+
+      if (!sessionUris || (expirationTime && now > expirationTime)) {
+        sessionUris = await UploadManager.fetchResumableSessionUris(folder);
+        expirationTime = now + 7 * 24 * 60 * 60 * 1000; // One week from now
+        await setSessionUris(folder, sessionUris, expirationTime);
+      }
 
       const filesToUpload = [
         'keylog.txt',
