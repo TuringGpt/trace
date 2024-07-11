@@ -152,19 +152,12 @@ app.on('open-url', (event, url) => {
       const accessToken = parsedUrl.searchParams.get('token');
       const refreshToken = parsedUrl.searchParams.get('refreshToken');
       if (accessToken && refreshToken) {
-        mainWindow.webContents
-          .executeJavaScript(
-            `localStorage.setItem('authToken', '${accessToken}');`,
-          )
-          .then(() => {
-            log.info('OAuth token stored in local storage');
-            setTokens(accessToken, refreshToken);
-          })
-          .catch((err) => {
-            log.error('Error storing token in local storage:', err);
-          });
+        log.info('OAuth token received');
+        setTokens(accessToken, refreshToken);
+        mainWindow.reload();
+      } else {
+        log.error('Error: Missing access token or refresh token');
       }
-      mainWindow.reload();
     }
   }
 });
