@@ -45,9 +45,11 @@ export default function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkAuthToken = () => {
-      const token = localStorage.getItem('authToken');
-      setAuthToken(token);
+    const checkAuthToken = async () => {
+      const tokens = await window.electron.getTokens();
+      if (tokens.status === 'success' && tokens.data.accessToken) {
+        setAuthToken(tokens.data.accessToken);
+      }
     };
     checkAuthToken();
   }, []);
