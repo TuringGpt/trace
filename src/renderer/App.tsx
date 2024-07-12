@@ -22,6 +22,7 @@ import useAppState from './store/hook';
 import AppStateProvider from './store/provider';
 import Logout from './components/Logout';
 import GoogleSignInButton from './components/GoogleSignInButton';
+import AuthHandler from './components/AuthHandler';
 
 function AppRoutes() {
   const { state } = useAppState();
@@ -45,15 +46,20 @@ function AppRoutes() {
 export default function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
 
+  const checkAuthToken = async () => {
+    const tokens = await window.electron.getTokens();
+    if (tokens.status === 'success' && tokens.data.accessToken) {
+      setAuthToken(tokens.data.accessToken);
+    }
+  };
+
   useEffect(() => {
-    const checkAuthToken = async () => {
-      const tokens = await window.electron.getTokens();
-      if (tokens.status === 'success' && tokens.data.accessToken) {
-        setAuthToken(tokens.data.accessToken);
-      }
-    };
     checkAuthToken();
   }, []);
+
+  const handleAuthSuccess = () => {
+    checkAuthToken();
+  };
 
   return (
     <AppStateProvider>
@@ -73,6 +79,7 @@ export default function App() {
               <GoogleSignInButton />
             </div>
           )}
+          <AuthHandler onAuthSuccess={handleAuthSuccess} />
         </div>
       </Router>
     </AppStateProvider>

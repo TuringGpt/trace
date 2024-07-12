@@ -188,6 +188,10 @@
     "appId": "org.turing.Trace",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
+    "protocols": {
+      "name": "trace",
+      "schemes": ["trace"]
+    },
     "files": [
       "dist",
       "node_modules",

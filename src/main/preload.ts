@@ -53,6 +53,13 @@ const electronHandler = {
   removeTokens: ipcInvoke('remove-tokens'),
   onSelectVideoSource,
   onUploadProgress,
+  onAuthSuccess: (
+    callback: (data: { accessToken: string; refreshToken: string }) => void,
+  ) => {
+    ipcRenderer.on('auth-success', (_event, data) => {
+      callback(data);
+    });
+  },
 };
 
 export type ElectronHandler = typeof electronHandler;

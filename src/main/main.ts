@@ -129,6 +129,44 @@ const createWindow = async () => {
   // new AppUpdater();
 };
 
+app.on('ready', () => {
+  if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+      app.setAsDefaultProtocolClient('trace', process.execPath, [
+        path.resolve(process.argv[1]),
+      ]);
+    }
+  } else {
+    app.setAsDefaultProtocolClient('trace');
+  }
+  createWindow();
+});
+
+const handleOpenUrl = (url: string) => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+    const parsedUrl = new URL(url);
+    const accessToken = parsedUrl.searchParams.get('token');
+    const refreshToken = parsedUrl.searchParams.get('refreshToken');
+    if (accessToken && refreshToken) {
+      log.info('OAuth token received');
+      setTokens(accessToken, refreshToken);
+      mainWindow.webContents.send('auth-success', {
+        accessToken,
+        refreshToken,
+      });
+    } else {
+      log.error('Error: Missing access token or refresh token');
+    }
+  }
+};
+
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  handleOpenUrl(url);
+});
+
 /**
  * Add event listeners...
  */
