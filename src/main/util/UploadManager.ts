@@ -40,7 +40,7 @@ class UploadManager {
   private constructor() {
     log.info('Creating Upload Manager instance');
     this.blobUrl = process.env.BLOB_STORAGE_URL;
-    this.gcsBucketUrl = 'trace-recordings';
+    this.gcsBucketUrl = 'trace-recordings-qa';
 
     if (!this.blobUrl) {
       log.info('Blob URL not found, using GCS for upload');

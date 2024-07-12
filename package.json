@@ -193,6 +193,10 @@
       "node_modules",
       "package.json"
     ],
+    "protocols": {
+      "name": "electron-deep-linking",
+      "schemes": ["trace"]
+    },
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
       "target": {
