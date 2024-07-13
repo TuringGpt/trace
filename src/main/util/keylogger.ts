@@ -54,24 +54,21 @@ class KeyLogger {
     uIOhook.on('wheel', throttle(this.logScroll, this.scrollLogInterval));
 
     uIOhook.start();
-    log.info('uIOhook started');
   }
 
   logKeyDown = (e: UiohookKeyboardEvent) => {
     if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
-    const key = keycodesMapping[e.keycode] || `Unknown keycode: ${e.keycode}`;
+    const key = keycodesMapping[e.keycode];
     this.logEntries.push(`${timestamp}: Keyboard Button Press : ${key}`);
     this.uniqueKeys.add(key);
-    log.info('Key down event:', { timestamp, key });
   };
 
   logKeyUp = (e: UiohookKeyboardEvent) => {
     if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
-    const key = keycodesMapping[e.keycode] || `Unknown keycode: ${e.keycode}`;
+    const key = keycodesMapping[e.keycode];
     this.logEntries.push(`${timestamp}: Keyboard Button Release : ${key}`);
-    log.info('Key up event:', { timestamp, key });
   };
 
   logMouseDown = (e: UiohookMouseEvent) => {
@@ -80,7 +77,6 @@ class KeyLogger {
     const button = `Mouse Button ${e.button}`;
     this.logEntries.push(`${timestamp}: Mouse Button Press : ${button}`);
     this.uniqueKeys.add(button);
-    log.info('Mouse down event:', { timestamp, button });
   };
 
   logMouseUp = (e: UiohookMouseEvent) => {
@@ -88,14 +84,12 @@ class KeyLogger {
     const timestamp = this.getFormattedTime();
     const button = `Mouse Button ${e.button}`;
     this.logEntries.push(`${timestamp}: Mouse Button Release : ${button}`);
-    log.info('Mouse up event:', { timestamp, button });
   };
 
   logMouseMove = (e: UiohookMouseEvent) => {
     if (Date.now() > this.stopTime) return;
     const timestamp = this.getFormattedTime();
     this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
-    log.info('Mouse move event:', { timestamp, x: e.x, y: e.y });
   };
 
   logScroll = (e: UiohookWheelEvent) => {
@@ -113,12 +107,6 @@ class KeyLogger {
         e.rotation < 0 ? e.rotation * -1 : e.rotation
       }`,
     );
-    log.info('Scroll event:', {
-      timestamp,
-      axis,
-      direction,
-      intensity: e.rotation,
-    });
   };
 
   getFormattedTime() {
