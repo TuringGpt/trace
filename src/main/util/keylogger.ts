@@ -57,6 +57,7 @@ class KeyLogger {
       );
       uIOhook.on('wheel', throttle(this.logScroll, this.scrollLogInterval));
       uIOhook.start();
+      log.info('uIOhook started');
     } catch (error) {
       log.error('Error starting keylogging', error);
       this.isLogging = false;
@@ -70,6 +71,7 @@ class KeyLogger {
       const key = keycodesMapping[e.keycode];
       this.logEntries.push(`${timestamp}: Keyboard Button Press : ${key}`);
       this.uniqueKeys.add(key);
+      log.info('Key down event:', { timestamp, key });
     } catch (error) {
       log.error('Error logging key down', error);
     }
@@ -81,6 +83,7 @@ class KeyLogger {
       const timestamp = this.getFormattedTime();
       const key = keycodesMapping[e.keycode];
       this.logEntries.push(`${timestamp}: Keyboard Button Release : ${key}`);
+      log.info('Key up event:', { timestamp, key });
     } catch (error) {
       log.error('Error logging key up', error);
     }
@@ -93,6 +96,7 @@ class KeyLogger {
       const button = `Mouse Button ${e.button}`;
       this.logEntries.push(`${timestamp}: Mouse Button Press : ${button}`);
       this.uniqueKeys.add(button);
+      log.info('Mouse down event:', { timestamp, button });
     } catch (error) {
       log.error('Error logging mouse down', error);
     }
@@ -104,6 +108,7 @@ class KeyLogger {
       const timestamp = this.getFormattedTime();
       const button = `Mouse Button ${e.button}`;
       this.logEntries.push(`${timestamp}: Mouse Button Release : ${button}`);
+      log.info('Mouse up event:', { timestamp, button });
     } catch (error) {
       log.error('Error logging mouse up', error);
     }
@@ -114,6 +119,7 @@ class KeyLogger {
       if (Date.now() > this.stopTime) return;
       const timestamp = this.getFormattedTime();
       this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
+      log.info('Mouse move event:', { timestamp, x: e.x, y: e.y });
     } catch (error) {
       log.error('Error logging mouse move', error);
     }
@@ -135,6 +141,12 @@ class KeyLogger {
           e.rotation < 0 ? e.rotation * -1 : e.rotation
         }`,
       );
+      log.info('Scroll event:', {
+        timestamp,
+        axis,
+        direction,
+        intensity: e.rotation,
+      });
     } catch (error) {
       log.error('Error logging scroll', error);
     }
