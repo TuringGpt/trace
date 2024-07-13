@@ -31,6 +31,7 @@ const log = logger.child({ module: 'ipc.record' });
 ipcHandle('start-new-recording', async () => {
   log.info('Recording started');
   await markRecordingStarted();
+  log.info('attempting to start keylogging');
   keylogger.startLogging();
   log.info('Keystrokes logging started');
   // showHintWindows();
