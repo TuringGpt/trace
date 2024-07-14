@@ -199,8 +199,14 @@ ipcHandle('discard-recording', async (event, folderId) => {
     const files = await fs.promises.readdir(folderPath);
     await Promise.all(
       files.map(async (file) => {
-        const filePath = path.join(folderPath, file);
-        await fs.promises.unlink(filePath);
+        try {
+          const filePath = path.join(folderPath, file);
+          await fs.promises.unlink(filePath);
+          return true;
+        } catch (err) {
+          log.error('Failed to delete file', { err });
+          return false;
+        }
       }),
     );
 
