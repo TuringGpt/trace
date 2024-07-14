@@ -163,7 +163,7 @@ class DB {
   }
 
   /**
-   * This returns a copy of the data
+   *
    * @returns StorageApplicationState
    */
   async getData(): Promise<StorageApplicationState> {
