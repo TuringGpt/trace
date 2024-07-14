@@ -78,6 +78,13 @@ class DB {
           log.error('Error parsing data from file', {
             filePath: this.filePath,
             err,
+            noOfErrors: err.errors.length,
+          });
+          err.errors.forEach((error) => {
+            log.error('Error parsing data', {
+              message: error.message,
+              path: error.path.join('.'),
+            });
           });
           await this.handleCorruptedData();
         }

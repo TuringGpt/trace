@@ -66,6 +66,7 @@ const installExtensions = async () => {
 };
 
 async function createWindow() {
+  log.info('Creating new window');
   if (isDebug) {
     await installExtensions();
   }
@@ -97,7 +98,10 @@ async function createWindow() {
   UploadManager.mainWindowInstance = mainWindow;
 
   mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) throw new Error('"mainWindow" is not defined');
+    if (!mainWindow) {
+      log.error('"mainWindow" is not defined');
+      throw new Error('"mainWindow" is not defined');
+    }
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
     } else {
@@ -123,7 +127,10 @@ function handleOpenUrl(url: string) {
   const refreshToken = parsedUrl.searchParams.get('refreshToken');
 
   if (accessToken && refreshToken) {
-    log.info('OAuth tokens received', { accessToken, refreshToken });
+    log.info('OAuth tokens received', {
+      accessToken: `${accessToken.slice(0, 10)}...`,
+      refreshToken: `${refreshToken.slice(0, 10)}...`,
+    });
     setTokens(accessToken, refreshToken);
     mainWindow?.reload();
   } else {
@@ -132,6 +139,9 @@ function handleOpenUrl(url: string) {
 }
 
 if (!app.requestSingleInstanceLock()) {
+  log.info(
+    'Another instance of the application is already running. Exiting...',
+  );
   app.quit();
 } else {
   app.on('second-instance', (_, commandLine) => {
@@ -140,7 +150,10 @@ if (!app.requestSingleInstanceLock()) {
       mainWindow.focus();
     }
     const url = commandLine.find((arg) => arg.startsWith('trace://'));
-    if (url) handleOpenUrl(url);
+    if (url) {
+      log.info(`Opening URL: ${url}`);
+      handleOpenUrl(url);
+    }
   });
 
   app.on('open-url', (event, url) => {
@@ -151,8 +164,12 @@ if (!app.requestSingleInstanceLock()) {
   app
     .whenReady()
     .then(async () => {
-      if (!app.isDefaultProtocolClient('trace'))
+      if (!app.isDefaultProtocolClient('trace')) {
+        log.info(
+          'The app is not the default protocol client for "trace". Setting it as the default.',
+        );
         app.setAsDefaultProtocolClient('trace');
+      }
       try {
         await createWindow();
         db.load();
@@ -179,7 +196,7 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 process.on('uncaughtException', (error) =>
-  log.error('Uncaught Exception:', error),
+  log.error('Uncaught Exception:', { error }),
 );
 process.on('unhandledRejection', (reason, promise) =>
   log.error('Unhandled Rejection at:', { promise, reason }),

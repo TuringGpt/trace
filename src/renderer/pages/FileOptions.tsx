@@ -40,7 +40,7 @@ export default function FileOptions() {
       const res: IPCResult<string[]> = await window.electron.getUniqueKeys();
       if (res.status === 'success') {
         const uniqueKeys: string[] = res.data;
-        log.info('uniqueKeys:', uniqueKeys);
+        log.info('uniqueKeys:', { uniqueKeys });
         const initialControls = uniqueKeys.map((key: string) => ({
           key,
           action: '',
@@ -79,7 +79,7 @@ export default function FileOptions() {
         log.error('Failed to retrieve recording');
         return;
       }
-      log.info('Recording resolution', res.data);
+      log.info('Recording resolution', { res: res.data });
       setRecordingResolution(res.data);
     };
     fetchRecordingResolution();

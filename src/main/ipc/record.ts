@@ -31,7 +31,6 @@ const log = logger.child({ module: 'ipc.record' });
 ipcHandle('start-new-recording', async () => {
   log.info('Recording started');
   await markRecordingStarted();
-  log.info('attempting to start keylogger', keylogger);
   keylogger.startLogging();
   log.info('Keystrokes logging started');
   // showHintWindows();
@@ -195,6 +194,17 @@ ipcHandle('discard-recording', async (event, folderId) => {
 
     // Delete the folder on disk
     const folderPath = `${getVideoStoragePath()}/${folderId}`;
+
+    // Delete all files in the folder first
+    const files = await fs.promises.readdir(folderPath);
+    await Promise.all(
+      files.map(async (file) => {
+        const filePath = path.join(folderPath, file);
+        await fs.promises.unlink(filePath);
+      }),
+    );
+
+    // Then remove the directory
     await rmdir(folderPath, { recursive: true });
 
     return ipc.success(undefined);

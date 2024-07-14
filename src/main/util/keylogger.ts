@@ -79,7 +79,7 @@ class KeyLogger {
       // Set the log timer
       this.logTimer = setInterval(this.logEventSummary, this.logInterval);
     } catch (error) {
-      log.error('Error starting keylogging', error);
+      log.error('Error starting keylogging', { error });
       this.isLogging = false;
     }
   }

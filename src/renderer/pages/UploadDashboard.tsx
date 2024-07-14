@@ -50,7 +50,7 @@ export default function UploadDashboard() {
   const fetchMemoryUsage = async () => {
     const usage = await window.electron.getRecordingMemoryUsage();
     if (usage.status === 'success') {
-      log.info('Recording memory usage', usage.data);
+      log.info('Recording memory usage', { memory: usage.data });
       setMemoryUsage(usage.data);
     } else {
       log.error('Failed to get recording memory usage', usage.error);
@@ -111,7 +111,7 @@ export default function UploadDashboard() {
     const selectedVideoIds = overrideSelectVideo
       ? [overrideSelectVideo]
       : Array.from(selectedVideos);
-    log.info('Selected videos to upload', selectedVideoIds);
+    log.info('Selected videos to upload', { selectedVideoIds });
     const res = await showDialog(CONSENT_TITLE, CONSENT_MESSAGE, {
       type: DialogType.Confirmation,
       buttons: [AGREE_POPUP_BUTTON, ABORT_POPUP_BUTTON],
@@ -150,7 +150,7 @@ export default function UploadDashboard() {
     const selectedVideoIds = overrideSelectVideo
       ? [overrideSelectVideo]
       : Array.from(selectedVideos);
-    log.info('Selected videos to delete', selectedVideoIds);
+    log.info('Selected videos to delete', { selectedVideoIds });
     const res = await showDialog(
       DELETE_RECORDING_POPUP_TITLE,
       DELETE_RECORDING_POPUT_MESSAGE,
