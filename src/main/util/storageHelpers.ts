@@ -4,18 +4,9 @@ import path from 'path';
 import * as uuid from 'short-uuid';
 import storage from '../storage';
 import logger from './logger';
+import getVideoStoragePath from './videoStorage';
 
 const log = logger.child({ module: 'util.storageHelpers' });
-export function getVideoStoragePath(): string {
-  const appDataPath = app.getPath('userData');
-  const storagePath = path.join(appDataPath, 'video-storage');
-
-  if (!fs.existsSync(storagePath)) {
-    fs.mkdirSync(storagePath);
-  }
-
-  return storagePath;
-}
 
 export function getThumbnailPath(): string {
   const appDataPath = app.getPath('userData');

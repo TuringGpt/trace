@@ -11,7 +11,6 @@ import logger from '../util/logger';
 import remuxVideo from '../util/remuxVideo';
 import {
   getCurrentRecordingFolder,
-  getVideoStoragePath,
   markRecordingStarted,
   markRecordingStopped,
   storeRecordingSize,
@@ -24,6 +23,7 @@ import UploadManager from '../util/UploadManager';
 //   showHintWindows,
 //   shrinkOverlayWindow,
 // } from './staticWindows';
+import getVideoStoragePath from '../util/videoStorage';
 import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.record' });
