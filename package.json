@@ -83,6 +83,7 @@
     "ffmpeg-static-electron": "^2.0.3",
     "fluent-ffmpeg": "^2.1.2",
     "jszip": "^3.10.1",
+    "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
     "proper-lockfile": "^4.1.2",
     "react": "^18.2.0",
@@ -192,6 +193,10 @@
       "node_modules",
       "package.json"
     ],
+    "protocols": {
+      "name": "electron-deep-linking",
+      "schemes": ["trace"]
+    },
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
       "target": {
@@ -224,6 +229,12 @@
     "win": {
       "target": [
         "nsis"
+      ],
+      "protocols": [
+        {
+          "name": "Trace Protocol",
+          "schemes": ["trace"]
+        }
       ]
     },
     "linux": {

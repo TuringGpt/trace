@@ -1,6 +1,13 @@
 import { IpcMainInvokeEvent } from 'electron';
 import { z } from 'zod';
 
+const sessionUrisSchema = z.record(z.string());
+
+const uploadInfoSchema = z.object({
+  sessionUris: sessionUrisSchema.optional(),
+  sessionUrisExpirationTime: z.number().optional(),
+});
+
 const RecordedFolderSchema = z.object({
   folderName: z.string(),
   id: z.string(),
@@ -14,6 +21,7 @@ const RecordedFolderSchema = z.object({
   uploadingInProgress: z.boolean(),
   uploadError: z.string().optional(),
   uploadedAt: z.number().optional(),
+  uploadInfo: uploadInfoSchema.optional(),
 });
 
 export type RecordedFolder = z.infer<typeof RecordedFolderSchema>;
@@ -24,11 +32,19 @@ const SelectedDisplaySchema = z.object({
   name: z.string(),
 });
 
+export const TokensSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+});
+
+type Tokens = z.infer<typeof TokensSchema>;
+
 export const StorageApplicationStateSchema = z.object({
   currentRecordingFolder: RecordedFolderSchema.optional(),
   isRecording: z.boolean(),
   selectedDisplay: SelectedDisplaySchema.optional(),
   recordingFolders: z.array(RecordedFolderSchema),
+  tokens: TokensSchema.optional(),
 });
 
 export type StorageApplicationState = z.infer<
@@ -76,20 +92,16 @@ export type IPCResult<Payload> = IPCSuccess<Payload> | IPCError;
 
 export enum StatusTypes {
   Pending = 'Pending',
-  Zipping = 'Zipping',
+  FetchingUploadURLs = 'Getting Upload URLs',
   Uploading = 'Uploading',
-  Completed = 'Completed',
+  Uploaded = 'Uploaded',
   Failed = 'Failed',
 }
 
-export type UploadItemStatus =
-  | {
-      status: Exclude<StatusTypes, StatusTypes.Uploading>;
-    }
-  | {
-      status: StatusTypes.Uploading;
-      progress: number;
-    };
+export type UploadItemStatus = {
+  status: StatusTypes;
+  progress?: number;
+};
 
 export type UploadStatusReport = Record<string, UploadItemStatus>;
 
@@ -169,6 +181,9 @@ export type IPCHandleEvents = {
   >;
   'start-uploading-recording': IPCHandler<[folderIds: string[]], boolean>;
   'close-overlay-window': IPCHandler<[], void>;
+  'open-google-auth': IPCHandler<[], void>;
+  'get-tokens': IPCHandler<[], Tokens>;
+  'remove-tokens': IPCHandler<[], void>;
 };
 
 export type IPCOnEvents = {

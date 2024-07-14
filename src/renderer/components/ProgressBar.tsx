@@ -22,7 +22,7 @@ export default function ProgressBar() {
       setOverallProgress({
         completed: Object.values(p).filter((uploadItem) => {
           if (
-            uploadItem.status === StatusTypes.Completed ||
+            uploadItem.status === StatusTypes.Uploaded ||
             uploadItem.status === StatusTypes.Failed
           ) {
             return true;

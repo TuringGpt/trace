@@ -23,6 +23,7 @@ import { resolveHtmlPath } from './util';
 import logger from './util/logger';
 import UploadManager from './util/UploadManager';
 import setupVideoAndThumbnailHttpServer from './videoHttpServer';
+import { setTokens } from './util/storageHelpers';
 
 const log = logger.child({ module: 'main' });
 
@@ -64,18 +65,16 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const createWindow = async () => {
+async function createWindow() {
+  log.info('Creating new window');
   if (isDebug) {
     await installExtensions();
   }
-
   const RESOURCES_PATH = app.isPackaged
     ? path.join(process.resourcesPath, 'assets')
     : path.join(__dirname, '../../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
+  const getAssetPath = (...paths: string[]) =>
+    path.join(RESOURCES_PATH, ...paths);
 
   mainWindow = new BrowserWindow({
     show: false,
@@ -96,11 +95,11 @@ const createWindow = async () => {
   });
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
-
   UploadManager.mainWindowInstance = mainWindow;
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
+      log.error('"mainWindow" is not defined');
       throw new Error('"mainWindow" is not defined');
     }
     if (process.env.START_MINIMIZED) {
@@ -114,59 +113,94 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
-
-  // Open urls in the user's browser
-  mainWindow.webContents.setWindowOpenHandler((edata) => {
-    shell.openExternal(edata.url);
+  new MenuBuilder(mainWindow).buildMenu();
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
     return { action: 'deny' };
   });
+}
 
-  // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
-  // new AppUpdater();
-};
+function handleOpenUrl(url: string) {
+  log.info('Handle open URL', { url });
+  const parsedUrl = new URL(url);
+  const accessToken = parsedUrl.searchParams.get('token');
+  const refreshToken = parsedUrl.searchParams.get('refreshToken');
 
-/**
- * Add event listeners...
- */
-
-app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app
-  .whenReady()
-  .then(() => {
-    createWindow();
-    db.load();
-    UploadManager.getInstance();
-    app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
+  if (accessToken && refreshToken) {
+    log.info('OAuth tokens received', {
+      accessToken: `${accessToken.slice(0, 10)}...`,
+      refreshToken: `${refreshToken.slice(0, 10)}...`,
     });
-  })
-  .catch(log.error);
+    setTokens(accessToken, refreshToken);
+    mainWindow?.reload();
+  } else {
+    log.error('Error: Missing access token or refresh token');
+  }
+}
 
-app.on('before-quit', () => {
-  log.info('App about to quit.');
-});
+if (!app.requestSingleInstanceLock()) {
+  log.info(
+    'Another instance of the application is already running. Exiting...',
+  );
+  app.quit();
+} else {
+  app.on('second-instance', (_, commandLine) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+    const url = commandLine.find((arg) => arg.startsWith('trace://'));
+    if (url) {
+      log.info(`Opening URL: ${url}`);
+      handleOpenUrl(url);
+    }
+  });
 
-process.on('uncaughtException', (error) => {
-  log.error('Uncaught Exception:', error);
-});
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    handleOpenUrl(url);
+  });
 
-process.on('unhandledRejection', (reason, promise) => {
-  log.error('Unhandled Rejection at:', { promise, reason });
-});
+  app
+    .whenReady()
+    .then(async () => {
+      if (!app.isDefaultProtocolClient('trace')) {
+        log.info(
+          'The app is not the default protocol client for "trace". Setting it as the default.',
+        );
+        app.setAsDefaultProtocolClient('trace');
+      }
+      try {
+        await createWindow();
+        db.load();
+        UploadManager.getInstance();
+      } catch (error) {
+        log.error(error);
+      }
+    })
+    .catch(log.error);
 
-// custom event listener
-ipcMain.on('report-renderer-unhandled-error', (e, error) => {
-  log.error('Unhandled Error from renderer:', { error });
-});
+  app.on('activate', async () => {
+    if (mainWindow === null) {
+      await createWindow();
+    }
+  });
+
+  app.on('before-quit', () => log.info('App about to quit.'));
+
+  app.on('window-all-closed', () => {
+    // Respect the OSX convention of having the application in memory even
+    // after all windows have been closed
+    if (process.platform !== 'darwin') app.quit();
+  });
+}
+
+process.on('uncaughtException', (error) =>
+  log.error('Uncaught Exception:', { error }),
+);
+process.on('unhandledRejection', (reason, promise) =>
+  log.error('Unhandled Rejection at:', { promise, reason }),
+);
+ipcMain.on('report-renderer-unhandled-error', (e, error) =>
+  log.error('Unhandled Error from renderer:', { error }),
+);

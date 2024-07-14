@@ -28,6 +28,13 @@ class KeyLogger {
 
   scrollLogInterval: number;
 
+  eventCounts: { [key: string]: number };
+
+  logInterval: number;
+
+  // eslint-disable-next-line  no-undef
+  logTimer: NodeJS.Timeout | null;
+
   constructor() {
     this.isLogging = false;
     this.logEntries = [];
@@ -37,6 +44,16 @@ class KeyLogger {
     this.scrollLogInterval = 50;
     this.startTime = 0;
     this.stopTime = Infinity;
+    this.eventCounts = {
+      keydown: 0,
+      keyup: 0,
+      mousedown: 0,
+      mouseup: 0,
+      mousemove: 0,
+      wheel: 0,
+    };
+    this.logInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
+    this.logTimer = null;
   }
 
   startLogging() {
@@ -46,67 +63,122 @@ class KeyLogger {
 
     log.info('Starting keylogging');
 
-    uIOhook.on('keydown', this.logKeyDown);
-    uIOhook.on('keyup', this.logKeyUp);
-    uIOhook.on('mousedown', this.logMouseDown);
-    uIOhook.on('mouseup', this.logMouseUp);
-    uIOhook.on('mousemove', throttle(this.logMouseMove, this.mouseLogInterval));
-    uIOhook.on('wheel', throttle(this.logScroll, this.scrollLogInterval));
+    try {
+      uIOhook.on('keydown', this.logKeyDown);
+      uIOhook.on('keyup', this.logKeyUp);
+      uIOhook.on('mousedown', this.logMouseDown);
+      uIOhook.on('mouseup', this.logMouseUp);
+      uIOhook.on(
+        'mousemove',
+        throttle(this.logMouseMove, this.mouseLogInterval),
+      );
+      uIOhook.on('wheel', throttle(this.logScroll, this.scrollLogInterval));
+      uIOhook.start();
+      log.info('uIOhook started');
 
-    uIOhook.start();
+      // Set the log timer
+      this.logTimer = setInterval(this.logEventSummary, this.logInterval);
+    } catch (error) {
+      log.error('Error starting keylogging', { error });
+      this.isLogging = false;
+    }
   }
 
   logKeyDown = (e: UiohookKeyboardEvent) => {
-    if (Date.now() > this.stopTime) return;
-    const timestamp = this.getFormattedTime();
-    const key = keycodesMapping[e.keycode];
-    this.logEntries.push(`${timestamp}: Keyboard Button Press : ${key}`);
-    this.uniqueKeys.add(key);
+    try {
+      if (Date.now() > this.stopTime) return;
+      const timestamp = this.getFormattedTime();
+      const key = keycodesMapping[e.keycode];
+      this.logEntries.push(`${timestamp}: Keyboard Button Press : ${key}`);
+      this.uniqueKeys.add(key);
+      this.eventCounts.keydown += 1;
+    } catch (error) {
+      log.error('Error logging key down', error);
+    }
   };
 
   logKeyUp = (e: UiohookKeyboardEvent) => {
-    if (Date.now() > this.stopTime) return;
-    const timestamp = this.getFormattedTime();
-    const key = keycodesMapping[e.keycode];
-    this.logEntries.push(`${timestamp}: Keyboard Button Release : ${key}`);
+    try {
+      if (Date.now() > this.stopTime) return;
+      const timestamp = this.getFormattedTime();
+      const key = keycodesMapping[e.keycode];
+      this.logEntries.push(`${timestamp}: Keyboard Button Release : ${key}`);
+      this.eventCounts.keyup += 1;
+    } catch (error) {
+      log.error('Error logging key up', error);
+    }
   };
 
   logMouseDown = (e: UiohookMouseEvent) => {
-    if (Date.now() > this.stopTime) return;
-    const timestamp = this.getFormattedTime();
-    const button = `Mouse Button ${e.button}`;
-    this.logEntries.push(`${timestamp}: Mouse Button Press : ${button}`);
-    this.uniqueKeys.add(button);
+    try {
+      if (Date.now() > this.stopTime) return;
+      const timestamp = this.getFormattedTime();
+      const button = `Mouse Button ${e.button}`;
+      this.logEntries.push(`${timestamp}: Mouse Button Press : ${button}`);
+      this.uniqueKeys.add(button);
+      this.eventCounts.mousedown += 1;
+    } catch (error) {
+      log.error('Error logging mouse down', error);
+    }
   };
 
   logMouseUp = (e: UiohookMouseEvent) => {
-    if (Date.now() > this.stopTime) return;
-    const timestamp = this.getFormattedTime();
-    const button = `Mouse Button ${e.button}`;
-    this.logEntries.push(`${timestamp}: Mouse Button Release : ${button}`);
+    try {
+      if (Date.now() > this.stopTime) return;
+      const timestamp = this.getFormattedTime();
+      const button = `Mouse Button ${e.button}`;
+      this.logEntries.push(`${timestamp}: Mouse Button Release : ${button}`);
+      this.eventCounts.mouseup += 1;
+    } catch (error) {
+      log.error('Error logging mouse up', error);
+    }
   };
 
   logMouseMove = (e: UiohookMouseEvent) => {
-    if (Date.now() > this.stopTime) return;
-    const timestamp = this.getFormattedTime();
-    this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
+    try {
+      if (Date.now() > this.stopTime) return;
+      const timestamp = this.getFormattedTime();
+      this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
+      this.eventCounts.mousemove += 1;
+    } catch (error) {
+      log.error('Error logging mouse move', error);
+    }
   };
 
   logScroll = (e: UiohookWheelEvent) => {
-    if (Date.now() > this.stopTime) return;
-    const timestamp = this.getFormattedTime();
-    const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
-    let direction;
-    if (axis === 'Vertical') {
-      direction = e.rotation > 0 ? 'UP' : 'DOWN';
-    } else {
-      direction = e.rotation > 0 ? 'LEFT' : 'RIGHT';
+    try {
+      if (Date.now() > this.stopTime) return;
+      const timestamp = this.getFormattedTime();
+      const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
+      let direction;
+      if (axis === 'Vertical') {
+        direction = e.rotation > 0 ? 'UP' : 'DOWN';
+      } else {
+        direction = e.rotation > 0 ? 'LEFT' : 'RIGHT';
+      }
+      this.logEntries.push(
+        `${timestamp}: Mouse Scrolled ${axis}, Direction: ${direction}, Intensity: ${
+          e.rotation < 0 ? e.rotation * -1 : e.rotation
+        }`,
+      );
+      this.eventCounts.wheel += 1;
+    } catch (error) {
+      log.error('Error logging scroll', error);
     }
-    this.logEntries.push(
-      `${timestamp}: Mouse Scrolled ${axis}, Direction: ${direction}, Intensity: ${
-        e.rotation < 0 ? e.rotation * -1 : e.rotation
-      }`,
-    );
+  };
+
+  logEventSummary = () => {
+    log.info(`Events Summary:`, { summary: this.eventCounts });
+
+    // Reset the event counts
+    this.eventCounts = {
+      keydown: 0,
+      keyup: 0,
+      mousedown: 0,
+      mouseup: 0,
+      mousemove: 0,
+      wheel: 0,
+    };
   };
 
   getFormattedTime() {
@@ -136,8 +208,19 @@ class KeyLogger {
     log.info('Keylogging being stopped');
     this.stopTime = recordingStopTime;
     this.isLogging = false;
-    uIOhook.removeAllListeners();
-    uIOhook.stop();
+    try {
+      uIOhook.removeAllListeners();
+      uIOhook.stop();
+      if (this.logTimer) {
+        clearInterval(this.logTimer);
+        this.logTimer = null;
+      }
+    } catch (error) {
+      log.error('Error stopping keylogging', error);
+    }
+
+    // Commit any remaining logs before stopping
+    this.logEventSummary();
     const logContent = this.logEntries.join('\n');
     this.logEntries = [];
     this.stopTime = Infinity;

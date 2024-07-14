@@ -48,6 +48,9 @@ const electronHandler = {
   mediaRecordingStopped: ipcInvoke('media-recording-stopped'),
   expandOverlayWindow: ipcInvoke('expand-overlay-window'),
   shrinkOverlayWindow: ipcInvoke('shrink-overlay-window'),
+  openGoogleAuth: ipcInvoke('open-google-auth'),
+  getTokens: ipcInvoke('get-tokens'),
+  removeTokens: ipcInvoke('remove-tokens'),
   onSelectVideoSource,
   onUploadProgress,
 };

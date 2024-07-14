@@ -5,3 +5,5 @@ import './showDialog';
 import './staticWindows';
 import './record';
 import './thumbnail';
+import './signInWithGoogle';
+import './tokens';

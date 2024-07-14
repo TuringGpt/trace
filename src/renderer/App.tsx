@@ -5,6 +5,7 @@ import './App.css';
 import clsx from 'clsx';
 import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 
+import { useEffect, useState } from 'react';
 import {
   ROUTE_UPLOAD,
   ROUTE_UPLOAD_DASHBOARD,
@@ -19,6 +20,8 @@ import UploadDashboard from './pages/UploadDashboard';
 import VideoRecorder from './pages/VideoRecorder';
 import useAppState from './store/hook';
 import AppStateProvider from './store/provider';
+import Logout from './components/Logout';
+import GoogleSignInButton from './components/GoogleSignInButton';
 
 function AppRoutes() {
   const { state } = useAppState();
@@ -40,14 +43,36 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkAuthToken = async () => {
+      const tokens = await window.electron.getTokens();
+      if (tokens.status === 'success' && tokens.data.accessToken) {
+        setAuthToken(tokens.data.accessToken);
+      }
+    };
+    checkAuthToken();
+  }, []);
+
   return (
     <AppStateProvider>
       <Router>
-        <div className="bg-slate-900 text-white h-screen">
-          <AppHeader />
-          <BusyOverlay />
-          <NavigationButton />
-          <AppRoutes />
+        <div className="bg-slate-900 text-white h-screen flex flex-col justify-between">
+          {authToken ? (
+            <div>
+              <AppHeader />
+              <BusyOverlay />
+              <NavigationButton />
+              <AppRoutes />
+              <Logout />
+            </div>
+          ) : (
+            <div className="h-full flex flex-col">
+              <AppHeader />
+              <GoogleSignInButton />
+            </div>
+          )}
         </div>
       </Router>
     </AppStateProvider>

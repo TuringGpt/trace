@@ -40,7 +40,7 @@ export default function FileOptions() {
       const res: IPCResult<string[]> = await window.electron.getUniqueKeys();
       if (res.status === 'success') {
         const uniqueKeys: string[] = res.data;
-        log.info('uniqueKeys:', uniqueKeys);
+        log.info('uniqueKeys:', { uniqueKeys });
         const initialControls = uniqueKeys.map((key: string) => ({
           key,
           action: '',
@@ -79,7 +79,7 @@ export default function FileOptions() {
         log.error('Failed to retrieve recording');
         return;
       }
-      log.info('Recording resolution', res.data);
+      log.info('Recording resolution', { res: res.data });
       setRecordingResolution(res.data);
     };
     fetchRecordingResolution();
@@ -146,10 +146,50 @@ export default function FileOptions() {
   ) => {
     const newControls = [...controls];
     newControls[index][key] = value;
-    setControls(newControls);
+
+    // Check for unique keys
+    const uniqueKeys = newControls
+      .filter((control, idx) => idx !== index)
+      .map((control) => control.key);
+    if (uniqueKeys.includes(value)) {
+      setError((prevError) => ({
+        ...prevError,
+        controls: 'Each key must be unique.',
+      }));
+    } else {
+      setControls(newControls);
+      setError((prevError) => ({
+        ...prevError,
+        controls: '',
+      }));
+    }
   };
 
   const addControl = () => {
+    // Check for empty keys or actions
+    const hasEmptyKey = controls.some(
+      (control) => control.key === '' || control.action === '',
+    );
+    if (hasEmptyKey) {
+      setError((prevError) => ({
+        ...prevError,
+        controls:
+          'Please fill up empty key and action fields before adding a new control.',
+      }));
+      return;
+    }
+
+    // Check for unique keys
+    const keys = controls.map((control) => control.key);
+    const hasDuplicateKeys = keys.some((key, idx) => keys.indexOf(key) !== idx);
+    if (hasDuplicateKeys) {
+      setError((prevError) => ({
+        ...prevError,
+        controls: 'Each key must be unique.',
+      }));
+      return;
+    }
+
     setControls([...controls, { key: '', action: '' }]);
   };
 
@@ -188,6 +228,18 @@ export default function FileOptions() {
       }));
       hasError = true;
     } else {
+      const keys = controls.map((control) => control.key);
+      const hasDuplicateKeys = keys.some(
+        (key, idx) => keys.indexOf(key) !== idx,
+      );
+      if (hasDuplicateKeys) {
+        setError((prevError) => ({
+          ...prevError,
+          controls: 'Each key must be unique.',
+        }));
+        hasError = true;
+      }
+
       controls.forEach((control) => {
         if (!control.action.trim()) {
           setError((prevError) => ({
@@ -323,26 +375,28 @@ export default function FileOptions() {
         <div className="w-full mt-4">
           <h3 className="text-xl font-semibold text-white mb-2">Controls</h3>
           {controls.map((control, index) => (
-            <div key={control.key} className="flex items-center space-x-4 mb-4">
+            // eslint-disable-next-line react/no-array-index-key
+            <div key={index} className="flex items-center space-x-4 mb-4">
               <input
                 className="flex-1 p-2 rounded-md bg-white text-black border-2 border-gray-300"
                 placeholder="Key"
                 value={control.key}
-                onChange={(e) =>
-                  handleControlChange(index, 'key', e.target.value)
-                }
+                onChange={(e) => {
+                  handleControlChange(index, 'key', e.target.value);
+                }}
               />
               <input
                 className="flex-1 p-2 rounded-md bg-white text-black border-2 border-gray-300"
                 placeholder="Action"
                 value={control.action}
-                onChange={(e) =>
-                  handleControlChange(index, 'action', e.target.value)
-                }
+                onChange={(e) => {
+                  handleControlChange(index, 'action', e.target.value);
+                }}
               />
               <button
                 type="button"
                 className="bg-red-600 rounded-md px-3 py-2 text-white"
+                onMouseDown={(e) => e.preventDefault()} // Prevent blur on button click
                 onClick={() => deleteControl(index)}
               >
                 X

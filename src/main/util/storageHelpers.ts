@@ -163,3 +163,84 @@ export async function saveVideoDuration(folderId: string, duration: number) {
     throw err;
   }
 }
+
+export async function setTokens(accessToken: string, refreshToken: string) {
+  try {
+    const db = await storage.getData();
+    db.tokens = {
+      accessToken,
+      refreshToken,
+    };
+    await storage.save(db);
+  } catch (err) {
+    log.error('Failed to set tokens.', { err });
+    throw err;
+  }
+}
+
+export async function getTokens() {
+  try {
+    const db = await storage.getData();
+    return db.tokens;
+  } catch (err) {
+    log.error('Failed to get tokens.', { err });
+    throw err;
+  }
+}
+
+export async function removeTokens() {
+  try {
+    const db = await storage.getData();
+    db.tokens = undefined;
+  } catch (err) {
+    log.error('Failed to get tokens.', { err });
+    throw err;
+  }
+}
+
+export async function setSessionUris(
+  folderId: string,
+  sessionUris: Record<string, string>,
+  expirationTime: number,
+) {
+  try {
+    const db = await storage.getData();
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    folder.uploadInfo = {
+      sessionUris,
+      sessionUrisExpirationTime: expirationTime,
+    };
+    await storage.save(db);
+  } catch (err) {
+    log.error('Failed to set session URIs.', {
+      err,
+      folderId,
+    });
+    throw err;
+  }
+}
+
+export async function getSessionUris(
+  folderId: string,
+): Promise<{ sessionUris?: Record<string, string>; expirationTime?: number }> {
+  try {
+    const db = await storage.getData();
+    const folder = db.recordingFolders.find((f) => f.id === folderId);
+    if (!folder) {
+      throw new Error('Folder not found');
+    }
+    return {
+      sessionUris: folder.uploadInfo?.sessionUris,
+      expirationTime: folder.uploadInfo?.sessionUrisExpirationTime,
+    };
+  } catch (err) {
+    log.error('Failed to get session URIs.', {
+      err,
+      folderId,
+    });
+    throw err;
+  }
+}

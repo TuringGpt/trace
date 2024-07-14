@@ -1,27 +1,25 @@
-import archiver from 'archiver';
 import { BrowserWindow } from 'electron';
-import { once } from 'events';
-import { createReadStream, createWriteStream } from 'fs';
-import { stat, unlink } from 'fs/promises';
+import { createReadStream } from 'fs';
+import { stat } from 'fs/promises';
 import { join } from 'path';
-
-import { BlobServiceClient } from '@azure/storage-blob';
-
-import axios from 'axios';
-import ensureError from '../../renderer/util/ensureError';
-import {
-  StatusTypes,
-  UploadItemStatus,
-  UploadStatusReport,
-} from '../../types/customTypes';
-import fileExists from './fileExists';
+import { request } from 'https';
+import axiosInstance from './axiosInstance';
 import logger from './logger';
 import {
-  getThumbnailPath,
+  UploadItemStatus,
+  UploadStatusReport,
+  StatusTypes,
+} from '../../types/customTypes';
+import {
   getVideoStoragePath,
   markFolderUploadComplete,
-  markFolderUploadStart,
+  setSessionUris,
+  getSessionUris,
 } from './storageHelpers';
+import ensureError from '../../renderer/util/ensureError';
+import fileExists from './fileExists';
+import { BACKEND_URL } from '../../constants';
+import storage from '../storage';
 
 const log = logger.child({ module: 'util.UploadManager' });
 
@@ -31,20 +29,18 @@ class UploadManager {
 
   public static mainWindowInstance: BrowserWindow;
 
-  private queue: string[] = [];
-
-  private isUploading = false;
-
   private blobUrl?: string;
 
   private gcsBucketUrl: string;
 
   private uploadStatusReport: UploadStatusReport = {};
 
+  private authToken: string | null = null;
+
   private constructor() {
     log.info('Creating Upload Manager instance');
     this.blobUrl = process.env.BLOB_STORAGE_URL;
-    this.gcsBucketUrl = 'trace-recordings';
+    this.gcsBucketUrl = 'trace-recordings-2';
 
     if (!this.blobUrl) {
       log.info('Blob URL not found, using GCS for upload');
@@ -67,37 +63,10 @@ class UploadManager {
     return this.uploadStatusReport;
   }
 
-  public addToQueue(folder: string): void {
-    if (this.queue.length === 0) {
-      // Start of a new upload batch, clear the status report
-      this.uploadStatusReport = {};
-    }
-    this.queue.push(folder);
+  public async startUpload(folder: string): Promise<void> {
+    log.info(`Starting upload for folder: ${folder}`);
     this.uploadStatusReport[folder] = { status: StatusTypes.Pending };
-  }
-
-  public async start(): Promise<void> {
-    if (this.isUploading) {
-      return;
-    }
-    this.isUploading = true;
-    log.info('Starting upload process queue');
-    await this.processQueue();
-  }
-
-  public stop(): void {
-    this.isUploading = false;
-  }
-
-  private async processQueue(): Promise<void> {
-    while (this.queue.length > 0 && this.isUploading) {
-      const folder = this.queue.shift();
-      if (folder) {
-        // eslint-disable-next-line no-await-in-loop
-        await this.uploadFolder(folder);
-      }
-    }
-    this.isUploading = false;
+    await this.uploadFolder(folder);
   }
 
   private async sendUploadProgress(): Promise<void> {
@@ -106,136 +75,211 @@ class UploadManager {
     });
   }
 
-  /**
-   *
-   * on discard complete, remove the folder from the status report
-   * and send the updated status report to the renderer
-   * this also forces the renderer to get the recording folders state again
-   * so we can hack into this to force a refresh of the recording folders
-   * this is debounced in the renderer so fell free to call this multiple times
-   */
   public async updateOnDiscardComplete(folder: string): Promise<void> {
     delete this.uploadStatusReport[folder];
     this.sendUploadProgress();
+  }
+
+  private static async fetchResumableSessionUris(
+    folderName: string,
+  ): Promise<Record<string, string>> {
+    try {
+      log.info(
+        `Fetching Resumable Session URIs from ${BACKEND_URL}/session-uri`,
+      );
+      const response = await axiosInstance.post(`${BACKEND_URL}/session-uri`, {
+        folderName,
+      });
+
+      if (response.status !== 200) {
+        throw new Error(
+          `Failed to generate resumable session URIs: ${response.status}`,
+        );
+      }
+
+      return response.data.sessionUris;
+    } catch (error: any) {
+      log.error('Error generating resumable session URIs', {
+        message: error.message,
+        stack: error.stack,
+      });
+      throw new Error('Failed to generate resumable session URIs');
+    }
+  }
+
+  private async uploadFileResumable(
+    filePath: string,
+    sessionUri: string,
+    folder: string,
+    fileType: string,
+  ): Promise<void> {
+    const totalSize = (await stat(filePath)).size;
+    const fileStream = createReadStream(filePath);
+
+    const headers = {
+      'Content-Type': UploadManager.getContentType(fileType),
+      'Content-Length': totalSize,
+    };
+
+    return new Promise<void>((resolve, reject) => {
+      const url = new URL(sessionUri);
+
+      const req = request(
+        {
+          method: 'PUT',
+          hostname: url.hostname,
+          port: url.port,
+          path: url.pathname + url.search,
+          headers,
+        },
+        (res) => {
+          if (res.statusCode === 200 || res.statusCode === 201) {
+            log.debug('Resumable upload progress', {
+              folder,
+              fileType,
+              progress: 100,
+            });
+            this.uploadStatusReport[folder] = {
+              status: StatusTypes.Uploading,
+              progress: 100,
+            };
+            this.sendUploadProgress();
+            resolve();
+          } else {
+            log.error(`Failed to upload ${fileType} to GCS`, {
+              statusCode: res.statusCode,
+              statusMessage: res.statusMessage,
+            });
+            reject(new Error(`Failed to upload ${fileType} to GCS`));
+          }
+        },
+      );
+
+      req.on('error', (err) => {
+        log.error(`Upload Failed for folder '${folder}', 0% Completed`, {
+          message: err.message,
+          stack: err.stack,
+        });
+        this.uploadStatusReport[folder] = {
+          status: StatusTypes.Failed,
+          progress: 0,
+        };
+        this.sendUploadProgress();
+        reject(
+          new Error(`Failed to upload ${fileType} to GCS: ${err.message}`),
+        );
+      });
+
+      fileStream.pipe(req);
+    });
+  }
+
+  private static getContentType(fileName: string): string {
+    const contentTypeMapping: { [key: string]: string } = {
+      txt: 'text/plain',
+      json: 'application/json',
+      webm: 'video/webm',
+      mp4: 'video/mp4',
+      png: 'image/png',
+    };
+    const fileExtension = fileName.split('.').pop() || '';
+    return contentTypeMapping[fileExtension] || 'application/octet-stream';
   }
 
   private async uploadFolder(folder: string): Promise<void> {
     try {
       log.info('Uploading folder', { folder });
       const videoStoragePath = getVideoStoragePath();
+      const db = await storage.getData();
+      const folderData = db.recordingFolders.find((f) => f.id === folder);
 
-      log.info('Zipping folder', { folder });
-      this.uploadStatusReport[folder] = { status: StatusTypes.Zipping };
-      this.sendUploadProgress();
-      const blobName = `${folder}.zip`;
-      const zipPath = join(videoStoragePath, folder, blobName);
-
-      if (await fileExists(zipPath)) {
-        await unlink(zipPath);
+      if (!folderData) {
+        throw new Error(`Folder data not found in DB for folder: ${folder}`);
       }
-
-      const archive = archiver('zip', { zlib: { level: 9 } });
-      const output = createWriteStream(zipPath);
-
-      archive.pipe(output);
-      archive.file(join(videoStoragePath, folder, 'video.mp4'), {
-        name: 'video.mp4',
-      });
-      archive.file(join(videoStoragePath, folder, 'keylog.txt'), {
-        name: 'keylog.txt',
-      });
-      archive.file(join(videoStoragePath, folder, 'metadata.json'), {
-        name: 'metadata.json',
-      });
-      archive.file(join(videoStoragePath, folder, 'controls.json'), {
-        name: 'controls.json',
-      });
-
-      // check if there is a thumbnail file and add it if it exists
-      const thumbnailPath = join(getThumbnailPath(), `${folder}.png`);
-      if (await fileExists(thumbnailPath)) {
-        archive.file(thumbnailPath, { name: 'thumbnail.png' });
-      } else {
-        log.error('Could not find thumbnail to upload', { thumbnailPath });
-      }
-
-      await archive.finalize();
-
-      await once(output, 'close');
-      log.info('Writing zip successful. Wrote %d bytes', output.bytesWritten);
 
       this.uploadStatusReport[folder] = {
-        status: StatusTypes.Uploading,
-        progress: 0,
+        status: StatusTypes.FetchingUploadURLs,
       };
       this.sendUploadProgress();
-      const totalBytes = (await stat(zipPath)).size;
 
-      if (this.blobUrl) {
-        // Azure Blob Storage upload
-        const blobServiceClient = BlobServiceClient.fromConnectionString(
-          this.blobUrl,
-        );
-        const containerClient =
-          blobServiceClient.getContainerClient('turing-videos');
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-        log.info('Uploading zip file to Azure Blob Storage...', { zipPath });
-        await markFolderUploadStart(folder);
-        await blockBlobClient.uploadFile(zipPath, {
-          onProgress: (progress) => {
-            if (
-              this.uploadStatusReport[folder].status ===
-                StatusTypes.Completed ||
-              this.uploadStatusReport[folder].status === StatusTypes.Failed
-            ) {
-              log.info(
-                'Upload already completed or failed. Stopping upload progress',
-              );
-              return;
-            }
-            const percentComplete = Math.round(
-              (progress.loadedBytes / totalBytes) * 100,
+      let { sessionUris, expirationTime } = await getSessionUris(folder);
+
+      const now = Date.now();
+
+      if (!sessionUris || (expirationTime && now > expirationTime)) {
+        sessionUris = await UploadManager.fetchResumableSessionUris(folder);
+        expirationTime = now + 7 * 24 * 60 * 60 * 1000; // One week from now
+        await setSessionUris(folder, sessionUris, expirationTime);
+      }
+
+      const filesToUpload = [
+        'keylog.txt',
+        'metadata.json',
+        'controls.json',
+        'thumbnail.png',
+        'video.mp4',
+      ];
+
+      const uploadPromises = filesToUpload.map(async (file) => {
+        const filePath = join(videoStoragePath, folder, file);
+        if (await fileExists(filePath)) {
+          try {
+            await this.uploadFileResumable(
+              filePath,
+              sessionUris[file],
+              folder,
+              file,
             );
-            log.debug('Upload progress', { folder, progress, percentComplete });
+          } catch (error: any) {
+            log.error(
+              `Failed to upload ${file} for folder ${folder}: ${error.message}`,
+            );
             this.uploadStatusReport[folder] = {
-              status: StatusTypes.Uploading,
-              progress: percentComplete,
+              status: StatusTypes.Failed,
+              progress: this.uploadStatusReport[folder]?.progress || 0,
             };
             this.sendUploadProgress();
-          },
-        });
-        log.info('Uploaded zip file to Azure Blob Storage', { zipPath });
-      } else {
-        // GCS upload
-        log.info('Uploading zip file to GCS...', { zipPath });
-        await markFolderUploadStart(folder);
-
-        const readStream = createReadStream(zipPath);
-        const uploadUrl = `https://storage.googleapis.com/trace-recordings/${folder}.zip`;
-
-        const response = await axios.put(uploadUrl, readStream, {
-          headers: {
-            'Content-Type': 'application/zip',
-          },
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-        });
-
-        if (response.status === 200) {
-          log.info('Uploaded zip file to GCS', { zipPath });
-          await markFolderUploadComplete(folder, true);
-          this.uploadStatusReport[folder] = { status: StatusTypes.Completed };
-          this.sendUploadProgress();
+            await markFolderUploadComplete(folder, false, ensureError(error));
+            throw error;
+          }
         } else {
-          throw new Error('Failed to upload zip file to GCS');
+          log.warn(`File not found, skipping upload: ${filePath}`);
         }
+      });
+
+      const results = await Promise.allSettled(uploadPromises);
+
+      const allSucceeded = results.every(
+        (result) => result.status === 'fulfilled',
+      );
+
+      if (allSucceeded) {
+        this.uploadStatusReport[folder] = { status: StatusTypes.Uploaded };
+        await markFolderUploadComplete(folder, true);
+      } else {
+        this.uploadStatusReport[folder] = {
+          status: StatusTypes.Failed,
+          progress: this.uploadStatusReport[folder]?.progress ?? 0,
+        };
+        await markFolderUploadComplete(
+          folder,
+          false,
+          ensureError(new Error('Some files failed to upload')),
+        );
       }
-      await markFolderUploadComplete(folder, true);
-      this.uploadStatusReport[folder] = { status: StatusTypes.Completed };
+
       this.sendUploadProgress();
-    } catch (err) {
-      log.error('Failed to upload the zip file.', { err, folder });
-      this.uploadStatusReport[folder] = { status: StatusTypes.Failed };
+    } catch (err: any) {
+      log.error('Failed to upload the folder.', {
+        message: err.message,
+        stack: err.stack,
+        folder,
+        response: err.response?.data,
+      });
+      this.uploadStatusReport[folder] = {
+        status: StatusTypes.Failed,
+        progress: this.uploadStatusReport[folder]?.progress ?? 0,
+      };
       this.sendUploadProgress();
       await markFolderUploadComplete(folder, false, ensureError(err));
       throw err;
