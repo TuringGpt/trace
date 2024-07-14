@@ -194,6 +194,23 @@ ipcHandle('discard-recording', async (event, folderId) => {
 
     // Delete the folder on disk
     const folderPath = `${getVideoStoragePath()}/${folderId}`;
+
+    // Delete all files in the folder first
+    const files = await fs.promises.readdir(folderPath);
+    await Promise.all(
+      files.map(async (file) => {
+        try {
+          const filePath = path.join(folderPath, file);
+          await fs.promises.unlink(filePath);
+          return true;
+        } catch (err) {
+          log.error('Failed to delete file', { err });
+          return false;
+        }
+      }),
+    );
+
+    // Then remove the directory
     await rmdir(folderPath, { recursive: true });
 
     return ipc.success(undefined);
