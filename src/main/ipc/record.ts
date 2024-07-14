@@ -281,7 +281,7 @@ const getFoldersForDeletion = async (
   cleanUpAll?: boolean,
 ) => {
   if (cleanUpAll) {
-    const db = await storage.getData({ forceReload: true });
+    const db = await storage.getData();
     return db.recordingFolders
       .filter((folder) => folder.isUploaded && !folder.isDeletedFromLocal)
       .map((folder) => folder.id);

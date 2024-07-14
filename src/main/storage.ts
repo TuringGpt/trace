@@ -9,6 +9,7 @@ import {
   StorageApplicationState,
   StorageApplicationStateSchema,
 } from '../types/customTypes';
+import logError from './util/error-utils';
 import logger from './util/logger';
 
 const log = logger.child({ module: 'storage' });
@@ -68,27 +69,20 @@ class DB {
    * so we can safely assume that the data will be loaded post app start
    */
   async load() {
-    return this.withLock(async (): Promise<void> => {
+    return this.withLock(async (): Promise<StorageApplicationState> => {
       try {
         log.info('Loading data from file');
         const data = await readFile(this.filePath, 'utf8');
-        this.data = StorageApplicationStateSchema.parse(JSON.parse(data));
+        const validatedData = StorageApplicationStateSchema.parse(
+          JSON.parse(data),
+        );
+        this.data = validatedData;
+        return validatedData;
       } catch (err) {
+        logError('Error loading data from file', err);
         if (err instanceof ZodError) {
-          log.error('Error parsing data from file', {
-            filePath: this.filePath,
-            err,
-            noOfErrors: err.errors.length,
-          });
-          err.errors.forEach((error) => {
-            log.error('Error parsing data', {
-              message: error.message,
-              path: error.path.join('.'),
-            });
-          });
           await this.handleCorruptedData();
         }
-        log.error('Error loading data from file', { err });
         throw err;
       }
     });
@@ -138,13 +132,14 @@ class DB {
     return this.withLock(async () => {
       try {
         log.info('Saving data to file');
+        const validatedData = StorageApplicationStateSchema.parse(this.data);
         await fs.promises.writeFile(
           this.filePath,
-          JSON.stringify(this.data),
+          JSON.stringify(validatedData),
           'utf8',
         );
       } catch (err) {
-        log.error('Error saving data to file', { err });
+        logError('Error saving application state to file', err);
         throw err;
       }
     });
@@ -167,13 +162,17 @@ class DB {
     }
   }
 
-  async getData(
-    { forceReload }: { forceReload?: boolean } = { forceReload: false },
-  ): Promise<StorageApplicationState> {
-    if (forceReload) {
-      await this.load();
+  /**
+   * This returns a copy of the data
+   * @returns StorageApplicationState
+   */
+  async getData(): Promise<StorageApplicationState> {
+    const data = await this.load();
+    if (!data) {
+      throw new Error('Data is not loaded');
     }
-    return this.data!;
+    this.data = data;
+    return this.data;
   }
 }
 
