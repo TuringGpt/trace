@@ -71,9 +71,7 @@ export async function markFolderUploadStart(folderId: string) {
 
 export async function storeRecordingSize(folderId: string, size: number) {
   try {
-    const db = await storage.getData({
-      forceReload: true,
-    });
+    const db = await storage.getData();
     const folder = db.recordingFolders.find((f) => f.id === folderId);
     if (!folder) {
       throw new Error('Folder not found');
