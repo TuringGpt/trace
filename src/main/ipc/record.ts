@@ -8,7 +8,7 @@ import fileExists from '../util/fileExists';
 import getDeviceMetadata from '../util/getMetaData';
 import keylogger from '../util/keylogger';
 import logger from '../util/logger';
-import remuxVideo from '../util/remuxVideo';
+import { remuxVideo, fixWebmDuration } from '../util/remuxVideo';
 import {
   getCurrentRecordingFolder,
   markRecordingStarted,
@@ -70,6 +70,8 @@ async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
       tempInputPath,
       tempOutputPath,
     });
+
+    await fixWebmDuration(tempInputPath, recordingFolder);
 
     const startTime = Date.now();
     await remuxVideo(tempInputPath, tempOutputPath);

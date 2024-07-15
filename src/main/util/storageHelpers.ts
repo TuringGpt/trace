@@ -153,12 +153,12 @@ export async function saveVideoDuration(folderId: string, duration: number) {
   }
 }
 
-export async function setTokens(accessToken: string, refreshToken: string) {
+export async function setTokens(accessToken: string, refreshToken?: string) {
   try {
     const db = await storage.getData();
     db.tokens = {
-      accessToken,
-      refreshToken,
+      accessToken: accessToken || db.tokens?.accessToken,
+      refreshToken: refreshToken || db.tokens?.refreshToken,
     };
     await storage.save(db);
   } catch (err) {

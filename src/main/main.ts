@@ -27,7 +27,7 @@ import { setTokens } from './util/storageHelpers';
 
 const log = logger.child({ module: 'main' });
 
-logger.info('App starting...');
+logger.info('App starting...', { version: app.getVersion() });
 
 setupVideoAndThumbnailHttpServer();
 
@@ -121,7 +121,7 @@ async function createWindow() {
 }
 
 function handleOpenUrl(url: string) {
-  log.info('Handle open URL', { url });
+  log.info('Handle open URL', { url: `${url.slice(0, 25)}...` });
   const parsedUrl = new URL(url);
   const accessToken = parsedUrl.searchParams.get('token');
   const refreshToken = parsedUrl.searchParams.get('refreshToken');

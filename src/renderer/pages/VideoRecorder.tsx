@@ -105,7 +105,7 @@ export default function VideoRecorder() {
       return;
     }
     const options = {
-      mimeType: 'video/webm; codecs=H264',
+      mimeType: 'video/webm; codecs=vp9',
       bitsPerSecond: 8000000,
     };
     const recorder = new MediaRecorder(stream, options);
@@ -121,7 +121,7 @@ export default function VideoRecorder() {
     recorder.onstop = async () => {
       log.info('Recording stopped', chunks.length);
       dispatch(showBusyIndicator(VIDEO_CONVERSION_INDICATOR));
-      const blob = new Blob(chunks, { type: 'video/webm; codecs=H264' });
+      const blob = new Blob(chunks, { type: 'video/webm; codecs=vp9' });
       const arrayBuffer = await blob.arrayBuffer();
       try {
         const res = await window.electron.stopRecording(

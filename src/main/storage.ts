@@ -3,7 +3,6 @@ import fs from 'fs';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import lockFile, { lock, LockOptions } from 'proper-lockfile';
-import { ZodError } from 'zod';
 
 import {
   RecordedFolder,
@@ -35,10 +34,28 @@ const emptyInitialState: StorageApplicationState = {
 };
 
 async function reviveStorageOnCorruption() {
-  const videoStoragePath = getVideoStoragePath();
-  // check folders inside video storage path, use them to populate
-  // recordingFolders
+  const appStatePath = path.join(app.getPath('userData'), fileName);
 
+  log.info('Reviving storage on corruption');
+  if (!fs.existsSync(appStatePath)) {
+    log.warn(
+      'Application state file not found. Initializing with empty state.',
+      { emptyInitialState },
+    );
+    fs.writeFileSync(appStatePath, JSON.stringify(emptyInitialState), 'utf8');
+    return emptyInitialState;
+  }
+
+  const corruptAppStateJson = fs.readFileSync(
+    path.join(app.getPath('userData'), 'application-state.json'),
+    'utf8',
+  );
+  log.error('Corrupt file found. Reviving storage from available folders.', {
+    corruptAppStateJson,
+  });
+
+  const videoStoragePath = getVideoStoragePath();
+  log.info('Checking folders inside video storage path');
   const folders = fs.readdirSync(videoStoragePath, { withFileTypes: true });
   const recordingFolders: RecordedFolder[] = folders
     .filter((folder) => folder.isDirectory())
@@ -59,8 +76,12 @@ async function reviveStorageOnCorruption() {
 
   const res = StorageApplicationStateSchema.safeParse(data);
   if (!res.success) {
+    log.error('Failed to validate revived data', { data });
     return emptyInitialState;
   }
+
+  fs.writeFileSync(appStatePath, JSON.stringify(res.data), 'utf8');
+  log.info('Corrupt file revived successfully with data', { data });
 
   return data;
 }
@@ -113,9 +134,8 @@ class DB {
         return validatedData;
       } catch (err) {
         logError('Error loading data from file', err);
-        if (err instanceof ZodError) {
-          await this.handleCorruptedData();
-        }
+        await this.unLockStorageFile();
+        await this.handleCorruptedData();
         throw err;
       }
     });

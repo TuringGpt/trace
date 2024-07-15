@@ -33,8 +33,8 @@ const SelectedDisplaySchema = z.object({
 });
 
 export const TokensSchema = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
+  accessToken: z.string().optional(),
+  refreshToken: z.string().optional(),
 });
 
 type Tokens = z.infer<typeof TokensSchema>;

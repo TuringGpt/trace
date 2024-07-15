@@ -3,6 +3,7 @@ import ffmpegStatic from 'ffmpeg-static-electron';
 import ffmpeg from 'fluent-ffmpeg';
 import path from 'path';
 
+import fs from 'fs';
 import logger from './logger';
 
 const log = logger.child({ module: 'util.remuxVideo' });
@@ -28,7 +29,37 @@ const ffmpegPath = app.isPackaged
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-export default function remuxVideo(inputPath: string, outputPath: string) {
+async function fixWebmDuration(inputPath: string, recordingFolder: string) {
+  try {
+    log.info('Starting to fix WebM duration');
+    const tempOutputPath = path.join(recordingFolder, 'temp-video-2.webm');
+    const startTime = Date.now();
+    await new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .outputOptions('-c:v copy')
+        .outputOptions('-fflags +genpts')
+        .on('end', resolve)
+        .on('error', (err, stdout, stderr) => {
+          log.error('ffmpeg error:', { err });
+          log.error('ffmpeg stdout:', { stdout });
+          log.error('ffmpeg stderr:', { stderr });
+          reject(err);
+        })
+        .save(tempOutputPath);
+    });
+    fs.unlinkSync(inputPath);
+    fs.renameSync(tempOutputPath, inputPath);
+    const timeTook = Date.now() - startTime;
+    log.info('WebM duration fixed successfully.', {
+      timeTook: `${timeTook / 1000} seconds`,
+      inputPath,
+    });
+  } catch (error) {
+    log.error('Error while fixing WebM issues:', { error, inputPath });
+  }
+}
+
+function remuxVideo(inputPath: string, outputPath: string) {
   return new Promise<void>((resolve, reject) => {
     ffmpeg(inputPath)
       .output(outputPath)
@@ -46,3 +77,5 @@ export default function remuxVideo(inputPath: string, outputPath: string) {
       .run();
   });
 }
+
+export { remuxVideo, fixWebmDuration };
