@@ -123,8 +123,8 @@ class DB {
    * so we can safely assume that the data will be loaded post app start
    */
   async load() {
-    return this.withLock(async (): Promise<StorageApplicationState> => {
-      try {
+    try {
+      return await this.withLock(async (): Promise<StorageApplicationState> => {
         log.info('Loading data from file');
         const data = await readFile(this.filePath, 'utf8');
         const validatedData = StorageApplicationStateSchema.parse(
@@ -132,13 +132,12 @@ class DB {
         );
         this.data = validatedData;
         return validatedData;
-      } catch (err) {
-        logError('Error loading data from file', err);
-        await this.unLockStorageFile();
-        await this.handleCorruptedData();
-        throw err;
-      }
-    });
+      });
+    } catch (err) {
+      logError('Error loading data from file', err);
+      await this.handleCorruptedData();
+      throw err;
+    }
   }
 
   private async unLockStorageFile() {
