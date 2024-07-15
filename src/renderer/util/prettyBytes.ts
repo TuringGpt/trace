@@ -1,4 +1,8 @@
-export default function prettyBytes(bytes: number) {
+export default function prettyBytes(bytes: number | undefined) {
+  if (bytes === undefined) {
+    return 'Size: NA';
+  }
+
   const kb = bytes / 1024;
   const mb = kb / 1024;
   const gb = mb / 1024;

@@ -106,9 +106,11 @@ async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
 ipcHandle(
   'stop-recording',
   async (event, uint8Array, recordingStopTime: number) => {
+    let recordingFolderName = '';
     try {
       const recordingFolder = await getCurrentRecordingFolder();
       const db = await storage.getData();
+      recordingFolderName = db.currentRecordingFolder!.folderName;
       const logContent = keylogger.stopLogging(recordingStopTime);
       const metadata = await getDeviceMetadata();
       await markRecordingStopped();
@@ -121,12 +123,13 @@ ipcHandle(
 
       await writeVideoToFile(uint8Array, recordingFolder);
 
-      return ipc.success({
-        recordingFolderName: db.currentRecordingFolder!.folderName,
-      });
+      return ipc.success({ recordingFolderName });
     } catch (err) {
       log.error('Failed during stop recording', { err });
-      return ipc.error('Error while saving the log', err);
+      return ipc.error('Error while saving the recording', {
+        err,
+        recordingFolderName,
+      });
     }
   },
 );
