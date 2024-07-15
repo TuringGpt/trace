@@ -137,7 +137,7 @@ export default function VideoCard({
             Recorded: {formatDateInYYYYMMDDHHMM(video.recordingStartedAt)}
           </p>
           <p className="text-gray-300 text-sm opacity-50 my-2">
-            {video.recordingSize && prettyBytes(video.recordingSize)}
+            {prettyBytes(video.recordingSize)}
           </p>
         </div>
       </div>

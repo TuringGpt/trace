@@ -123,22 +123,35 @@ export default function VideoRecorder() {
       dispatch(showBusyIndicator(VIDEO_CONVERSION_INDICATOR));
       const blob = new Blob(chunks, { type: 'video/webm; codecs=H264' });
       const arrayBuffer = await blob.arrayBuffer();
-      const res = await window.electron.stopRecording(
-        new Uint8Array(arrayBuffer),
-        recordingStopTime === null ? Date.now() : recordingStopTime,
-      );
-      setIsRecording(false);
-      if (res.status === 'error') {
-        log.error('Error during video saving', {
-          remuxRes: res,
-        });
-        return;
+      try {
+        const res = await window.electron.stopRecording(
+          new Uint8Array(arrayBuffer),
+          recordingStopTime === null ? Date.now() : recordingStopTime,
+        );
+        setIsRecording(false);
+        if (res.status === 'error') {
+          log.error('Error during video saving', {
+            remuxRes: res,
+          });
+          throw new Error('Remuxing error');
+        }
+
+        dispatch(hideBusyIndicator());
+        dispatch(setRecordingName(res.data.recordingFolderName));
+        navigate(ROUTE_VIDEO);
+      } catch (error: any) {
+        log.error('Error during remuxing:', error);
+        await showDialog(
+          'Remuxing Error',
+          'An error occurred during the video processing. Please try again.',
+          {
+            type: DialogType.Error,
+            buttons: ['Close'],
+          },
+        );
+        dispatch(hideBusyIndicator());
+        dispatch(setRecordingName(error.recordingFolderName));
       }
-
-      dispatch(hideBusyIndicator());
-      dispatch(setRecordingName(res.data.recordingFolderName));
-
-      navigate(ROUTE_VIDEO);
     };
     recorder.start();
     window.electron.startNewRecording();

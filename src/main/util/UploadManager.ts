@@ -212,12 +212,17 @@ class UploadManager {
         await setSessionUris(folder, sessionUris, expirationTime);
       }
 
+      const videoFile = (await fileExists(
+        join(videoStoragePath, folder, 'video.mp4'),
+      ))
+        ? 'video.mp4'
+        : 'temp-video.webm';
       const filesToUpload = [
         'keylog.txt',
         'metadata.json',
         'controls.json',
         'thumbnail.png',
-        'video.mp4',
+        videoFile,
       ];
 
       const uploadPromises = filesToUpload.map(async (file) => {
