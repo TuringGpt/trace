@@ -181,6 +181,7 @@ export async function removeTokens() {
   try {
     const db = await storage.getData();
     db.tokens = undefined;
+    await storage.save(db);
   } catch (err) {
     log.error('Failed to get tokens.', { err });
     throw err;
