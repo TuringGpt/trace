@@ -1,25 +1,25 @@
 import { BrowserWindow } from 'electron';
 import { createReadStream } from 'fs';
 import { stat } from 'fs/promises';
-import { join } from 'path';
 import { request } from 'https';
-import axiosInstance from './axiosInstance';
-import logger from './logger';
+import { join } from 'path';
+import { BACKEND_URL } from '../../constants';
+import ensureError from '../../renderer/util/ensureError';
 import {
+  StatusTypes,
   UploadItemStatus,
   UploadStatusReport,
-  StatusTypes,
 } from '../../types/customTypes';
+import storage from '../storage';
+import axiosInstance from './axiosInstance';
+import fileExists from './fileExists';
+import logger from './logger';
 import {
-  getVideoStoragePath,
+  getSessionUris,
   markFolderUploadComplete,
   setSessionUris,
-  getSessionUris,
 } from './storageHelpers';
-import ensureError from '../../renderer/util/ensureError';
-import fileExists from './fileExists';
-import { BACKEND_URL } from '../../constants';
-import storage from '../storage';
+import getVideoStoragePath from './videoStorage';
 
 const log = logger.child({ module: 'util.UploadManager' });
 

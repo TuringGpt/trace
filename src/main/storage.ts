@@ -6,11 +6,13 @@ import lockFile, { lock, LockOptions } from 'proper-lockfile';
 import { ZodError } from 'zod';
 
 import {
+  RecordedFolder,
   StorageApplicationState,
   StorageApplicationStateSchema,
 } from '../types/customTypes';
 import logError from './util/error-utils';
 import logger from './util/logger';
+import getVideoStoragePath from './util/videoStorage';
 
 const log = logger.child({ module: 'storage' });
 
@@ -31,6 +33,37 @@ const emptyInitialState: StorageApplicationState = {
   isRecording: false,
   recordingFolders: [],
 };
+
+async function reviveStorageOnCorruption() {
+  const videoStoragePath = getVideoStoragePath();
+  // check folders inside video storage path, use them to populate
+  // recordingFolders
+
+  const folders = fs.readdirSync(videoStoragePath, { withFileTypes: true });
+  const recordingFolders: RecordedFolder[] = folders
+    .filter((folder) => folder.isDirectory())
+    .map((folder): RecordedFolder => {
+      return {
+        id: folder.name,
+        folderName: folder.name,
+        isUploaded: false,
+        recordingStartedAt: Date.now(),
+        uploadingInProgress: false,
+      };
+    });
+
+  const data: StorageApplicationState = {
+    isRecording: false,
+    recordingFolders,
+  };
+
+  const res = StorageApplicationStateSchema.safeParse(data);
+  if (!res.success) {
+    return emptyInitialState;
+  }
+
+  return data;
+}
 
 class DB {
   data: StorageApplicationState | undefined;
@@ -115,7 +148,7 @@ class DB {
       buttons: ['Reset', 'Quit'],
     });
     if (response.response === 0) {
-      this.data = emptyInitialState;
+      this.data = await reviveStorageOnCorruption();
       await this.#save();
     } else {
       log.error('User does not want to reset the app. Quitting.');
