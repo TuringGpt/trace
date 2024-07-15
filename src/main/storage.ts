@@ -36,54 +36,59 @@ const emptyInitialState: StorageApplicationState = {
 async function reviveStorageOnCorruption() {
   const appStatePath = path.join(app.getPath('userData'), fileName);
 
-  log.info('Reviving storage on corruption');
-  if (!fs.existsSync(appStatePath)) {
-    log.warn(
-      'Application state file not found. Initializing with empty state.',
-      { emptyInitialState },
+  try {
+    log.info('Reviving storage on corruption');
+    if (!fs.existsSync(appStatePath)) {
+      log.warn(
+        'Application state file not found. Initializing with empty state.',
+        { emptyInitialState },
+      );
+      fs.writeFileSync(appStatePath, JSON.stringify(emptyInitialState), 'utf8');
+      return emptyInitialState;
+    }
+
+    const corruptAppStateJson = fs.readFileSync(
+      path.join(app.getPath('userData'), 'application-state.json'),
+      'utf8',
     );
-    fs.writeFileSync(appStatePath, JSON.stringify(emptyInitialState), 'utf8');
-    return emptyInitialState;
-  }
-
-  const corruptAppStateJson = fs.readFileSync(
-    path.join(app.getPath('userData'), 'application-state.json'),
-    'utf8',
-  );
-  log.error('Corrupt file found. Reviving storage from available folders.', {
-    corruptAppStateJson,
-  });
-
-  const videoStoragePath = getVideoStoragePath();
-  log.info('Checking folders inside video storage path');
-  const folders = fs.readdirSync(videoStoragePath, { withFileTypes: true });
-  const recordingFolders: RecordedFolder[] = folders
-    .filter((folder) => folder.isDirectory())
-    .map((folder): RecordedFolder => {
-      return {
-        id: folder.name,
-        folderName: folder.name,
-        isUploaded: false,
-        recordingStartedAt: Date.now(),
-        uploadingInProgress: false,
-      };
+    log.error('Corrupt file found. Reviving storage from available folders.', {
+      corruptAppStateJson,
     });
 
-  const data: StorageApplicationState = {
-    isRecording: false,
-    recordingFolders,
-  };
+    const videoStoragePath = getVideoStoragePath();
+    log.info('Checking folders inside video storage path');
+    const folders = fs.readdirSync(videoStoragePath, { withFileTypes: true });
+    const recordingFolders: RecordedFolder[] = folders
+      .filter((folder) => folder.isDirectory())
+      .map((folder): RecordedFolder => {
+        return {
+          id: folder.name,
+          folderName: folder.name,
+          isUploaded: false,
+          recordingStartedAt: Date.now(),
+          uploadingInProgress: false,
+        };
+      });
 
-  const res = StorageApplicationStateSchema.safeParse(data);
-  if (!res.success) {
-    log.error('Failed to validate revived data', { data });
-    return emptyInitialState;
+    const data: StorageApplicationState = {
+      isRecording: false,
+      recordingFolders,
+    };
+
+    const res = StorageApplicationStateSchema.safeParse(data);
+    if (!res.success) {
+      log.error('Failed to validate revived data', { data });
+      return emptyInitialState;
+    }
+
+    fs.writeFileSync(appStatePath, JSON.stringify(res.data), 'utf8');
+    log.info('Corrupt file revived successfully with data', { data });
+
+    return data;
+  } catch (error) {
+    logError('Error reviving storage on corruption', error);
+    throw error;
   }
-
-  fs.writeFileSync(appStatePath, JSON.stringify(res.data), 'utf8');
-  log.info('Corrupt file revived successfully with data', { data });
-
-  return data;
 }
 
 class DB {
@@ -136,7 +141,7 @@ class DB {
     } catch (err) {
       logError('Error loading data from file', err);
       await this.handleCorruptedData();
-      throw err;
+      return this.data || emptyInitialState;
     }
   }
 
@@ -157,21 +162,26 @@ class DB {
   }
 
   private async handleCorruptedData() {
-    const response = await dialog.showMessageBox({
-      type: 'error',
-      title: 'Error loading data',
-      message:
-        'Error loading data from file. \n' +
-        `Resetting app data deletes all upload progress. \n` +
-        'Do you want to reset the app?',
-      buttons: ['Reset', 'Quit'],
-    });
-    if (response.response === 0) {
-      this.data = await reviveStorageOnCorruption();
-      await this.#save();
-    } else {
-      log.error('User does not want to reset the app. Quitting.');
-      app.quit();
+    try {
+      const response = await dialog.showMessageBox({
+        type: 'error',
+        title: 'Error loading data',
+        message:
+          'Error loading data from file. \n' +
+          `Resetting app data deletes all upload progress. \n` +
+          'Do you want to reset the app?',
+        buttons: ['Reset', 'Quit'],
+      });
+      if (response.response === 0) {
+        this.data = await reviveStorageOnCorruption();
+        await this.#save();
+      } else {
+        log.error('User does not want to reset the app. Quitting.');
+        app.quit();
+      }
+    } catch (error) {
+      logError('Error handling corrupted data', error);
+      throw error;
     }
   }
 
