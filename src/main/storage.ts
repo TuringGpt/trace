@@ -33,28 +33,8 @@ const emptyInitialState: StorageApplicationState = {
   recordingFolders: [],
 };
 
-async function reviveStorageOnCorruption() {
-  const appStatePath = path.join(app.getPath('userData'), fileName);
-
+function generateAppStateFromFolders() {
   try {
-    log.info('Reviving storage on corruption');
-    if (!fs.existsSync(appStatePath)) {
-      log.warn(
-        'Application state file not found. Initializing with empty state.',
-        { emptyInitialState },
-      );
-      fs.writeFileSync(appStatePath, JSON.stringify(emptyInitialState), 'utf8');
-      return emptyInitialState;
-    }
-
-    const corruptAppStateJson = fs.readFileSync(
-      path.join(app.getPath('userData'), 'application-state.json'),
-      'utf8',
-    );
-    log.error('Corrupt file found. Reviving storage from available folders.', {
-      corruptAppStateJson,
-    });
-
     const videoStoragePath = getVideoStoragePath();
     log.info('Checking folders inside video storage path');
     const folders = fs.readdirSync(videoStoragePath, { withFileTypes: true });
@@ -81,10 +61,35 @@ async function reviveStorageOnCorruption() {
       return emptyInitialState;
     }
 
-    fs.writeFileSync(appStatePath, JSON.stringify(res.data), 'utf8');
-    log.info('Corrupt file revived successfully with data', { data });
-
     return data;
+  } catch (error) {
+    logError('Error generating app state from folders', error);
+    throw error;
+  }
+}
+
+async function reviveStorageOnCorruption() {
+  const appStatePath = path.join(app.getPath('userData'), fileName);
+
+  try {
+    log.info('Reviving storage on corruption');
+    if (!fs.existsSync(appStatePath)) {
+      log.warn(
+        'Application state file not found. Reviving storage from available folders.',
+      );
+    } else {
+      const corruptAppStateJson = fs.readFileSync(
+        path.join(app.getPath('userData'), 'application-state.json'),
+        'utf8',
+      );
+      log.error(
+        'Corrupt file found. Reviving storage from available folders.',
+        {
+          corruptAppStateJson,
+        },
+      );
+    }
+    return generateAppStateFromFolders();
   } catch (error) {
     logError('Error reviving storage on corruption', error);
     throw error;
@@ -101,11 +106,8 @@ class DB {
       this.filePath = path.join(app.getPath('userData'), fileName);
       if (!fs.existsSync(this.filePath)) {
         log.info(`Cannot find file at ${this.filePath}. Creating it.`);
-        fs.writeFileSync(
-          this.filePath,
-          JSON.stringify(emptyInitialState),
-          'utf8',
-        );
+        this.data = generateAppStateFromFolders();
+        this.#save();
       }
     } catch (err) {
       log.error('Error creating file while initializing db', { err });
@@ -131,11 +133,15 @@ class DB {
     try {
       return await this.withLock(async (): Promise<StorageApplicationState> => {
         log.info('Loading data from file');
-        const data = await readFile(this.filePath, 'utf8');
-        const validatedData = StorageApplicationStateSchema.parse(
-          JSON.parse(data),
-        );
-        this.data = validatedData;
+        let validatedData: StorageApplicationState;
+        if (!fs.existsSync(this.filePath)) {
+          validatedData = generateAppStateFromFolders();
+          this.data = validatedData;
+          this.#save();
+        } else {
+          const data = await readFile(this.filePath, 'utf8');
+          validatedData = StorageApplicationStateSchema.parse(JSON.parse(data));
+        }
         return validatedData;
       });
     } catch (err) {
