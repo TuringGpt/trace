@@ -39,7 +39,7 @@ export default function setupVideoAndThumbnailHttpServer() {
         app.getPath('userData'),
         'video-storage',
         req.url,
-        'video.mp4',
+        'temp-video.webm',
       );
 
       try {
@@ -68,14 +68,14 @@ export default function setupVideoAndThumbnailHttpServer() {
           'Content-Range': `bytes ${start}-${end}/${size}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': end - start + 1,
-          'Content-Type': 'video/mp4',
+          'Content-Type': 'video/webm',
         });
 
         createReadStream(videoPath, { start, end }).pipe(res);
       } else {
         res.writeHead(200, {
           'Content-Length': size,
-          'Content-Type': 'video/mp4',
+          'Content-Type': 'video/webm',
         });
 
         createReadStream(videoPath).pipe(res);

@@ -42,7 +42,7 @@ import { join } from 'path';
         userDataPath,
         'video-storage',
         folder.id,
-        'video.mp4',
+        'temp-video.webm',
       );
       const stats = await stat(videoPath);
       folder.recordingSize = stats.size;
