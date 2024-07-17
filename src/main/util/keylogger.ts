@@ -88,11 +88,10 @@ class KeyLogger {
     try {
       if (Date.now() > this.stopTime) return;
       const timestamp = Date.now();
-      const formattedTime = this.getFormattedTime(timestamp);
       const key = keycodesMapping[e.keycode];
       this.logEntries.push({
         timestamp,
-        entry: `${formattedTime}: Keyboard Button Press : ${key}`,
+        entry: `Keyboard Button Press : ${key}`,
       });
       this.uniqueKeys.add(key);
       this.eventCounts.keydown += 1;
@@ -105,11 +104,10 @@ class KeyLogger {
     try {
       if (Date.now() > this.stopTime) return;
       const timestamp = Date.now();
-      const formattedTime = this.getFormattedTime(timestamp);
       const key = keycodesMapping[e.keycode];
       this.logEntries.push({
         timestamp,
-        entry: `${formattedTime}: Keyboard Button Release : ${key}`,
+        entry: `Keyboard Button Release : ${key}`,
       });
       this.eventCounts.keyup += 1;
     } catch (error) {
@@ -121,11 +119,10 @@ class KeyLogger {
     try {
       if (Date.now() > this.stopTime) return;
       const timestamp = Date.now();
-      const formattedTime = this.getFormattedTime(timestamp);
       const button = `Mouse Button ${e.button}`;
       this.logEntries.push({
         timestamp,
-        entry: `${formattedTime}: Mouse Button Press : ${button}`,
+        entry: `Mouse Button Press : ${button}`,
       });
       this.uniqueKeys.add(button);
       this.eventCounts.mousedown += 1;
@@ -138,11 +135,10 @@ class KeyLogger {
     try {
       if (Date.now() > this.stopTime) return;
       const timestamp = Date.now();
-      const formattedTime = this.getFormattedTime(timestamp);
       const button = `Mouse Button ${e.button}`;
       this.logEntries.push({
         timestamp,
-        entry: `${formattedTime}: Mouse Button Release : ${button}`,
+        entry: `Mouse Button Release : ${button}`,
       });
       this.eventCounts.mouseup += 1;
     } catch (error) {
@@ -154,10 +150,9 @@ class KeyLogger {
     try {
       if (Date.now() > this.stopTime) return;
       const timestamp = Date.now();
-      const formattedTime = this.getFormattedTime(timestamp);
       this.logEntries.push({
         timestamp,
-        entry: `${formattedTime}: Mouse moved to X:${e.x}, Y:${e.y}`,
+        entry: `Mouse moved to X:${e.x}, Y:${e.y}`,
       });
       this.eventCounts.mousemove += 1;
     } catch (error) {
@@ -169,7 +164,6 @@ class KeyLogger {
     try {
       if (Date.now() > this.stopTime) return;
       const timestamp = Date.now();
-      const formattedTime = this.getFormattedTime(timestamp);
       const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
       let direction;
       if (axis === 'Vertical') {
@@ -179,7 +173,9 @@ class KeyLogger {
       }
       this.logEntries.push({
         timestamp,
-        entry: `${formattedTime}: Mouse Scrolled ${axis}, Direction: ${direction}, Intensity: ${e.rotation < 0 ? e.rotation * -1 : e.rotation}`,
+        entry: `Mouse Scrolled ${axis}, Direction: ${direction}, Intensity: ${
+          e.rotation < 0 ? e.rotation * -1 : e.rotation
+        }`,
       });
       this.eventCounts.wheel += 1;
     } catch (error) {
@@ -201,7 +197,7 @@ class KeyLogger {
     };
   };
 
-  getFormattedTime(timestamp = Date.now()) {
+  getFormattedTime(timestamp: number) {
     const time = timestamp - this.startTime;
     const milliseconds = `000${time % 1000}`.slice(-3);
     const totalSeconds = Math.floor(time / 1000);
@@ -243,7 +239,10 @@ class KeyLogger {
     // Commit any remaining logs before stopping
     this.logEventSummary();
     const logContent = this.logEntries
-      .map((logEntry) => logEntry.entry)
+      .map(
+        (logEntry) =>
+          `${this.getFormattedTime(logEntry.timestamp)}: ${logEntry.entry}`,
+      )
       .join('\n');
     this.logEntries = [];
     this.stopTime = Infinity;
