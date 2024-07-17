@@ -41,6 +41,7 @@ function generateAppStateFromFolders() {
     const recordingFolders: RecordedFolder[] = folders
       .filter((folder) => folder.isDirectory())
       .map((folder): RecordedFolder => {
+        log.info('Generating app state from folder', { folder });
         return {
           id: folder.name,
           folderName: folder.name,
@@ -71,6 +72,7 @@ function generateAppStateFromFolders() {
 async function reviveStorageOnCorruption() {
   const appStatePath = path.join(app.getPath('userData'), fileName);
 
+  // Log the current state of the application-state.json file
   try {
     log.info('Reviving storage on corruption');
     if (!fs.existsSync(appStatePath)) {
@@ -89,6 +91,7 @@ async function reviveStorageOnCorruption() {
         },
       );
     }
+    // try to revive the storage from the folders
     return generateAppStateFromFolders();
   } catch (error) {
     logError('Error reviving storage on corruption', error);
@@ -117,10 +120,14 @@ class DB {
 
   private async withLock<T>(fn: () => Promise<T>): Promise<T> {
     try {
+      log.info('Acquiring lock on storage file');
       await lock(this.filePath, lockRetryOptions);
+      log.info('Lock acquired on storage file');
       return await fn();
     } finally {
+      log.info('Releasing lock on storage file');
       await this.unLockStorageFile();
+      log.info('Lock released on storage file');
     }
   }
 
@@ -131,6 +138,12 @@ class DB {
    */
   async load() {
     try {
+      if (!fs.existsSync(this.filePath)) {
+        const validatedData = generateAppStateFromFolders();
+        this.data = validatedData;
+        this.#save();
+        return validatedData;
+      }
       return await this.withLock(async (): Promise<StorageApplicationState> => {
         log.info('Loading data from file');
         let validatedData: StorageApplicationState;
@@ -197,9 +210,24 @@ class DB {
   }
 
   async #save() {
+    if (!fs.existsSync(this.filePath)) {
+      try {
+        log.info('File does not exist. Creating file');
+        const validatedData = StorageApplicationStateSchema.parse(this.data);
+        await fs.promises.writeFile(
+          this.filePath,
+          JSON.stringify(validatedData),
+          'utf8',
+        );
+        return 0;
+      } catch (err) {
+        logError('Error while saving file when none exists', err);
+        throw err;
+      }
+    }
     return this.withLock(async () => {
       try {
-        log.info('Saving data to file');
+        log.info('Application state exists, saving to file with lock');
         const validatedData = StorageApplicationStateSchema.parse(this.data);
         await fs.promises.writeFile(
           this.filePath,
