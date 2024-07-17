@@ -120,6 +120,10 @@ class DB {
 
   private async withLock<T>(fn: () => Promise<T>): Promise<T> {
     try {
+      if (!fs.existsSync(this.filePath)) {
+        log.warn('File does not exist. Skipping lock');
+        return await fn();
+      }
       log.info('Acquiring lock on storage file');
       await lock(this.filePath, lockRetryOptions);
       log.info('Lock acquired on storage file');
@@ -138,12 +142,6 @@ class DB {
    */
   async load() {
     try {
-      if (!fs.existsSync(this.filePath)) {
-        const validatedData = generateAppStateFromFolders();
-        this.data = validatedData;
-        this.#save();
-        return validatedData;
-      }
       return await this.withLock(async (): Promise<StorageApplicationState> => {
         log.info('Loading data from file');
         let validatedData: StorageApplicationState;
@@ -210,24 +208,9 @@ class DB {
   }
 
   async #save() {
-    if (!fs.existsSync(this.filePath)) {
-      try {
-        log.info('File does not exist. Creating file');
-        const validatedData = StorageApplicationStateSchema.parse(this.data);
-        await fs.promises.writeFile(
-          this.filePath,
-          JSON.stringify(validatedData),
-          'utf8',
-        );
-        return 0;
-      } catch (err) {
-        logError('Error while saving file when none exists', err);
-        throw err;
-      }
-    }
     return this.withLock(async () => {
       try {
-        log.info('Application state exists, saving to file with lock');
+        log.info('Saving Application state');
         const validatedData = StorageApplicationStateSchema.parse(this.data);
         await fs.promises.writeFile(
           this.filePath,
