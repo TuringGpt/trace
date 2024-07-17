@@ -2,6 +2,7 @@
   "description": "Trace: Cross Platform Screen Recorder with clicks and keystrokes",
   "keywords": [],
   "license": "MIT",
+  "version": "1.3.1",
   "author": {
     "name": "turing"
   },
@@ -195,7 +196,9 @@
     ],
     "protocols": {
       "name": "electron-deep-linking",
-      "schemes": ["trace"]
+      "schemes": [
+        "trace"
+      ]
     },
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
@@ -233,7 +236,9 @@
       "protocols": [
         {
           "name": "Trace Protocol",
-          "schemes": ["trace"]
+          "schemes": [
+            "trace"
+          ]
         }
       ]
     },

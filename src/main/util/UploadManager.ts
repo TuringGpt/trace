@@ -213,9 +213,9 @@ class UploadManager {
       }
 
       const videoFile = (await fileExists(
-        join(videoStoragePath, folder, 'video.mp4'),
+        join(videoStoragePath, folder, 'temp-video.webm'),
       ))
-        ? 'video.mp4'
+        ? 'temp-video.webm'
         : 'temp-video.webm';
       const filesToUpload = [
         'keylog.txt',

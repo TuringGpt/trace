@@ -3,7 +3,6 @@ import fs from 'fs';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import lockFile, { lock, LockOptions } from 'proper-lockfile';
-import { ZodError } from 'zod';
 
 import {
   RecordedFolder,
@@ -34,35 +33,70 @@ const emptyInitialState: StorageApplicationState = {
   recordingFolders: [],
 };
 
-async function reviveStorageOnCorruption() {
-  const videoStoragePath = getVideoStoragePath();
-  // check folders inside video storage path, use them to populate
-  // recordingFolders
+function generateAppStateFromFolders() {
+  try {
+    const videoStoragePath = getVideoStoragePath();
+    log.info('Checking folders inside video storage path');
+    const folders = fs.readdirSync(videoStoragePath, { withFileTypes: true });
+    const recordingFolders: RecordedFolder[] = folders
+      .filter((folder) => folder.isDirectory())
+      .map((folder): RecordedFolder => {
+        log.info('Generating app state from folder', { folder });
+        return {
+          id: folder.name,
+          folderName: folder.name,
+          isUploaded: false,
+          recordingStartedAt: Date.now(),
+          uploadingInProgress: false,
+        };
+      });
 
-  const folders = fs.readdirSync(videoStoragePath, { withFileTypes: true });
-  const recordingFolders: RecordedFolder[] = folders
-    .filter((folder) => folder.isDirectory())
-    .map((folder): RecordedFolder => {
-      return {
-        id: folder.name,
-        folderName: folder.name,
-        isUploaded: false,
-        recordingStartedAt: Date.now(),
-        uploadingInProgress: false,
-      };
-    });
+    const data: StorageApplicationState = {
+      isRecording: false,
+      recordingFolders,
+    };
 
-  const data: StorageApplicationState = {
-    isRecording: false,
-    recordingFolders,
-  };
+    const res = StorageApplicationStateSchema.safeParse(data);
+    if (!res.success) {
+      log.error('Failed to validate revived data', { data });
+      return emptyInitialState;
+    }
 
-  const res = StorageApplicationStateSchema.safeParse(data);
-  if (!res.success) {
-    return emptyInitialState;
+    return data;
+  } catch (error) {
+    logError('Error generating app state from folders', error);
+    throw error;
   }
+}
 
-  return data;
+async function reviveStorageOnCorruption() {
+  const appStatePath = path.join(app.getPath('userData'), fileName);
+
+  // Log the current state of the application-state.json file
+  try {
+    log.info('Reviving storage on corruption');
+    if (!fs.existsSync(appStatePath)) {
+      log.warn(
+        'Application state file not found. Reviving storage from available folders.',
+      );
+    } else {
+      const corruptAppStateJson = fs.readFileSync(
+        path.join(app.getPath('userData'), 'application-state.json'),
+        'utf8',
+      );
+      log.error(
+        'Corrupt file found. Reviving storage from available folders.',
+        {
+          corruptAppStateJson,
+        },
+      );
+    }
+    // try to revive the storage from the folders
+    return generateAppStateFromFolders();
+  } catch (error) {
+    logError('Error reviving storage on corruption', error);
+    throw error;
+  }
 }
 
 class DB {
@@ -75,11 +109,8 @@ class DB {
       this.filePath = path.join(app.getPath('userData'), fileName);
       if (!fs.existsSync(this.filePath)) {
         log.info(`Cannot find file at ${this.filePath}. Creating it.`);
-        fs.writeFileSync(
-          this.filePath,
-          JSON.stringify(emptyInitialState),
-          'utf8',
-        );
+        this.data = generateAppStateFromFolders();
+        this.#save();
       }
     } catch (err) {
       log.error('Error creating file while initializing db', { err });
@@ -89,10 +120,14 @@ class DB {
 
   private async withLock<T>(fn: () => Promise<T>): Promise<T> {
     try {
+      log.info('Acquiring lock on storage file');
       await lock(this.filePath, lockRetryOptions);
+      log.info('Lock acquired on storage file');
       return await fn();
     } finally {
+      log.info('Releasing lock on storage file');
       await this.unLockStorageFile();
+      log.info('Lock released on storage file');
     }
   }
 
@@ -102,23 +137,31 @@ class DB {
    * so we can safely assume that the data will be loaded post app start
    */
   async load() {
-    return this.withLock(async (): Promise<StorageApplicationState> => {
-      try {
-        log.info('Loading data from file');
-        const data = await readFile(this.filePath, 'utf8');
-        const validatedData = StorageApplicationStateSchema.parse(
-          JSON.parse(data),
-        );
+    try {
+      if (!fs.existsSync(this.filePath)) {
+        const validatedData = generateAppStateFromFolders();
         this.data = validatedData;
+        this.#save();
         return validatedData;
-      } catch (err) {
-        logError('Error loading data from file', err);
-        if (err instanceof ZodError) {
-          await this.handleCorruptedData();
-        }
-        throw err;
       }
-    });
+      return await this.withLock(async (): Promise<StorageApplicationState> => {
+        log.info('Loading data from file');
+        let validatedData: StorageApplicationState;
+        if (!fs.existsSync(this.filePath)) {
+          validatedData = generateAppStateFromFolders();
+          this.data = validatedData;
+          this.#save();
+        } else {
+          const data = await readFile(this.filePath, 'utf8');
+          validatedData = StorageApplicationStateSchema.parse(JSON.parse(data));
+        }
+        return validatedData;
+      });
+    } catch (err) {
+      logError('Error loading data from file', err);
+      await this.handleCorruptedData();
+      return this.data || emptyInitialState;
+    }
   }
 
   private async unLockStorageFile() {
@@ -138,21 +181,26 @@ class DB {
   }
 
   private async handleCorruptedData() {
-    const response = await dialog.showMessageBox({
-      type: 'error',
-      title: 'Error loading data',
-      message:
-        'Error loading data from file. \n' +
-        `Resetting app data deletes all upload progress. \n` +
-        'Do you want to reset the app?',
-      buttons: ['Reset', 'Quit'],
-    });
-    if (response.response === 0) {
-      this.data = await reviveStorageOnCorruption();
-      await this.#save();
-    } else {
-      log.error('User does not want to reset the app. Quitting.');
-      app.quit();
+    try {
+      const response = await dialog.showMessageBox({
+        type: 'error',
+        title: 'Error loading data',
+        message:
+          'Error loading data from file. \n' +
+          `Resetting app data deletes all upload progress. \n` +
+          'Do you want to reset the app?',
+        buttons: ['Reset', 'Quit'],
+      });
+      if (response.response === 0) {
+        this.data = await reviveStorageOnCorruption();
+        await this.#save();
+      } else {
+        log.error('User does not want to reset the app. Quitting.');
+        app.quit();
+      }
+    } catch (error) {
+      logError('Error handling corrupted data', error);
+      throw error;
     }
   }
 
@@ -162,9 +210,24 @@ class DB {
   }
 
   async #save() {
+    if (!fs.existsSync(this.filePath)) {
+      try {
+        log.info('File does not exist. Creating file');
+        const validatedData = StorageApplicationStateSchema.parse(this.data);
+        await fs.promises.writeFile(
+          this.filePath,
+          JSON.stringify(validatedData),
+          'utf8',
+        );
+        return 0;
+      } catch (err) {
+        logError('Error while saving file when none exists', err);
+        throw err;
+      }
+    }
     return this.withLock(async () => {
       try {
-        log.info('Saving data to file');
+        log.info('Application state exists, saving to file with lock');
         const validatedData = StorageApplicationStateSchema.parse(this.data);
         await fs.promises.writeFile(
           this.filePath,

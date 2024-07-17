@@ -8,7 +8,7 @@ import fileExists from '../util/fileExists';
 import getDeviceMetadata from '../util/getMetaData';
 import keylogger from '../util/keylogger';
 import logger from '../util/logger';
-import remuxVideo from '../util/remuxVideo';
+import { fixWebmDuration } from '../util/remuxVideo';
 import {
   getCurrentRecordingFolder,
   markRecordingStarted,
@@ -58,47 +58,27 @@ async function writeMetadataToFile(metadata: string, recordingFolder: string) {
 }
 
 async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
-  let tempInputPath = '';
-  let tempOutputPath = '';
   try {
     const buffer = Buffer.from(video);
+    const videoPath = `${recordingFolder}/temp-video.webm`;
 
-    tempInputPath = `${recordingFolder}/temp-video.webm`;
-    tempOutputPath = `${recordingFolder}/video.mp4`;
-    await fs.promises.writeFile(tempInputPath, buffer);
-    log.info('Video file written to disk for remuxing.', {
-      tempInputPath,
-      tempOutputPath,
-    });
-
-    const startTime = Date.now();
-    await remuxVideo(tempInputPath, tempOutputPath);
-    const timeTakenToConvert = Date.now() - startTime;
-    log.info(`Video conversion took ${timeTakenToConvert / 1000} seconds.`);
-    // await unlink(tempInputPath);
+    await fs.promises.writeFile(videoPath, buffer);
+    await fixWebmDuration(videoPath, recordingFolder);
 
     // Store the video file size in the database
     const folderId = recordingFolder.split('/').pop();
-    const videoStats = await stat(tempOutputPath);
-
+    const videoStats = await stat(videoPath);
     if (!folderId) {
       log.error('Failed to get folderId from recordingFolder', {
         recordingFolder,
       });
       throw new Error('Failed to get folderId from recordingFolder');
     }
-
     await storeRecordingSize(folderId, videoStats.size);
 
     return true;
   } catch (error) {
     log.error('Failed to remux the video file.', error);
-    if (fs.existsSync(tempInputPath)) {
-      // fs.unlinkSync(tempInputPath);
-    }
-    if (fs.existsSync(tempOutputPath)) {
-      fs.unlinkSync(tempOutputPath);
-    }
     throw error;
   }
 }
@@ -361,14 +341,14 @@ ipcHandle('clean-up-from-local', async (event, folderIds, cleanUpAll) => {
 
 ipcHandle('get-recording-memory-usage', async () => {
   const videoStoragePath = getVideoStoragePath();
-  // get the memory occupied by the recording folders video.mp4
+  // get the memory occupied by the recording folders temp-video.webm
   // read the items in video storage folder path
 
   try {
     const folders = await fs.promises.readdir(videoStoragePath);
 
     const allPromises = folders.map(async (folder) => {
-      const folderPath = `${videoStoragePath}/${folder}/video.mp4`;
+      const folderPath = `${videoStoragePath}/${folder}/temp-video.webm`;
       const stats = await stat(folderPath);
       return stats.size;
     });
