@@ -14,7 +14,7 @@ const log = logger.child({ module: 'util.keylogger' });
 class KeyLogger {
   isLogging: boolean;
 
-  logEntries: string[];
+  logEntries: { timestamp: number; entry: string }[];
 
   uniqueKeys: Set<string>;
 
@@ -87,9 +87,13 @@ class KeyLogger {
   logKeyDown = (e: UiohookKeyboardEvent) => {
     try {
       if (Date.now() > this.stopTime) return;
-      const timestamp = this.getFormattedTime();
+      const timestamp = Date.now();
+      const formattedTime = this.getFormattedTime(timestamp);
       const key = keycodesMapping[e.keycode];
-      this.logEntries.push(`${timestamp}: Keyboard Button Press : ${key}`);
+      this.logEntries.push({
+        timestamp,
+        entry: `${formattedTime}: Keyboard Button Press : ${key}`,
+      });
       this.uniqueKeys.add(key);
       this.eventCounts.keydown += 1;
     } catch (error) {
@@ -100,9 +104,13 @@ class KeyLogger {
   logKeyUp = (e: UiohookKeyboardEvent) => {
     try {
       if (Date.now() > this.stopTime) return;
-      const timestamp = this.getFormattedTime();
+      const timestamp = Date.now();
+      const formattedTime = this.getFormattedTime(timestamp);
       const key = keycodesMapping[e.keycode];
-      this.logEntries.push(`${timestamp}: Keyboard Button Release : ${key}`);
+      this.logEntries.push({
+        timestamp,
+        entry: `${formattedTime}: Keyboard Button Release : ${key}`,
+      });
       this.eventCounts.keyup += 1;
     } catch (error) {
       log.error('Error logging key up', error);
@@ -112,9 +120,13 @@ class KeyLogger {
   logMouseDown = (e: UiohookMouseEvent) => {
     try {
       if (Date.now() > this.stopTime) return;
-      const timestamp = this.getFormattedTime();
+      const timestamp = Date.now();
+      const formattedTime = this.getFormattedTime(timestamp);
       const button = `Mouse Button ${e.button}`;
-      this.logEntries.push(`${timestamp}: Mouse Button Press : ${button}`);
+      this.logEntries.push({
+        timestamp,
+        entry: `${formattedTime}: Mouse Button Press : ${button}`,
+      });
       this.uniqueKeys.add(button);
       this.eventCounts.mousedown += 1;
     } catch (error) {
@@ -125,9 +137,13 @@ class KeyLogger {
   logMouseUp = (e: UiohookMouseEvent) => {
     try {
       if (Date.now() > this.stopTime) return;
-      const timestamp = this.getFormattedTime();
+      const timestamp = Date.now();
+      const formattedTime = this.getFormattedTime(timestamp);
       const button = `Mouse Button ${e.button}`;
-      this.logEntries.push(`${timestamp}: Mouse Button Release : ${button}`);
+      this.logEntries.push({
+        timestamp,
+        entry: `${formattedTime}: Mouse Button Release : ${button}`,
+      });
       this.eventCounts.mouseup += 1;
     } catch (error) {
       log.error('Error logging mouse up', error);
@@ -137,8 +153,12 @@ class KeyLogger {
   logMouseMove = (e: UiohookMouseEvent) => {
     try {
       if (Date.now() > this.stopTime) return;
-      const timestamp = this.getFormattedTime();
-      this.logEntries.push(`${timestamp}: Mouse moved to X:${e.x}, Y:${e.y}`);
+      const timestamp = Date.now();
+      const formattedTime = this.getFormattedTime(timestamp);
+      this.logEntries.push({
+        timestamp,
+        entry: `${formattedTime}: Mouse moved to X:${e.x}, Y:${e.y}`,
+      });
       this.eventCounts.mousemove += 1;
     } catch (error) {
       log.error('Error logging mouse move', error);
@@ -148,7 +168,8 @@ class KeyLogger {
   logScroll = (e: UiohookWheelEvent) => {
     try {
       if (Date.now() > this.stopTime) return;
-      const timestamp = this.getFormattedTime();
+      const timestamp = Date.now();
+      const formattedTime = this.getFormattedTime(timestamp);
       const axis = e.direction === 3 ? 'Vertical' : 'Horizontal';
       let direction;
       if (axis === 'Vertical') {
@@ -156,11 +177,10 @@ class KeyLogger {
       } else {
         direction = e.rotation > 0 ? 'LEFT' : 'RIGHT';
       }
-      this.logEntries.push(
-        `${timestamp}: Mouse Scrolled ${axis}, Direction: ${direction}, Intensity: ${
-          e.rotation < 0 ? e.rotation * -1 : e.rotation
-        }`,
-      );
+      this.logEntries.push({
+        timestamp,
+        entry: `${formattedTime}: Mouse Scrolled ${axis}, Direction: ${direction}, Intensity: ${e.rotation < 0 ? e.rotation * -1 : e.rotation}`,
+      });
       this.eventCounts.wheel += 1;
     } catch (error) {
       log.error('Error logging scroll', error);
@@ -181,19 +201,15 @@ class KeyLogger {
     };
   };
 
-  getFormattedTime() {
-    const time = Date.now() - this.startTime;
-    const milliseconds = time % 1000;
-    const seconds = Math.floor((time / 1000) % 60);
-    const minutes = Math.floor((time / (1000 * 60)) % 60);
-    const hours = Math.floor((time / (1000 * 60 * 60)) % 24);
+  getFormattedTime(timestamp = Date.now()) {
+    const time = timestamp - this.startTime;
+    const milliseconds = `000${time % 1000}`.slice(-3);
+    const totalSeconds = Math.floor(time / 1000);
+    const seconds = `0${totalSeconds % 60}`.slice(-2);
+    const minutes = `0${Math.floor((totalSeconds / 60) % 60)}`.slice(-2);
+    const hours = `0${Math.floor(totalSeconds / 3600) % 24}`.slice(-2);
 
-    const fHours = hours < 10 ? `0${hours}` : hours;
-    const fMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    const fSeconds = seconds < 10 ? `0${seconds}` : seconds;
-    const fMilliseconds = milliseconds.toString().padStart(3, '0');
-
-    return `${fHours}:${fMinutes}:${fSeconds}:${fMilliseconds}`;
+    return `${hours}:${minutes}:${seconds}:${milliseconds}`;
   }
 
   getUniqueKeys() {
@@ -219,9 +235,16 @@ class KeyLogger {
       log.error('Error stopping keylogging', error);
     }
 
+    // remove extra entries after record stops
+    this.logEntries = this.logEntries.filter(
+      (logEntry) => logEntry.timestamp <= recordingStopTime,
+    );
+
     // Commit any remaining logs before stopping
     this.logEventSummary();
-    const logContent = this.logEntries.join('\n');
+    const logContent = this.logEntries
+      .map((logEntry) => logEntry.entry)
+      .join('\n');
     this.logEntries = [];
     this.stopTime = Infinity;
     return logContent;
