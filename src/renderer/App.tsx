@@ -22,6 +22,7 @@ import useAppState from './store/hook';
 import AppStateProvider from './store/provider';
 import Logout from './components/Logout';
 import GoogleSignInButton from './components/GoogleSignInButton';
+import UpdatesBanner from './components/UpdatesBanner';
 
 function AppRoutes() {
   const { state } = useAppState();
@@ -58,7 +59,8 @@ export default function App() {
   return (
     <AppStateProvider>
       <Router>
-        <div className="bg-slate-900 text-white h-screen flex flex-col justify-between">
+        <div className="bg-slate-900 text-white h-screen flex flex-col">
+          <UpdatesBanner />
           {authToken ? (
             <div>
               <AppHeader />

@@ -176,7 +176,7 @@ export default function VideoRecorder() {
           onClick={async () => {
             await window.electron.getVideoSources();
           }}
-          className="bg-slate-600 m-6 mb-0 rounded-full px-4 py-2 text-white"
+          className="bg-slate-600 mb-0 rounded-full px-4 py-2 text-white"
         >
           {source?.name || CHOOSE_VIDEO_SOURCE_TEXT}
         </button>
