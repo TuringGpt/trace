@@ -79,7 +79,7 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     show: false,
     width: 1300,
-    height: 1000,
+    height: 1100,
     x: process.env.START_WIN_X
       ? Number.parseInt(process.env.START_WIN_X, 10)
       : undefined,

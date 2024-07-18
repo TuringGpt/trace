@@ -137,6 +137,9 @@ export interface Control {
 }
 
 export type IPCHandleEvents = {
+  'get-app-version': IPCHandler<[], string>;
+  'check-update-available': IPCHandler<[], boolean>;
+  'open-updates-url': IPCHandler<[], void>;
   'get-video-sources': IPCHandler<[], void>;
   'remux-video-file': IPCHandler<[uint8Array: Uint8Array], boolean>;
   'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult>;
