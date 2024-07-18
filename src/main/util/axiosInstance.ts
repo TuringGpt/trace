@@ -5,7 +5,7 @@ import logger from './logger';
 
 const log = logger.child({ module: 'axiosInstance' });
 
-let isRefreshing = false;
+let refreshPromise: Promise<any> | null = null;
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: BACKEND_URL,
@@ -42,7 +42,7 @@ axiosInstance.interceptors.response.use(
     ) {
       log.info('Handling 401 error');
 
-      if (isRefreshing) {
+      if (refreshPromise) {
         log.info(
           'Token refresh already in progress. Returning original error.',
         );
@@ -51,7 +51,6 @@ axiosInstance.interceptors.response.use(
 
       // eslint-disable-next-line no-underscore-dangle
       originalRequest._retry = true;
-      isRefreshing = true;
 
       const tokens = await getTokens();
       if (!tokens) {
@@ -60,10 +59,13 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
       }
 
+      refreshPromise = axios.post(`${BACKEND_URL}/refresh-token`, {
+        refreshToken: tokens.refreshToken,
+      });
+
       try {
-        const response = await axios.post(`${BACKEND_URL}/refresh-token`, {
-          refreshToken: tokens.refreshToken,
-        });
+        const response = await refreshPromise;
+
         log.info('Access token refreshed.');
 
         const { accessToken } = response.data;
@@ -77,7 +79,7 @@ axiosInstance.interceptors.response.use(
         await removeTokens();
         return Promise.reject(err);
       } finally {
-        isRefreshing = false;
+        refreshPromise = null;
       }
     }
 
