@@ -43,10 +43,16 @@ axiosInstance.interceptors.response.use(
       log.info('Handling 401 error');
 
       if (refreshPromise) {
-        log.info(
-          'Token refresh already in progress. Returning original error.',
-        );
-        return Promise.reject(error);
+        const response = await refreshPromise;
+
+        log.info('Access token refreshed by another request.');
+        const { accessToken } = response.data;
+        await setTokens(accessToken);
+
+        axiosInstance.defaults.headers.Authorization = `Bearer ${accessToken}`;
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+        return axiosInstance(originalRequest);
       }
 
       // eslint-disable-next-line no-underscore-dangle
