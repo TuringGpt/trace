@@ -146,7 +146,7 @@ export type IPCHandleEvents = {
   >;
   'start-new-recording': IPCHandler<[], void>;
   'stop-recording': IPCHandler<
-    [uint8Array: Uint8Array, recordingStopTime: number],
+    [recordingStopTime: number],
     { recordingFolderName: string }
   >;
   'get-unique-keys': IPCHandler<[], string[]>;
@@ -184,6 +184,7 @@ export type IPCHandleEvents = {
   'open-google-auth': IPCHandler<[], void>;
   'get-tokens': IPCHandler<[], Tokens>;
   'remove-tokens': IPCHandler<[], void>;
+  'save-chunk': IPCHandler<[chunk: Uint8Array], void>;
 };
 
 export type IPCOnEvents = {

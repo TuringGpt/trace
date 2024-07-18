@@ -57,12 +57,10 @@ async function writeMetadataToFile(metadata: string, recordingFolder: string) {
   log.info('Metadata saved.');
 }
 
-async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
+async function writeVideoToFile(recordingFolder: string) {
   try {
-    const buffer = Buffer.from(video);
     const videoPath = `${recordingFolder}/temp-video.webm`;
 
-    await fs.promises.writeFile(videoPath, buffer);
     await fixWebmDuration(videoPath, recordingFolder);
 
     // Store the video file size in the database
@@ -83,36 +81,33 @@ async function writeVideoToFile(video: Uint8Array, recordingFolder: string) {
   }
 }
 
-ipcHandle(
-  'stop-recording',
-  async (event, uint8Array, recordingStopTime: number) => {
-    let recordingFolderName = '';
-    try {
-      const recordingFolder = await getCurrentRecordingFolder();
-      const db = await storage.getData();
-      recordingFolderName = db.currentRecordingFolder!.folderName;
-      const logContent = keylogger.stopLogging(recordingStopTime);
-      const metadata = await getDeviceMetadata();
-      await markRecordingStopped();
+ipcHandle('stop-recording', async (event, recordingStopTime: number) => {
+  let recordingFolderName = '';
+  try {
+    const recordingFolder = await getCurrentRecordingFolder();
+    const db = await storage.getData();
+    recordingFolderName = db.currentRecordingFolder!.folderName;
+    const logContent = keylogger.stopLogging(recordingStopTime);
+    const metadata = await getDeviceMetadata();
+    await markRecordingStopped();
 
-      log.info('Recording stopped');
+    log.info('Recording stopped');
 
-      await writeKeylogToFile(logContent, recordingFolder);
+    await writeKeylogToFile(logContent, recordingFolder);
 
-      await writeMetadataToFile(JSON.stringify(metadata), recordingFolder);
+    await writeMetadataToFile(JSON.stringify(metadata), recordingFolder);
 
-      await writeVideoToFile(uint8Array, recordingFolder);
+    await writeVideoToFile(recordingFolder);
 
-      return ipc.success({ recordingFolderName });
-    } catch (err) {
-      log.error('Failed during stop recording', { err });
-      return ipc.error('Error while saving the recording', {
-        err,
-        recordingFolderName,
-      });
-    }
-  },
-);
+    return ipc.success({ recordingFolderName });
+  } catch (err) {
+    log.error('Failed during stop recording', { err });
+    return ipc.error('Error while saving the recording', {
+      err,
+      recordingFolderName,
+    });
+  }
+});
 
 ipcHandle('get-unique-keys', async () => {
   const uniqueKeys = keylogger.getUniqueKeys();
@@ -366,6 +361,27 @@ ipcHandle('get-recording-memory-usage', async () => {
   } catch (err) {
     log.error('Failed to get recording memory usage', { err });
     return ipc.error('Failed to get recording memory usage', err);
+  }
+});
+
+const appendChuckToFile = async (
+  chunk: Uint8Array,
+  recordingFolder: string,
+) => {
+  const buffer = Buffer.from(chunk);
+  const videoPath = `${recordingFolder}/temp-video.webm`;
+
+  await fs.promises.appendFile(videoPath, buffer);
+};
+
+ipcHandle('save-chunk', async (event, chunk) => {
+  try {
+    const recordingFolder = await getCurrentRecordingFolder();
+    await appendChuckToFile(chunk, recordingFolder);
+    return ipc.success(undefined);
+  } catch (err) {
+    log.error('Failed to save chunk', { err });
+    throw err;
   }
 });
 

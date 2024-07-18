@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
+  ABORT_POPUP_BUTTON,
+  AGREE_POPUP_BUTTON,
   CHOOSE_VIDEO_SOURCE_TEXT,
+  INFO_POPUP_TITLE,
   INITIAL_CONSENT_TEXT,
   ROUTE_VIDEO,
   SELECT_SOURCE_TEXT,
   VIDEO_CONVERSION_INDICATOR,
-  INFO_POPUP_TITLE,
-  AGREE_POPUP_BUTTON,
-  ABORT_POPUP_BUTTON,
 } from '../../constants';
 import { CapturedSource, DialogType } from '../../types/customTypes';
 import {
@@ -58,17 +58,22 @@ export default function VideoRecorder() {
         const videoPlaceholder = videoPlaceholderRef.current;
         const startButton = startButtonRef.current;
         if (videoElement && videoPlaceholder && startButton) {
-          videoElement.srcObject = await navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: {
-              mandatory: {
-                chromeMediaSource: 'desktop',
-                chromeMediaSourceId: source.id,
-              },
-            } as any,
-          });
-          videoElement.play();
-          startButton.disabled = false;
+          try {
+            videoElement.srcObject = await navigator.mediaDevices.getUserMedia({
+              audio: false,
+              video: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: source.id,
+                },
+              } as any,
+            });
+            videoElement.play();
+            startButton.disabled = false;
+          } catch (err) {
+            log.error('Error loading recording preview', err);
+            throw err;
+          }
         }
       };
       playVideo();
@@ -112,20 +117,19 @@ export default function VideoRecorder() {
     setMediaRecorder(recorder);
 
     const chunks: Blob[] = [];
-    recorder.ondataavailable = (event) => {
+    recorder.ondataavailable = async (event) => {
       if (event.data.size > 0) {
-        chunks.push(event.data);
+        const arrayBuffer = await event.data.arrayBuffer();
+        window.electron.saveChunks(new Uint8Array(arrayBuffer));
       }
     };
 
     recorder.onstop = async () => {
       log.info('Recording stopped', chunks.length);
       dispatch(showBusyIndicator(VIDEO_CONVERSION_INDICATOR));
-      const blob = new Blob(chunks, { type: 'video/webm; codecs=vp9' });
-      const arrayBuffer = await blob.arrayBuffer();
+
       try {
         const res = await window.electron.stopRecording(
-          new Uint8Array(arrayBuffer),
           recordingStopTime === null ? Date.now() : recordingStopTime,
         );
         setIsRecording(false);
@@ -153,7 +157,7 @@ export default function VideoRecorder() {
         dispatch(setRecordingName(error.recordingFolderName));
       }
     };
-    recorder.start();
+    recorder.start(5 * 1000); // Start saving records every 5 seconds
     window.electron.startNewRecording();
   };
 
@@ -174,7 +178,12 @@ export default function VideoRecorder() {
           id="videoSelectBtn"
           type="button"
           onClick={async () => {
-            await window.electron.getVideoSources();
+            try {
+              await window.electron.getVideoSources();
+            } catch (err) {
+              log.error('Error getting video sources', err);
+              throw err;
+            }
           }}
           className="bg-slate-600 m-6 mb-0 rounded-full px-4 py-2 text-white"
         >
