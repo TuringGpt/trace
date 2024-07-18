@@ -26,6 +26,7 @@ function onUploadProgress(
 }
 
 const electronHandler = {
+  getAppVersion: ipcInvoke('get-app-version'),
   getVideoSources: ipcInvoke('get-video-sources'),
   uploadFiles: ipcInvoke('upload-zip-file'),
   logFromRenderer: ipcSend('log-from-renderer'),
