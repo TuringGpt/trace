@@ -17,6 +17,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import GoogleSignInButton from './components/GoogleSignInButton';
 import Logout from './components/Logout';
 import NavigationButton from './components/NavigationButton';
+import UpdatesBanner from './components/UpdatesBanner';
 import FileOptions from './pages/FileOptions';
 import Upload from './pages/Upload';
 import UploadDashboard from './pages/UploadDashboard';
@@ -60,7 +61,8 @@ export default function App() {
     <ErrorBoundary>
       <AppStateProvider>
         <Router>
-          <div className="bg-slate-900 text-white h-screen flex flex-col justify-between">
+          <div className="bg-slate-900 text-white h-screen flex flex-col">
+            <UpdatesBanner />
             {authToken ? (
               <div>
                 <AppHeader />

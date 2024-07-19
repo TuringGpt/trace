@@ -1,3 +1,5 @@
+import './appUpdates';
+import './appVersion';
 import './ipcLogger';
 import './video';
 import './upload';

@@ -1,6 +1,7 @@
 // URL Constants
 export const BACKEND_URL = `https://trace.turing.com`;
 // export const BACKEND_URL = 'http://localhost:3000'; // for local devt
+export const UPDATES_URL = 'https://github.com/TuringGpt/trace/releases';
 
 // Action Types constants
 export const SET_RECORDING_NAME = 'setRecordingName';
