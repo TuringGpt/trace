@@ -28,8 +28,12 @@ import { ipcHandle } from './typeSafeHandler';
 
 const log = logger.child({ module: 'ipc.record' });
 
+let chunksWritten = 0;
+let chunkQueue: Promise<number> = Promise.resolve(0);
+
 ipcHandle('start-new-recording', async () => {
   log.info('Recording started');
+  chunksWritten = 0;
   await markRecordingStarted();
   keylogger.startLogging();
   log.info('Keystrokes logging started');
@@ -60,7 +64,8 @@ async function writeMetadataToFile(metadata: string, recordingFolder: string) {
 async function writeVideoToFile(recordingFolder: string) {
   try {
     const videoPath = `${recordingFolder}/temp-video.webm`;
-
+    await chunkQueue;
+    log.info('All chunks written to the video file, fix webm duration');
     await fixWebmDuration(videoPath, recordingFolder);
 
     // Store the video file size in the database
@@ -84,6 +89,7 @@ async function writeVideoToFile(recordingFolder: string) {
 ipcHandle('stop-recording', async (event, recordingStopTime: number) => {
   let recordingFolderName = '';
   try {
+    log.info('Stopping recording');
     const recordingFolder = await getCurrentRecordingFolder();
     const db = await storage.getData();
     recordingFolderName = db.currentRecordingFolder!.folderName;
@@ -364,20 +370,28 @@ ipcHandle('get-recording-memory-usage', async () => {
   }
 });
 
-const appendChuckToFile = async (
+const appendChunkToFile = async (
   chunk: Uint8Array,
   recordingFolder: string,
 ) => {
+  log.info('appending chunk to file');
   const buffer = Buffer.from(chunk);
   const videoPath = `${recordingFolder}/temp-video.webm`;
 
   await fs.promises.appendFile(videoPath, buffer);
+  log.info('appending chunk completed');
 };
 
 ipcHandle('save-chunk', async (event, chunk) => {
   try {
-    const recordingFolder = await getCurrentRecordingFolder();
-    await appendChuckToFile(chunk, recordingFolder);
+    chunksWritten += 1;
+    chunkQueue = chunkQueue.then(async () => {
+      log.info(`Received Chunk-${chunksWritten}`);
+      const recordingFolder = await getCurrentRecordingFolder();
+      await appendChunkToFile(chunk, recordingFolder);
+      log.info(`Saved Chunk-${chunksWritten} successfully`);
+      return chunksWritten;
+    });
     return ipc.success(undefined);
   } catch (err) {
     log.error('Failed to save chunk', { err });
