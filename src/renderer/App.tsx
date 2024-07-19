@@ -1,9 +1,9 @@
-import 'tailwindcss/tailwind.css';
 import 'react-tooltip/dist/react-tooltip.css';
+import 'tailwindcss/tailwind.css';
 import './App.css';
 
 import clsx from 'clsx';
-import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
+import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 
 import { useEffect, useState } from 'react';
 import {
@@ -13,16 +13,17 @@ import {
 } from '../constants';
 import AppHeader from './components/AppHeader';
 import BusyOverlay from './components/BusyOverlay';
+import ErrorBoundary from './components/ErrorBoundary';
+import GoogleSignInButton from './components/GoogleSignInButton';
+import Logout from './components/Logout';
 import NavigationButton from './components/NavigationButton';
+import UpdatesBanner from './components/UpdatesBanner';
 import FileOptions from './pages/FileOptions';
 import Upload from './pages/Upload';
 import UploadDashboard from './pages/UploadDashboard';
 import VideoRecorder from './pages/VideoRecorder';
 import useAppState from './store/hook';
 import AppStateProvider from './store/provider';
-import Logout from './components/Logout';
-import GoogleSignInButton from './components/GoogleSignInButton';
-import UpdatesBanner from './components/UpdatesBanner';
 
 function AppRoutes() {
   const { state } = useAppState();
@@ -57,26 +58,28 @@ export default function App() {
   }, []);
 
   return (
-    <AppStateProvider>
-      <Router>
-        <div className="bg-slate-900 text-white h-screen flex flex-col">
-          <UpdatesBanner />
-          {authToken ? (
-            <div>
-              <AppHeader />
-              <BusyOverlay />
-              <NavigationButton />
-              <AppRoutes />
-              <Logout />
-            </div>
-          ) : (
-            <div className="h-full flex flex-col">
-              <AppHeader />
-              <GoogleSignInButton />
-            </div>
-          )}
-        </div>
-      </Router>
-    </AppStateProvider>
+    <ErrorBoundary>
+      <AppStateProvider>
+        <Router>
+          <div className="bg-slate-900 text-white h-screen flex flex-col">
+            <UpdatesBanner />
+            {authToken ? (
+              <div>
+                <AppHeader />
+                <BusyOverlay />
+                <NavigationButton />
+                <AppRoutes />
+                <Logout />
+              </div>
+            ) : (
+              <div className="h-full flex flex-col">
+                <AppHeader />
+                <GoogleSignInButton />
+              </div>
+            )}
+          </div>
+        </Router>
+      </AppStateProvider>
+    </ErrorBoundary>
   );
 }

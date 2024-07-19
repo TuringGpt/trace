@@ -54,6 +54,7 @@ const electronHandler = {
   openGoogleAuth: ipcInvoke('open-google-auth'),
   getTokens: ipcInvoke('get-tokens'),
   removeTokens: ipcInvoke('remove-tokens'),
+  saveChunks: ipcInvoke('save-chunk'),
   onSelectVideoSource,
   onUploadProgress,
 };
