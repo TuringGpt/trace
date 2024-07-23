@@ -136,6 +136,8 @@ export interface Control {
   action: string;
 }
 
+export type TimeRange = '1hour' | '6hours' | '1day';
+
 export type IPCHandleEvents = {
   'get-app-version': IPCHandler<[], string>;
   'check-update-available': IPCHandler<[], boolean>;
@@ -188,6 +190,10 @@ export type IPCHandleEvents = {
   'get-tokens': IPCHandler<[], Tokens>;
   'remove-tokens': IPCHandler<[], void>;
   'save-chunk': IPCHandler<[chunk: Uint8Array], void>;
+  'report-error': IPCHandler<
+    [description: string, timeRage: TimeRange],
+    string
+  >;
 };
 
 export type IPCOnEvents = {

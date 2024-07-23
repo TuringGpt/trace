@@ -46,7 +46,7 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
     winston.format.splat(), // allow string interpolation like: logger.info('Hello, %s', 'world')
-    winston.format.simple(),
+    winston.format.json(),
   ),
   transports: [transport],
 });
