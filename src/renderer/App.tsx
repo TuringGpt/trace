@@ -12,6 +12,7 @@ import {
   ROUTE_VIDEO,
 } from '../constants';
 import AppHeader from './components/AppHeader';
+import BugReporter from './components/BugReporter';
 import BusyOverlay from './components/BusyOverlay';
 import ErrorBoundary from './components/ErrorBoundary';
 import GoogleSignInButton from './components/GoogleSignInButton';
@@ -70,11 +71,13 @@ export default function App() {
                 <NavigationButton />
                 <AppRoutes />
                 <Logout />
+                <BugReporter />
               </div>
             ) : (
               <div className="h-full flex flex-col">
                 <AppHeader />
                 <GoogleSignInButton />
+                <BugReporter />
               </div>
             )}
           </div>

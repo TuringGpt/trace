@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import log from '../util/logger';
+import BugReporter from './BugReporter';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -47,6 +48,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             >
               Reload Page
             </button>
+            <BugReporter />
           </div>
         </div>
       );

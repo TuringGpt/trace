@@ -1,11 +1,12 @@
 import './appUpdates';
 import './appVersion';
 import './ipcLogger';
-import './video';
-import './upload';
-import './showDialog';
-import './staticWindows';
 import './record';
-import './thumbnail';
+import './reportError';
+import './showDialog';
 import './signInWithGoogle';
+import './staticWindows';
+import './thumbnail';
 import './tokens';
+import './upload';
+import './video';

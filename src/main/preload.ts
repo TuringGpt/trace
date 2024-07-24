@@ -55,6 +55,7 @@ const electronHandler = {
   getTokens: ipcInvoke('get-tokens'),
   removeTokens: ipcInvoke('remove-tokens'),
   saveChunks: ipcInvoke('save-chunk'),
+  reportError: ipcInvoke('report-error'),
   onSelectVideoSource,
   onUploadProgress,
 };

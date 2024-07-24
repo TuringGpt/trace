@@ -33,7 +33,7 @@ const emptyInitialState: StorageApplicationState = {
   recordingFolders: [],
 };
 
-function generateAppStateFromFolders() {
+export function generateAppStateFromFolders() {
   try {
     const videoStoragePath = getVideoStoragePath();
     log.info('Checking folders inside video storage path');
