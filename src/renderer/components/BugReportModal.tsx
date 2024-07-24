@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaCopy } from 'react-icons/fa';
 import Modal from 'react-modal';
 
 type TimeRange = '1hour' | '6hours' | '1day';
@@ -14,6 +15,7 @@ function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bugReportId, setBugReportId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,13 +49,19 @@ function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
     onClose();
   }
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(bugReportId || '');
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       onRequestClose={() => {
         handleClose();
       }}
-      className="w-full max-w-md mx-auto mt-20 bg-white p-6 rounded-lg shadow-xl"
+      className="w-full max-w-2xl mx-auto mt-20 bg-white p-6 rounded-lg shadow-xl"
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
     >
       <h2 className="text-2xl font-bold mb-4 text-indigo-600">Report a Bug</h2>
@@ -148,7 +156,16 @@ function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
           </p>
           <p className="mb-4">
             Your bug report ID is:{' '}
-            <span className="font-medium">{bugReportId}</span>
+            <span className="font-medium select-all">{bugReportId}</span>
+            <FaCopy
+              className={`inline-block ml-2 cursor-pointer ${
+                isCopied ? 'text-green-600' : 'text-indigo-600'
+              }`}
+              onClick={handleCopy}
+            />
+            {isCopied && (
+              <span className="ml-2 text-sm text-green-500">Copied!</span>
+            )}
           </p>
           <button
             type="button"

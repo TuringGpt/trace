@@ -5,6 +5,7 @@ import { join } from 'path';
 import { BACKEND_URL } from '../../constants';
 import { ipc, TimeRange } from '../../types/customTypes';
 import db, { generateAppStateFromFolders } from '../storage';
+import axiosInstance from '../util/axiosInstance';
 import getDeviceMetadata from '../util/getMetaData';
 import logger, { logDirectory } from '../util/logger';
 import { ipcHandle } from './typeSafeHandler';
@@ -70,7 +71,7 @@ async function getLogsForTimeRange(timeRange: TimeRange) {
     );
 }
 
-async function readAndFormatState(path: string): Promise<string> {
+async function attemptToParseState(path: string): Promise<string> {
   const state = await readFile(path, 'utf-8');
   try {
     // Attempt to parse the state as JSON
@@ -87,7 +88,7 @@ async function getApplicationState() {
   if (!path) {
     path = join(app.getPath('userData'), 'application-state.json');
   }
-  const state = await readAndFormatState(path);
+  const state = await attemptToParseState(path);
   return state;
 }
 
@@ -136,6 +137,13 @@ ipcHandle('report-error', async (e, description, timeRage) => {
     log.info('Error report uploaded successfully');
 
     await execWithoutError('unlink', unlink.bind(null, errorReportPath));
+
+    await execWithoutError('notifyError', async () => {
+      await axiosInstance.post('/notify-error', {
+        id: uuid,
+        description,
+      });
+    });
 
     return ipc.success(uuid);
   } catch (error) {
