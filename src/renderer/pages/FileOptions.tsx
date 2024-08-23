@@ -338,10 +338,14 @@ export default function FileOptions() {
           htmlFor="folderName"
         >
           Name
+          <p className="text-sm text-gray-400">
+            This should be the title of the video. e.g., Asphalt 8 Gameplay
+          </p>
           <input
             id="folderName"
-            className="mt-4 block w-full text-l border-2 border-gray-300 p-2 rounded-md bg-white text-black"
+            className="mt-2 block w-full text-l border-2 border-gray-300 p-2 rounded-md bg-white text-black"
             value={folderName}
+            placeholder="Enter the title of the video"
             onChange={(e) => {
               setFolderName(e.target.value);
               setError({ ...error, folderName: '' });
@@ -356,10 +360,15 @@ export default function FileOptions() {
           className="block text-lg font-medium text-white w-full mt-4"
         >
           Description
+          <p className="text-sm text-gray-400">
+            This should be a brief description of the recording. e.g., Racing
+            through wet tracks of Tokyo with Merc AMG in classic race
+          </p>
           <input
             id="description"
-            className="mt-4 block w-full text-l border-2 border-gray-300 p-2 rounded-md bg-white text-black"
+            className="mt-2 block w-full text-l border-2 border-gray-300 p-2 rounded-md bg-white text-black"
             value={description}
+            placeholder="Enter a brief description of the recording"
             onChange={(e) => {
               setDescription(e.target.value);
               setError({ ...error, description: '' });
@@ -374,6 +383,10 @@ export default function FileOptions() {
 
         <div className="w-full mt-4">
           <h3 className="text-xl font-semibold text-white mb-2">Controls</h3>
+          <p className="text-sm text-gray-400">
+            Specify the controls used during the gameplay. e.g., W for car goes
+            forward, Space for character jumping, etc.
+          </p>
           {controls.map((control, index) => (
             // eslint-disable-next-line react/no-array-index-key
             <div key={index} className="flex items-center space-x-4 mb-4">
