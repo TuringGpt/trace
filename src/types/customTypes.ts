@@ -12,6 +12,7 @@ const RecordedFolderSchema = z.object({
   folderName: z.string(),
   id: z.string(),
   description: z.string().optional(),
+  game: z.string().optional(),
   isUploaded: z.boolean(),
   recordingSize: z.number().optional(),
   recordingDuration: z.number().optional(),
@@ -136,6 +137,11 @@ export interface Control {
   action: string;
 }
 
+export interface GameOptions {
+  value: string;
+  label: string;
+}
+
 export type TimeRange = '1hour' | '6hours' | '1day';
 
 export type IPCHandleEvents = {
@@ -155,11 +161,13 @@ export type IPCHandleEvents = {
     { recordingFolderName: string }
   >;
   'get-unique-keys': IPCHandler<[], string[]>;
+  'get-games-list': IPCHandler<[], string[]>;
   'rename-recording': IPCHandler<
     [
       folderId: string,
       newName: string,
       description: string,
+      game: string,
       controls: Control[],
     ],
     void

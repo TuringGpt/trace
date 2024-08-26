@@ -38,6 +38,7 @@ const electronHandler = {
   startNewRecording: ipcInvoke('start-new-recording'),
   stopRecording: ipcInvoke('stop-recording'),
   getUniqueKeys: ipcInvoke('get-unique-keys'),
+  getGamesList: ipcInvoke('get-games-list'),
   renameRecording: ipcInvoke('rename-recording'),
   discardRecording: ipcInvoke('discard-recording'),
   discardMultipleRecordings: ipcInvoke('discard-multiple-recordings'),

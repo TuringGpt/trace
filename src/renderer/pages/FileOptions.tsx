@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import {
   FIELD_REQUIRED_ERROR,
   MIN_DESCRIPTION_LENGTH_ERROR,
@@ -13,7 +14,12 @@ import {
 import useAppState from '../store/hook';
 import log from '../util/logger';
 import { useDialog } from '../hooks/useDialog';
-import { DialogType, IPCResult, Control } from '../../types/customTypes';
+import {
+  DialogType,
+  IPCResult,
+  Control,
+  GameOptions,
+} from '../../types/customTypes';
 
 export default function FileOptions() {
   const { state } = useAppState();
@@ -31,9 +37,13 @@ export default function FileOptions() {
     folderName: '',
     description: '',
     controls: '',
+    game: '',
   });
   const { showDialog } = useDialog();
   const [controls, setControls] = useState<Control[]>([]);
+  const [games, setGames] = useState<GameOptions[]>([]);
+  const [game, setGame] = useState<GameOptions | null>(null);
+  const [loadingGames, setLoadingGames] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -49,6 +59,29 @@ export default function FileOptions() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    const fetchGamesList = async () => {
+      if (games.length > 0) return;
+      try {
+        const res: IPCResult<string[]> = await window.electron.getGamesList();
+        if (res.status === 'success') {
+          const { data } = res;
+          log.info('Games list fetched', { numberOfGames: data.length });
+          const gameOptions: GameOptions[] = data.map((g: string) => ({
+            value: g,
+            label: g,
+          }));
+          setGames(gameOptions);
+          setLoadingGames(false);
+        }
+      } catch (err: any) {
+        log.error('Failed to fetch games list', err);
+        setLoadingGames(false);
+      }
+    };
+    fetchGamesList();
+  }, [games]);
 
   useEffect(() => {
     const fetchVideoServerPort = async () => {
@@ -199,7 +232,13 @@ export default function FileOptions() {
 
   const onSave = async () => {
     let hasError = false;
-
+    if (!game) {
+      setError((prevError) => ({
+        ...prevError,
+        game: FIELD_REQUIRED_ERROR,
+      }));
+      hasError = true;
+    }
     if (!folderName.trim()) {
       setError((prevError) => ({
         ...prevError,
@@ -257,6 +296,7 @@ export default function FileOptions() {
       recordingName,
       folderName,
       description,
+      game ? game.value : '',
       controls,
     );
     if (res.status === 'success') {
@@ -332,6 +372,25 @@ export default function FileOptions() {
               crossOrigin="anonymous"
             />
           )}
+
+        <div className="w-full my-4">
+          <p className="block text-lg font-medium text-white w-full">Game</p>
+          <Select
+            isLoading={loadingGames}
+            options={games}
+            value={game}
+            onChange={(g) => {
+              setGame(g);
+              setError({ ...error, game: '' });
+            }}
+            placeholder={loadingGames ? 'Loading...' : 'Select a game'}
+            isSearchable
+            className="mt-2 text-black"
+          />
+          {error.game && (
+            <p className="selected-game-error text-red-500">{error.game}</p>
+          )}
+        </div>
 
         <label
           className="block text-lg font-medium text-white w-full"

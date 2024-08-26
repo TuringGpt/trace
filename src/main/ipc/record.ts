@@ -25,6 +25,7 @@ import UploadManager from '../util/UploadManager';
 // } from './staticWindows';
 import getVideoStoragePath from '../util/videoStorage';
 import { ipcHandle } from './typeSafeHandler';
+import axiosInstance from '../util/axiosInstance';
 
 const log = logger.child({ module: 'ipc.record' });
 
@@ -120,9 +121,19 @@ ipcHandle('get-unique-keys', async () => {
   return ipc.success(uniqueKeys);
 });
 
+ipcHandle('get-games-list', async () => {
+  try {
+    const games = await axiosInstance.get('/games-list');
+    return ipc.success(games.data);
+  } catch (err) {
+    log.error('Failed to get games list', { err });
+    return ipc.error('Failed to get games list', err);
+  }
+});
+
 ipcHandle(
   'rename-recording',
-  async (event, folderId, newName, description, controls) => {
+  async (event, folderId, newName, description, game, controls) => {
     try {
       const db = await storage.getData();
       const folder = db.recordingFolders.find((f) => f.id === folderId);
@@ -131,6 +142,7 @@ ipcHandle(
       }
       folder.description = description;
       folder.folderName = newName.trim();
+      folder.game = game;
       await storage.save(db);
 
       const folderPath = path.join(getVideoStoragePath(), folderId);
@@ -141,6 +153,7 @@ ipcHandle(
         const metadata = JSON.parse(
           await fs.promises.readFile(metadataPath, 'utf-8'),
         );
+        metadata.game = game;
         metadata.videoTitle = newName.trim();
         metadata.videoDescription = description;
         await fs.promises.writeFile(
