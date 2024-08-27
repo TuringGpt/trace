@@ -13,7 +13,7 @@ Welcome to Trace, the intuitive, cross-platform screen recording application tha
 
 ## Download and Installation
 
-To get started with Trace, please visit the [Releases page](https://github.com/suraj-turing/trace/releases) on our GitHub repository.
+To get started with Trace, please visit the [Releases page](https://github.com/turinggpt/trace/releases) on our GitHub repository.
 
 Depending on your operating system, download the respective executable:
 
@@ -81,7 +81,7 @@ Before running the application, set up the necessary environment variables:
    ```
 8. Create Blob storage container using azure cli.
    ```
-   az storage container create --name turing-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+   az storage container create --name trace-videos --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
    ```
 9. Start the application in development mode.
    ```

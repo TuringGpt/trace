@@ -4,7 +4,7 @@
   "license": "MIT",
   "version": "1.4.0",
   "author": {
-    "name": "turing"
+    "name": "trace"
   },
   "main": "./src/main/main.ts",
   "scripts": {
@@ -187,7 +187,7 @@
   },
   "build": {
     "productName": "Trace",
-    "appId": "org.turing.Trace",
+    "appId": "org.trace.Trace",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [
