@@ -1,5 +1,5 @@
-import fs from 'fs';
-import { readFile, rmdir, stat } from 'fs/promises';
+import fs, { rmSync } from 'fs';
+import { readFile, stat } from 'fs/promises';
 
 import path from 'path';
 import { ipc } from '../../types/customTypes';
@@ -208,7 +208,7 @@ ipcHandle('discard-recording', async (event, folderId) => {
     );
 
     // Then remove the directory
-    await rmdir(folderPath, { recursive: true });
+    rmSync(folderPath, { recursive: true, force: true });
 
     return ipc.success(undefined);
   } catch (err) {
@@ -227,8 +227,9 @@ ipcHandle('discard-multiple-recordings', async (event, folderIds) => {
 
     // Delete the folders on disk
     const deletePromises = folderIds.map((folderId) =>
-      rmdir(`${getVideoStoragePath()}/${folderId}`, {
+      rmSync(`${getVideoStoragePath()}/${folderId}`, {
         recursive: true,
+        force: true,
       }),
     );
 
@@ -315,7 +316,7 @@ const deleteFoldersOnDisk = async (folderIdsForDeletion: string[]) => {
         return;
       }
 
-      await rmdir(folderPath, { recursive: true });
+      rmSync(folderPath, { recursive: true, force: true });
       UploadManager.getInstance().updateOnDiscardComplete(folderId);
     } catch (err) {
       log.error(`Failed to delete folder ${folderId}`, { err });
