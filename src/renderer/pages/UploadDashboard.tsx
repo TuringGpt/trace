@@ -15,10 +15,6 @@ import {
   FILTER_ALL,
   FILTER_CLOUD,
   FILTER_LOCAL,
-  FREE_UP_ALL_MESSAGE,
-  FREE_UP_ALL_TITLE,
-  FREE_UP_ALL_TOOLTIP,
-  FREE_UP_SPACE_LABEL,
   LOCAL_STORAGE_INFO,
   NO_POPUP_BUTTON,
   YES_POPUP_BUTTON,
@@ -170,31 +166,7 @@ export default function UploadDashboard() {
     }
   };
 
-  const handleFreeUpSpace = async () => {
-    const res = await showDialog(FREE_UP_ALL_TITLE, FREE_UP_ALL_MESSAGE, {
-      type: DialogType.Confirmation,
-      buttons: [YES_POPUP_BUTTON, NO_POPUP_BUTTON],
-      useNative: true,
-    });
-
-    if (res.success) {
-      const deleteRes = await window.electron.cleanUpFromLocal([], true);
-      if (deleteRes.status === 'success') {
-        log.info('Deleted all uploaded recordings');
-        setVideos(videos.filter((video) => !video.isUploaded));
-      } else {
-        log.error('Failed to delete uploaded recordings', deleteRes.error);
-      }
-    } else {
-      log.info('User cancelled the free up space');
-    }
-  };
-
   const yetToBeUploadedVideos = videos.filter((video) => !video.isUploaded);
-
-  const uploadedFolderStillInLocal = videos.filter(
-    (video) => video.isUploaded && !video.isDeletedFromLocal,
-  );
 
   const handleSelectAll = () => {
     if (selectedVideos.size === videos.length) {
@@ -227,20 +199,6 @@ export default function UploadDashboard() {
             <p className="text-indigo-600 font-semibold">
               {prettyBytes(memoryUsage)} {LOCAL_STORAGE_INFO}
             </p>
-            {uploadedFolderStillInLocal.length > 0 && (
-              <p className="text-gray-400 text-sm">
-                <button
-                  type="button"
-                  aria-label="freeup space"
-                  onClick={handleFreeUpSpace}
-                  className="focus:outline-none"
-                  data-tooltip-content={FREE_UP_ALL_TOOLTIP}
-                  data-tooltip-id="video-dashboard-tooltip"
-                >
-                  {FREE_UP_SPACE_LABEL}
-                </button>
-              </p>
-            )}
           </div>
         )}
 
