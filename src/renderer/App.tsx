@@ -6,11 +6,7 @@ import clsx from 'clsx';
 import { Route, MemoryRouter as Router, Routes } from 'react-router-dom';
 
 import { useEffect, useState } from 'react';
-import {
-  ROUTE_UPLOAD,
-  ROUTE_UPLOAD_DASHBOARD,
-  ROUTE_VIDEO,
-} from '../constants';
+import { ROUTE_UPLOAD_DASHBOARD, ROUTE_VIDEO } from '../constants';
 import AppHeader from './components/AppHeader';
 import BugReporter from './components/BugReporter';
 import BusyOverlay from './components/BusyOverlay';
@@ -20,7 +16,6 @@ import Logout from './components/Logout';
 import NavigationButton from './components/NavigationButton';
 import UpdatesBanner from './components/UpdatesBanner';
 import FileOptions from './pages/FileOptions';
-import Upload from './pages/Upload';
 import UploadDashboard from './pages/UploadDashboard';
 import VideoRecorder from './pages/VideoRecorder';
 import useAppState from './store/hook';
@@ -38,7 +33,6 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<VideoRecorder />} />
         <Route path={ROUTE_VIDEO} element={<FileOptions />} />
-        <Route path={ROUTE_UPLOAD} element={<Upload />} />
         <Route path={ROUTE_UPLOAD_DASHBOARD} element={<UploadDashboard />} />
       </Routes>
     </div>

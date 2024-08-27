@@ -39,19 +39,11 @@ export const MIN_DESCRIPTION_LENGTH_ERROR =
 export const RENAME_FOLDER_ERROR = 'Failed to rename recording folder';
 export const DISCARD_RECORDING_ERROR = 'Failed to discard recording';
 
-// Upload page constants
+// UploadDashboard page constants
 export const CONSENT_TITLE = 'Consent Required';
 export const CONSENT_MESSAGE = `By clicking OK, you confirm your consent to upload recorded activities.
 Please be aware that uploaded files may contain sensitive information.
 Proceeding indicates your acknowledgment and acceptance of this disclosure.`;
-export const UPLOAD_CONSENT_MESSAGE = `By clicking OK, you confirm your consent to upload recorded activities. Please be aware that uploaded files may contain sensitive information. Proceeding indicates your acknowledgment and acceptance of this disclosure.`;
-export const UPLOAD_SUCCESS_MESSAGE = 'Files uploaded successfully!';
-export const SELECT_FILE_ERROR = 'Please select a file';
-export const INVALID_FILE_TYPE_ERROR = 'Please select a zip file';
-export const UPLOAD_FAILURE_ERROR = 'Failed to upload the file';
-
-// UploadDashboard page constants
-
 export const LOCAL_STORAGE_INFO = 'used, upload to free up space.';
 export const FREE_UP_SPACE_LABEL = 'Click to free up space';
 export const FILTER_ALL = 'all';
@@ -72,7 +64,6 @@ export const CHOOSE_VIDEO_SOURCE_TEXT = 'Choose a Video Source';
 export const SELECT_SOURCE_TEXT = 'Please select a source to proceed.';
 
 export const ROUTE_VIDEO = '/save-video';
-export const ROUTE_UPLOAD = '/upload';
 export const ROUTE_UPLOAD_DASHBOARD = '/upload-dashboard';
 
 // useDialog constants

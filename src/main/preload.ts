@@ -30,7 +30,6 @@ const electronHandler = {
   checkUpdateAvailable: ipcInvoke('check-update-available'),
   openUpdatesUrl: ipcInvoke('open-updates-url'),
   getVideoSources: ipcInvoke('get-video-sources'),
-  uploadFiles: ipcInvoke('upload-zip-file'),
   logFromRenderer: ipcSend('log-from-renderer'),
   showDialog: ipcInvoke('show-dialog'),
   reportUnhandledError: ipcSend('report-renderer-unhandled-error'),

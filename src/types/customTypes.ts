@@ -58,10 +58,6 @@ export type CapturedSource = {
   name: string;
 };
 
-export type UploadResult = {
-  uploadedZipFileName: string;
-};
-
 export enum DialogType {
   /**
    * Only has an ok button
@@ -150,7 +146,6 @@ export type IPCHandleEvents = {
   'open-updates-url': IPCHandler<[], void>;
   'get-video-sources': IPCHandler<[], void>;
   'remux-video-file': IPCHandler<[uint8Array: Uint8Array], boolean>;
-  'upload-zip-file': IPCHandler<[zipFilePath: string], UploadResult>;
   'show-dialog': IPCHandler<
     [title: string, message: string, options?: DialogOptions],
     boolean
