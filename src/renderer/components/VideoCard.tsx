@@ -1,28 +1,21 @@
+import { useEffect } from 'react';
 import { FaCloudUploadAlt } from 'react-icons/fa';
 import { GiSandsOfTime } from 'react-icons/gi';
 import { GoSync } from 'react-icons/go';
 import { ImCheckboxChecked, ImCheckboxUnchecked } from 'react-icons/im';
 import { MdOutlineCloudSync, MdSyncProblem } from 'react-icons/md';
 import { RiDeleteBin2Fill } from 'react-icons/ri';
-import { SiCcleaner } from 'react-icons/si';
 import { Tooltip } from 'react-tooltip';
 
 import {
-  CLEAN_UP_LABEL,
-  CLEANUP_POPUP_MESSAGE,
-  CLEANUP_POPUP_TITLE,
   DELETE_LABEL,
   IN_QUEUE_TOOLTIP,
   MAX_FOLDER_NAME_LENGTH,
-  NO_POPUP_BUTTON,
-  REMOVE_LOCAL_TOOLTIP,
   UPLOAD_FAILED_TOOLTIP,
   UPLOADED_TOOLTIP,
   UPLOADING_TOOLTIP,
-  YES_POPUP_BUTTON,
 } from '../../constants';
 import {
-  DialogType,
   RecordedFolder,
   StatusTypes,
   UploadItemStatus,
@@ -32,7 +25,6 @@ import prettyBytes from '../util/prettyBytes';
 import prettyDuration from '../util/prettyDuration';
 import { formatDateInYYYYMMDDHHMM } from '../util/timeFormat';
 import Thumbnail from './Thumbnail';
-import { useDialog } from '../hooks/useDialog';
 
 type VideoCardProps = {
   video: RecordedFolder;
@@ -79,27 +71,29 @@ export default function VideoCard({
     !isVideoUploaded(uploadProgress) &&
     !video.isUploaded;
 
-  const { showDialog } = useDialog();
-
-  const onCleanUp = async () => {
-    const res = await showDialog(CLEANUP_POPUP_TITLE, CLEANUP_POPUP_MESSAGE, {
-      type: DialogType.Confirmation,
-      buttons: [YES_POPUP_BUTTON, NO_POPUP_BUTTON],
-    });
-    if (res.success) {
-      const deleteRes = await window.electron.cleanUpFromLocal([video.id]);
-      if (deleteRes.status === 'success') {
-        log.info('Recording deleted successfully', {
-          recordingId: video.id,
-        });
-      } else {
-        log.error('Failed to delete recording', {
-          recordingId: video.id,
-          error: deleteRes.error,
-        });
+  useEffect(() => {
+    const autoCleanUp = async () => {
+      if (
+        video.isUploaded &&
+        !video.isDeletedFromLocal &&
+        !isVideoUploading(uploadProgress)
+      ) {
+        const deleteRes = await window.electron.cleanUpFromLocal([video.id]);
+        if (deleteRes.status === 'success') {
+          log.info('Recording deleted successfully', {
+            recordingId: video.id,
+          });
+        } else {
+          log.error('Failed to delete recording', {
+            recordingId: video.id,
+            error: deleteRes.error,
+          });
+        }
       }
-    }
-  };
+    };
+
+    autoCleanUp();
+  }, [video, uploadProgress]);
 
   return (
     <div
@@ -205,20 +199,6 @@ export default function VideoCard({
           />
         </>
       )}
-      {video.isUploaded &&
-        !video.isDeletedFromLocal &&
-        !isVideoUploading(uploadProgress) && (
-          <button
-            type="button"
-            data-tooltip-id="video-tooltip"
-            data-tooltip-html={REMOVE_LOCAL_TOOLTIP}
-            className="interactive-button bg-green-600 w-12 text-2xl absolute bottom-4 right-4"
-            onClick={onCleanUp}
-          >
-            <span className="sr-only">{CLEAN_UP_LABEL}</span>
-            <SiCcleaner />
-          </button>
-        )}
     </div>
   );
 }
