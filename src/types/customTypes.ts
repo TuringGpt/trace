@@ -1,4 +1,4 @@
-import { IpcMainInvokeEvent } from 'electron';
+import { IpcMainInvokeEvent, Rectangle, Size } from 'electron';
 import { z } from 'zod';
 
 const sessionUrisSchema = z.record(z.string());
@@ -152,7 +152,7 @@ export type IPCHandleEvents = {
   >;
   'start-new-recording': IPCHandler<[], void>;
   'stop-recording': IPCHandler<
-    [recordingStopTime: number],
+    [recordingStopTime: number, recordingStartTime: number],
     { recordingFolderName: string }
   >;
   'get-unique-keys': IPCHandler<[], string[]>;
@@ -205,4 +205,19 @@ export type IPCOnEvents = {
     event: IpcMainInvokeEvent,
     error: any,
   ) => void;
+};
+
+export type DeviceMetadata = {
+  osType: string;
+  osRelease: string;
+  cpuModel: string;
+  cpuSpeed: number;
+  numCores: number;
+  totalMemory: number;
+  freeMemory: number;
+  screenSize?: Size;
+  screenResolution?: Rectangle;
+  screenRotation?: number;
+  screenScaleFactor?: number;
+  duration?: number;
 };

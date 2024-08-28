@@ -25,6 +25,7 @@ import { formatTimeInHHMMSS } from '../util/timeFormat';
 
 import { useDialog } from '../hooks/useDialog';
 
+let recordingStartTime: number | null = null;
 let recordingStopTime: number | null = null;
 
 export default function VideoRecorder() {
@@ -102,6 +103,7 @@ export default function VideoRecorder() {
       return;
     }
     setIsRecording(true);
+    recordingStartTime = Date.now();
     log.info('Recording started');
     const videoElement = videoRef.current;
     const stream = videoElement?.srcObject as MediaStream;
@@ -131,6 +133,7 @@ export default function VideoRecorder() {
       try {
         const res = await window.electron.stopRecording(
           recordingStopTime === null ? Date.now() : recordingStopTime,
+          recordingStartTime === null ? Date.now() : recordingStartTime,
         );
         setIsRecording(false);
         if (res.status === 'error') {

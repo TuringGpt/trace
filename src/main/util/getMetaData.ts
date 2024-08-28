@@ -3,9 +3,10 @@ import os from 'os';
 
 import storage from '../storage';
 import logger from './logger';
+import { DeviceMetadata } from '../../types/customTypes';
 
 const log = logger.child({ module: 'util.getMetadata' });
-export default async function getDeviceMetadata() {
+export default async function getDeviceMetadata(): Promise<DeviceMetadata> {
   const db = await storage.getData();
 
   const selectedDevice =
@@ -19,7 +20,7 @@ export default async function getDeviceMetadata() {
     .getAllDisplays()
     .find((d) => `${d.id}` === `${selectedDevice}`);
 
-  const metadata = {
+  const metadata: DeviceMetadata = {
     osType: os.type(),
     osRelease: os.release(),
     cpuModel: os.cpus()[0].model,
