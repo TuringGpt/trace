@@ -98,7 +98,7 @@ ipcHandle(
       recordingFolderName = db.currentRecordingFolder!.folderName;
       const logContent = keylogger.stopLogging(recordingStopTime);
       const metadata: DeviceMetadata = await getDeviceMetadata();
-      metadata.duration = recordingStopTime - recordingStartTime;
+      metadata.videoDuration = recordingStopTime - recordingStartTime;
       await markRecordingStopped();
 
       log.info('Recording stopped');

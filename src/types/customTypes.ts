@@ -219,5 +219,5 @@ export type DeviceMetadata = {
   screenResolution?: Rectangle;
   screenRotation?: number;
   screenScaleFactor?: number;
-  duration?: number;
+  videoDuration?: number;
 };
