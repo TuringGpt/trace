@@ -13,7 +13,7 @@ Welcome to Trace, the intuitive, cross-platform screen recording application tha
 
 ## Download and Installation
 
-To get started with Trace, please visit the [Releases page](https://github.com/turinggpt/trace/releases) on our GitHub repository.
+To get started with Trace, please visit the [Downloads](https://toolsfoundry.org/trace) page or [Releases](https://github.com/turinggpt/trace/releases) page on our GitHub repository.
 
 Depending on your operating system, download the respective executable:
 
