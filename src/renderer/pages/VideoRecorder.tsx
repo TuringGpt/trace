@@ -1,8 +1,10 @@
 /* eslint-disable jsx-a11y/media-has-caption */
+import React, { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import RadioLabel from '../components/RadioLabel'; // Importing RadioLabel
+import { useDialog } from '../hooks/useDialog';
+import { CapturedSource, DialogType } from '../../types/customTypes';
 import {
   ABORT_POPUP_BUTTON,
   AGREE_POPUP_BUTTON,
@@ -13,7 +15,6 @@ import {
   SELECT_SOURCE_TEXT,
   VIDEO_CONVERSION_INDICATOR,
 } from '../../constants';
-import { CapturedSource, DialogType } from '../../types/customTypes';
 import {
   hideBusyIndicator,
   setRecordingName,
@@ -22,8 +23,6 @@ import {
 import useAppState from '../store/hook';
 import log from '../util/logger';
 import { formatTimeInHHMMSS } from '../util/timeFormat';
-
-import { useDialog } from '../hooks/useDialog';
 
 let recordingStartTime: number | null = null;
 let recordingStopTime: number | null = null;
@@ -34,14 +33,13 @@ export default function VideoRecorder() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const videoPlaceholderRef = useRef<HTMLDivElement>(null);
-
+  const [timer, setTimer] = useState<number | null>(30);
   const [recordingTime, setRecordingTime] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
   const { dispatch } = useAppState();
   const navigate = useNavigate();
-
   const { showDialog } = useDialog();
 
   useEffect(() => {
@@ -93,6 +91,16 @@ export default function VideoRecorder() {
     }
     return () => clearInterval(interval);
   }, [isRecording]);
+
+  const onStopRecording = () => {
+    recordingStopTime = Date.now();
+    log.info('Recording stopped', mediaRecorder?.state);
+    if (mediaRecorder?.state === 'recording') {
+      mediaRecorder.stop();
+      setMediaRecorder(null);
+      window.electron.mediaRecordingStopped();
+    }
+  };
 
   const onStartRecording = async () => {
     const consent = await showDialog(INFO_POPUP_TITLE, INITIAL_CONSENT_TEXT, {
@@ -162,16 +170,20 @@ export default function VideoRecorder() {
     };
     recorder.start(5 * 1000); // Start saving records every 5 seconds
     window.electron.startNewRecording();
+
+    const recordingDuration = (timer ?? 30) * 60 * 1000; // Convert minutes to milliseconds
+    setTimeout(() => {
+      const stopButton = document.getElementById('stopButton');
+      if (stopButton) {
+        stopButton.click();
+      } else {
+        log.error('Stop button not found, unable to trigger auto-stop');
+      }
+    }, recordingDuration);
   };
 
-  const onStopRecording = () => {
-    recordingStopTime = Date.now();
-    log.info('Recording stopped', mediaRecorder?.state);
-    if (mediaRecorder?.state === 'recording') {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
-      window.electron.mediaRecordingStopped();
-    }
+  const handleTimerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTimer(Number(event.target.value));
   };
 
   return (
@@ -194,7 +206,7 @@ export default function VideoRecorder() {
         </button>
       </div>
 
-      <div className="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-450px)]">
+      <div className="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-500px)]">
         <video
           id="videoElement"
           ref={videoRef}
@@ -206,7 +218,7 @@ export default function VideoRecorder() {
           id="videoPlaceholder"
           ref={videoPlaceholderRef}
           className={clsx(
-            `flex items-center justify-center py-20 w-full text-2xl text-indigo-600`,
+            `flex items-center justify-center py-40 w-full text-2xl text-indigo-600`,
             {
               hidden: source,
             },
@@ -225,6 +237,24 @@ export default function VideoRecorder() {
         <span id="recordingTime" className="text-2xl">
           {formatTimeInHHMMSS(recordingTime)}
         </span>
+      </div>
+
+      <div className="flex justify-center space-x-4 mt-6 mb-4 text-xl">
+        <h3 className="font-bold">Recording Time:</h3>
+        <RadioLabel
+          id="timer-10"
+          value={10}
+          checked={timer === 10}
+          onChange={handleTimerChange}
+          label="10 minutes"
+        />
+        <RadioLabel
+          id="timer-30"
+          value={30}
+          checked={timer === 30}
+          onChange={handleTimerChange}
+          label="30 minutes"
+        />
       </div>
 
       <div className="flex justify-center">

@@ -124,14 +124,10 @@ class DB {
         log.warn('File does not exist. Skipping lock');
         return await fn();
       }
-      log.info('Acquiring lock on storage file');
       await lock(this.filePath, lockRetryOptions);
-      log.info('Lock acquired on storage file');
       return await fn();
     } finally {
-      log.info('Releasing lock on storage file');
       await this.unLockStorageFile();
-      log.info('Lock released on storage file');
     }
   }
 
@@ -143,7 +139,6 @@ class DB {
   async load() {
     try {
       return await this.withLock(async (): Promise<StorageApplicationState> => {
-        log.info('Loading data from file');
         let validatedData: StorageApplicationState;
         if (!fs.existsSync(this.filePath)) {
           validatedData = generateAppStateFromFolders();

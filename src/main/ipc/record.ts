@@ -392,19 +392,16 @@ const appendChunkToFile = async (
   chunk: Uint8Array,
   recordingFolder: string,
 ) => {
-  log.info('appending chunk to file');
   const buffer = Buffer.from(chunk);
   const videoPath = `${recordingFolder}/temp-video.webm`;
 
   await fs.promises.appendFile(videoPath, buffer);
-  log.info('appending chunk completed');
 };
 
 ipcHandle('save-chunk', async (event, chunk) => {
   try {
     chunksWritten += 1;
     chunkQueue = chunkQueue.then(async () => {
-      log.info(`Received Chunk-${chunksWritten}`);
       const recordingFolder = await getCurrentRecordingFolder();
       await appendChunkToFile(chunk, recordingFolder);
       log.info(`Saved Chunk-${chunksWritten} successfully`);
