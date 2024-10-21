@@ -1,3 +1,4 @@
+/* eslint-disable react/require-default-props */
 import React from 'react';
 
 interface RadioLabelProps {
@@ -6,6 +7,7 @@ interface RadioLabelProps {
   checked: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   label: string;
+  disabled?: boolean;
 }
 
 export default function RadioLabel({
@@ -14,9 +16,13 @@ export default function RadioLabel({
   checked,
   onChange,
   label,
+  disabled = false,
 }: RadioLabelProps) {
   return (
-    <label className="flex items-center space-x-2" htmlFor={id}>
+    <label
+      className={`flex items-center space-x-2 ${disabled ? 'opacity-50' : ''}`}
+      htmlFor={id}
+    >
       <div className="relative">
         <input
           id={id}
@@ -25,6 +31,7 @@ export default function RadioLabel({
           value={value}
           checked={checked}
           onChange={onChange}
+          disabled={disabled}
           className="appearance-none h-5 w-5 border-2 border-gray-200 rounded-sm checked:bg-blue-500 checked:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {checked && (

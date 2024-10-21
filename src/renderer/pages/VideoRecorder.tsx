@@ -206,7 +206,7 @@ export default function VideoRecorder() {
         </button>
       </div>
 
-      <div className="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-500px)]">
+      <div className="flex justify-center m-6 px-4 py-2 max-h-[calc(100vh-550px)]">
         <video
           id="videoElement"
           ref={videoRef}
@@ -247,6 +247,7 @@ export default function VideoRecorder() {
           checked={timer === 10}
           onChange={handleTimerChange}
           label="10 minutes"
+          disabled={!source || isRecording}
         />
         <RadioLabel
           id="timer-30"
@@ -254,19 +255,17 @@ export default function VideoRecorder() {
           checked={timer === 30}
           onChange={handleTimerChange}
           label="30 minutes"
+          disabled={!source || isRecording}
         />
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center mb-6">
         <button
           type="button"
           id="startButton"
-          className={clsx(
-            `bg-indigo-600 m-6 mb-0 rounded-md px-4 py-4 text-white`,
-            {
-              'opacity-50': !source || isRecording,
-            },
-          )}
+          className={clsx(`bg-indigo-600 m-6 rounded-md px-4 py-4 text-white`, {
+            'opacity-50': !source || isRecording,
+          })}
           disabled={!source || isRecording}
           ref={startButtonRef}
           onClick={onStartRecording}
@@ -276,12 +275,9 @@ export default function VideoRecorder() {
         <button
           type="button"
           id="stopButton"
-          className={clsx(
-            'bg-red-600 m-6 mb-0 rounded-md px-4 py-4 text-white',
-            {
-              'opacity-50': !isRecording,
-            },
-          )}
+          className={clsx('bg-red-600 m-6 rounded-md px-4 py-4 text-white', {
+            'opacity-50': !isRecording,
+          })}
           disabled={!isRecording}
           onClick={onStopRecording}
         >
