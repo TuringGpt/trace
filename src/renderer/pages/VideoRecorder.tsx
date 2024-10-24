@@ -38,6 +38,7 @@ export default function VideoRecorder() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
+  const recordingTimeoutRef = useRef<number | null>(null);
   const { dispatch } = useAppState();
   const navigate = useNavigate();
   const { showDialog } = useDialog();
@@ -92,7 +93,15 @@ export default function VideoRecorder() {
     return () => clearInterval(interval);
   }, [isRecording]);
 
+  const clearRecordingTimeout = () => {
+    if (recordingTimeoutRef.current) {
+      clearTimeout(recordingTimeoutRef.current);
+      recordingTimeoutRef.current = null;
+    }
+  };
+
   const onStopRecording = () => {
+    clearRecordingTimeout();
     recordingStopTime = Date.now();
     log.info('Recording stopped', mediaRecorder?.state);
     if (mediaRecorder?.state === 'recording') {
@@ -172,7 +181,7 @@ export default function VideoRecorder() {
     window.electron.startNewRecording();
 
     const recordingDuration = (timer ?? 30) * 60 * 1000; // Convert minutes to milliseconds
-    setTimeout(() => {
+    recordingTimeoutRef.current = window.setTimeout(() => {
       const stopButton = document.getElementById('stopButton');
       if (stopButton) {
         stopButton.click();
